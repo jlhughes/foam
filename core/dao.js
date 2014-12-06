@@ -2709,33 +2709,70 @@ CLASS({
     buildPutURL: function(obj) {
       return this.url;
     },
-    buildPutParams: function(obj) {
-      return [];
+      buildPutParams: function(obj) {
+	return [];
     },
     buildSelectParams: function(sink, query) {
       return [];
     },
+      buildRemoveURL: function(key) {
+	  //return this.url + '/' + key;
+	  return this.url;
+      },
+      buildRemoveParams: function(key) {
+	return [];
+    },
+
+
     put: function(value, sink) {
       var self = this;
       var extra = {};
       this.X.ajsonp(this.buildPutURL(value),
-             this.buildPutParams(value),
-             "POST",
-             this.objToJson(value, extra)
-            )(
+		    //this.buildPutParams(value)
+              ["method_=put",
+	      "json_="+this.objToJson(value, extra)]
+//	extra.method_ = 'put';
+//	self.X.axhr(this.buildPutURL(value),
+//		    'POST',
+//		    this.objToJson(value, extra)
+		   )(
+//	    function(data) {
         function(resp, status) {
           if ( status !== 200 ) {
             sink && sink.error && sink.error([resp, status]);
             return;
           }
-          var obj = self.jsonToObj(resp, extra);
+		console.log("RestDAO.put resp", resp);
+		var obj = self.jsonToObj(resp, extra);
           sink && sink.put && sink.put(obj);
           self.notify_('put', [obj]);
         });
     },
-    remove: function(query, sink) {
-    },
-    select: function(sink, options) {
+      remove: function(query, sink) {
+	  var self = this;
+	  var extra = {};
+	  this.X.ajsonp(this.buildRemoveURL(query),
+			['method_=remove',
+			 'id_='+query.id]
+			//	extra.method_ = 'put';
+			//	self.X.axhr(this.buildPutURL(value),
+			//		    'POST',
+			//		    this.objToJson(value, extra)
+		       )(
+	      //	    function(data) {
+              function(resp, status) {
+		  if ( status !== 200 ) {
+		      sink && sink.error && sink.error([resp, status]);
+		      return;
+		  }
+		  console.log("RestDAO.remove resp", resp);
+		  var obj = self.jsonToObj(resp, extra);
+		  sink && sink.remove && sink.remove(obj);
+		  self.notify_('remove', [obj]);
+              });
+      },
+      select: function(sink, options) {
+	  console.log('RestDAO.select sink=',sink);
       sink = sink || [].sink;
       var fut = afuture();
       var self = this;
@@ -2748,12 +2785,12 @@ CLASS({
       // Clean this up.
       var extra = {};
       var params = [];
-
+      var url = this.buildURL();
       if ( options ) {
         index += options.skip || 0;
 
         var query = options.query;
-        var url;
+        //var url;
 
         if ( query ) {
           var origQuery = query;
@@ -2802,7 +2839,9 @@ CLASS({
           myparams.push('maxResults=' + batch);
           myparams.push('startIndex=' + index);
 
-          self.X.ajsonp(url, myparams)(function(data) {
+            //self.X.ajsonp(url, myparams)(function(data) {
+	    self.X.axhr(url, 'GET', myparams)(function(data) {
+		console.log("RestDAO.select response data=", data);
             // Short-circuit count.
             // TODO: This count is wrong for queries that use
             if ( CountExpr.isInstance(sink) ) {
