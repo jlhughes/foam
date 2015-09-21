@@ -300,7 +300,6 @@ CLASS({
     {
       name: 'cancel',
       label: 'CANCEL',
-      keyboardShortcuts: [ 27 /*escape*/ ],
       code: function() {
         this.popup.close();
       }
@@ -317,7 +316,6 @@ CLASS({
     {
       name: 'left',
       label: '<',
-      keyboardShortcuts: [ 37 /*left*/ ],
       code: function() {
         this.snapToView(-1);
       }
@@ -325,7 +323,6 @@ CLASS({
     {
       name: 'right',
       label: '>',
-      keyboardShortcuts: [ 39 /*right*/ ],
       code: function() {
         this.snapToView(1);
       }
