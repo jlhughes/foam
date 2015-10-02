@@ -100,8 +100,13 @@ CLASS({
         var dao = this.MDAO.create({
           model: Model,
         }, this.Y);
-        this.masterAppDAO.where(HAS(this.AppConfig.MODEL)).pipe(MAP(this.AppConfig.MODEL,
-          dao));
+        this.masterAppDAO
+          .where(HAS(this.AppConfig.DATA_CONFIGS))
+          .pipe(MAP(function(appCfg) { // dump models
+            for (var i = 0; i < appCfg.dataConfigs.length; ++i) {
+              dao.put(appCfg.dataConfigs[i].model);
+            }
+          }));
         return dao;
       },
     },
