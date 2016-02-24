@@ -18,14 +18,17 @@
 CLASS({
   name: 'MaxExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   properties: [
     {
       name:  'max',
-      type:  'int',
-      help:  'Maximum value.',
-      defaultValue: undefined
+      help:  'Maximum value.'
+    },
+    {
+      name: 'value',
+      compareProperty: function() { return 0; },
+      getter: function() { return this.max; }
     }
   ],
 
@@ -42,7 +45,7 @@ CLASS({
     pipe: function(sink) { sink.put(this); },
     put: function(obj) {
       var v = this.arg1.f(obj);
-      this.max = this.max === undefined ? v : this.maximum(this.max, v);
+      this.max = this.hasOwnProperty('max') ? this.maximum(this.max, v) : v ;
     },
     remove: function(obj) { },
     toString: function() { return this.max; }
@@ -58,7 +61,7 @@ function MAX(expr) {
 CLASS({
   name: 'InExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   documentation: 'Binary expression which is true if its first argument is EQ to any element of its second argument, which is an array.',
 
@@ -104,7 +107,7 @@ function IN(arg1, arg2) {
 CLASS({
   name: 'LtExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
   abstract: true,
 
   methods: {
@@ -136,7 +139,7 @@ function LT(arg1, arg2) {
 CLASS({
   name: 'GtExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
   abstract: true,
 
   methods: {
@@ -168,7 +171,7 @@ function GT(arg1, arg2) {
 CLASS({
   name: 'LteExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
   abstract: true,
 
   methods: {
@@ -201,7 +204,7 @@ function LTE(arg1, arg2) {
 CLASS({
   name: 'GteExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
   abstract: true,
 
   methods: {

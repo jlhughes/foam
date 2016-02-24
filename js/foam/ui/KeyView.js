@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'KeyView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
@@ -51,7 +51,7 @@ CLASS({
     },
     { name: 'subKey' },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'innerView',
       defaultValue: 'foam.ui.DetailView'
     },

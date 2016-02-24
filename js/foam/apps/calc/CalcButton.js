@@ -12,7 +12,7 @@
 CLASS({
   name: 'CalcButton',
   package: 'foam.apps.calc',
-  extendsModel: 'foam.graphics.ActionButtonCView',
+  extends: 'foam.graphics.ActionButtonCView',
   properties: [
     {
       name: 'color',
@@ -32,7 +32,7 @@ CLASS({
     },
     {
       name: 'font',
-      defaultValue: '300 28px RobotoDraft'
+      defaultValue: '300 28px Roboto'
     },
     {
       name: 'role',

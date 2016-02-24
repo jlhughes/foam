@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.metrics',
   name: 'PageView',
-  extendsModel: 'foam.metrics.Metric',
+  extends: 'foam.metrics.Metric',
 
   properties: [
     {
@@ -20,7 +20,7 @@ CLASS({
       defaultValue: 'pageview',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'url',
       required: true,
     },

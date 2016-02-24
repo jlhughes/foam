@@ -20,7 +20,7 @@ CLASS({
 
   name: 'DAOProperty',
 
-  extendsModel: 'Property',
+  extends: 'Property',
 
   requires: ['foam.dao.FutureDAO', 'foam.dao.ProxyDAO'],
   imports: ['console'],
@@ -34,7 +34,7 @@ CLASS({
       help: 'The FOAM type of this property.'
     },
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name: 'model',
       help: 'The model for objects stored in the DAO.'
     },
@@ -43,7 +43,7 @@ CLASS({
       defaultValue: 'foam.ui.DAOListView'
     },
     {
-//      model_: 'FunctionProperty',
+//      type: 'Function',
       name: 'onDAOUpdate'
     },
     {
@@ -60,7 +60,7 @@ CLASS({
 
           var proxy = prop.ProxyDAO.create({delegate: delegate});
 
-          this.addPropertyListener(prop.name, function(_, _, _, dao) {
+          this.addPropertyListener(prop.name, function(_, __, ___, dao) {
             if ( future ) {
               future.set(dao);
               future = null;

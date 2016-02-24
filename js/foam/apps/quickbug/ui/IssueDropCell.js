@@ -18,7 +18,7 @@
 CLASS({
   name: 'IssueDropCell',
   package: 'foam.apps.quickbug.ui',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
@@ -29,11 +29,11 @@ CLASS({
       hidden: true
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'props'
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'values'
     }
   ],

@@ -107,19 +107,35 @@ function range(c1, c2) {
   return f;
 }
 
-function literal(str, opt_value) {
-  var f = function(ps) {
-    for ( var i = 0 ; i < str.length ; i++, ps = ps.tail ) {
-      if ( str.charAt(i) !== ps.head ) return undefined;
+var literal = (function() {
+  // Cache of literal parsers, which repeat a lot
+  var cache = {};
+
+  return function(str, opt_value) {
+    if ( ! opt_value && cache[str] ) return cache[str];
+
+    var f;
+    if ( str.length === 1 ) {
+      f = function(ps) {
+      return str === ps.head ? ps.tail.setValue(opt_value || str) : undefined;
+    };
+    } else {
+      f = function(ps) {
+        for ( var i = 0 ; i < str.length ; i++, ps = ps.tail ) {
+          if ( str.charAt(i) !== ps.head ) return undefined;
+        }
+
+        return ps.setValue(opt_value || str);
+      };
     }
 
-    return ps.setValue(opt_value || str);
+    f.toString = function() { return '"' + str + '"'; };
+
+    if ( ! opt_value ) return cache[str] = f;
+
+    return f;
   };
-
-  f.toString = function() { return '"' + str + '"'; };
-
-  return f;
-}
+})();
 
 /**
  * Case-insensitive String literal.
@@ -141,8 +157,16 @@ function literal_ic(str, opt_value) {
   return f;
 }
 
+var alphaChar    = alt(range('a','z'), range('A', 'Z'));
+var alphaNumChar = alt(alphaChar, range('0', '9'));
+var wordChar     = alt(alphaNumChar, '_');
+
 function anyChar(ps) {
   return ps.head ? ps.tail/*.setValue(ps.head)*/ : undefined;
+}
+
+function fail(ps) {
+  return undefined;
 }
 
 function notChar(c) {
@@ -233,7 +257,7 @@ function repeat(p, opt_delim, opt_min, opt_max) {
   return f;
 }
 
-function plus(p) { return repeat(p, undefined, 1); }
+function plus(p, opt_delim) { return repeat(p, opt_delim, 1); }
 
 function noskip(p) {
   return function(ps) {
@@ -248,11 +272,32 @@ function noskip(p) {
 function repeat0(p) {
   p = prep(p);
 
-  return function(ps) {
+  var f = function(ps) {
     var res;
     while ( res = this.parse(p, ps) ) ps = res;
     return ps.setValue('');
   };
+
+  f.toString = function() { return 'repeat0(' + p + ')'; };
+
+  return f;
+}
+
+/** A repeat-at-least-once which doesn't build an array of parsed values. **/
+function plus0(p) {
+  p = prep(p);
+
+  var f = function(ps) {
+    var res;
+    if ( ! (res = this.parse(p, ps)) ) return undefined;
+    ps = res;
+    while ( res = this.parse(p, ps) ) ps = res;
+    return ps.setValue('');
+  };
+
+  f.toString = function() { return 'repeat0(' + p + ')'; };
+
+  return f;
 }
 
 function seq(/* vargs */) {
@@ -318,7 +363,7 @@ function simpleAlt(/* vargs */) {
     return undefined;
   };
 
-  f.toString = function() { return 'alt(' + argsToArray(args).join(' | ') + ')'; };
+  f.toString = function() { return 'simpleAlt(' + argsToArray(args).join(' | ') + ')'; };
 
   return f;
 }
@@ -383,7 +428,7 @@ function alt(/* vargs */) {
     return p;
   }
 
-  return function(ps) {
+  var f = function(ps) {
     if ( parserVersion !== parserVersion_ ) {
       map = {};
       parserVersion = parserVersion_;
@@ -398,6 +443,10 @@ function alt(/* vargs */) {
     */
     return r1;
   };
+
+  f.toString = function() { return 'alt(' + argsToArray(args).join(' | ') + ')'; };
+
+  return f;
 }
 
 /** Takes a parser which returns an array, and converts its result to a String. **/
@@ -508,7 +557,6 @@ var grammar = {
 
   addActions: function(map) {
     for ( var key in map ) this.addAction(key, map[key]);
-
     return this;
   }
 };

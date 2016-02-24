@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.demos',
   name: 'FOAMComponents',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   exports: ['masterModelList', '_DEV_ModelDAO'],
 
@@ -169,7 +169,7 @@ CLASS({
           { name: 'Templates', model: 'Template', instance: null },
           { name: 'Unit Tests', model: 'UnitTest', instance: null },
           { name: 'Issues', model: 'Issue', instance: null },
-          { name: 'Timer', model: 'Timer', instance: null },
+          { name: 'Timer', model: 'foam.util.Timer', instance: null },
           { name: 'Mouse', model: 'foam.input.Mouse', instance: null },
           { name: 'EyeCView', model: 'foam.demos.graphics.EyeCView', instance: null },
           { name: 'EyesCView', model: 'foam.demos.graphics.EyesCView', instance: null },
@@ -299,7 +299,7 @@ CLASS({
       this.SUPER();
       this.space.canvas.font = "bold 14px Arial";
       this.sys.architecture = this.foam;
-      Events.dynamic(
+      Events.dynamicFn(
         function () {
           this.timer.time;
         }.bind(this),
@@ -309,7 +309,7 @@ CLASS({
         }.bind(this)
       );
 
-      Events.dynamic(
+      Events.dynamicFn(
         function() {
           this.sys.selectedX;
           this.sys.selectedY;

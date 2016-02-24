@@ -18,11 +18,15 @@
 CLASS({
   package: 'foam.graphics',
   name:  'Label',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   traits: [
     'foam.patterns.layout.LayoutItemHorizontalTrait',
     'foam.patterns.layout.LayoutItemVerticalTrait'
+  ],
+
+  imports: [
+    'document'
   ],
 
   properties: [
@@ -62,12 +66,12 @@ CLASS({
       defaultValue: 'rgba(0,0,0,0)'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'padding',
       defaultValue: 5
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isShrinkable',
       defaultValue: false,
       documentation: function() {/* Indicates if the minimum size constraint should
@@ -83,17 +87,16 @@ CLASS({
     init: function() {
       this.SUPER();
 
-      Events.dynamic(
-        function() { this.text; this.font; this.canvas; this.padding; }.bind(this),
+      Events.dynamicFn(
+        function() { this.text; this.font; this.padding; }.bind(this),
         this.updatePreferred );
 
       this.updatePreferred();
     },
 
-    paintSelf: function() {
-      this.SUPER();
+    paintSelf: function(c) {
+      this.SUPER(c);
 
-      var c = this.canvas;
       c.save();
 
       c.textBaseline = 'top';
@@ -116,8 +119,10 @@ CLASS({
       name: 'updatePreferred',
       isFramed: false, // preferred size updates propagate up immediately
       code: function() {
-        var c = this.canvas;
-        if ( ! c ) return;
+        // TODO(jacksonic): Mark dirty and calculate the preferred size on next paint if possible.
+        
+        var e = this.document.createElement('canvas');
+        var c = e.getContext('2d');
 
         // width of text
         c.save();

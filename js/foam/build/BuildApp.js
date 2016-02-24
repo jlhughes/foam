@@ -28,7 +28,8 @@ CLASS({
     'foam.dao.File',
     'foam.core.dao.OrDAO',
     'node.dao.ModelFileDAO',
-    'foam.build.WebApplication'
+    'foam.build.WebApplication',
+    'foam.u2.ElementParser'
   ],
   properties: [
     {
@@ -39,7 +40,7 @@ CLASS({
       help: 'Name of the main controller/model to create',
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'coreFiles',
       adapt: function(_, s) { if ( typeof s === 'string' ) return s.split(','); return s; }
     },
@@ -53,60 +54,60 @@ CLASS({
       required: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'precompileTemplates',
       help: 'True to precompile templates of models loaded from the ModelDAO.',
       defaultValue: false
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'includeFoamCSS',
       defaultValue: false
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'icon'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'version'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'resources'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'appcacheManifest',
       defaultValue: false
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'extraFiles',
       help: 'Extra files to both load during the build process, and include in the built image.',
       adapt: function(_, s) { if ( typeof s === 'string' ) return s.split(','); return s; }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'extraBuildFiles',
       help: 'Extra files to load during the build process, but NOT include in the built image.',
       adapt: function(_, s) { if ( typeof s === 'string' ) return s.split(','); return s; }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'extraModels',
       help: 'Extra models to include in the image regardless of if they were arequired or not.',
       adapt: function(_, s) { if ( typeof s === 'string' ) return s.split(','); return s; },
       factory: function() { return ['foam.ui.FoamTagView']; }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'blacklistModels',
       help: 'Models to unconditionally exclude from the image, even if they are listed as required.',
       adapt: function(_, s) { if ( typeof s === 'string' ) return s.split(','); return s; }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'outputManifest',
       defaultValue: false,
       help: 'Set to true to write out a MANIFEST file listing all included models.'
@@ -117,7 +118,7 @@ CLASS({
       defaultValue: 'main.html'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'htmlHeaders'
     },
     {
@@ -192,27 +193,27 @@ CLASS({
       factory: function() { return this.FileDAO.create(); }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'extraClassPaths',
       help: 'List of extra .js hierarchies to load models from.  Paths will be checked in the order given, finally falling back to the main FOAM js/ hierarchy.',
       adapt: function(_, s) { if ( typeof s === 'string' ) return s.split(','); return s; }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'locale'
     },
     // TODO(markdittmer): Remove "i18nMessagesPath" when all build processes
     // no longer require it.
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'i18nMessagesPath'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'i18nTranslationsPath'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'i18nMessages',
       adapt: function(_, s) {
         if (typeof s === 'string') return s.split(',');
@@ -220,7 +221,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'i18nTranslations',
       adapt: function(_, s) {
         if (typeof s === 'string') return s.split(',');
@@ -228,14 +229,14 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'jsFileName',
       getter: function() {
         return 'foam' + (this.locale ? '_' + this.locale : '') + '.js';
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'manifestFileName',
       getter: function() {
         return 'app' + (this.locale ? '_' + this.locale : '') + '.manifest';
@@ -252,12 +253,14 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'delegate'
     }
   ],
   methods: {
     execute: function() {
+      this.ElementParser.create();
+      
       for ( var i = 0; i < this.extraClassPaths.length ; i++ ) {
         this.X.ModelDAO = this.OrDAO.create({
           delegate: this.ModelFileDAO.create({
@@ -332,7 +335,11 @@ CLASS({
           function() {
             file = myfiles[i++];
             if ( Array.isArray(file) ) {
-              if ( ! file[0] || file[1] == IN_NODEJS || file[1] == IN_CHROME_APP )
+              if ( ! file[0] ||
+                   file[1] == IN_NODEJS || // Exclude nodejs files
+                   file[1] == IN_CHROME_APP || // Exclude chrome app files
+                   file[0] == '../js/foam/core/bootstrap/BrowserFileDAO' // Exclude BrowserFileDAO, use more portable IE11ModelDAO
+                 )
                 return false;
               file = file[0];
             }
@@ -373,7 +380,10 @@ CLASS({
           models[model.id] = model;
         }
 
-        model.getAllRequires().forEach(add);
+        // Only CLASS models have requires. Other types (eg. Enums) don't have
+        // requires to process.
+        if ( model.getAllRequires ) model.getAllRequires().forEach(add);
+        else if ( model.model_ ) add(model.model_);
       };
       add(this.controller);
       if ( this.defaultView ) add(this.defaultView);
@@ -394,25 +404,34 @@ CLASS({
 
       for ( var i = 0; i < ids.length; i++ ) {
         var model = models[ids[i]];
-        if ( this.precompileTemplates ) {
+        if (model.model_.id === 'Model') {
+          // Special case for full CLASS models.
+          if ( this.precompileTemplates ) {
 
-          function precompile(model) {
-            for ( var j = 0 ; j < model.templates.length ; j++ ) {
-              var t = model.templates[j];
-              // It's safe to remove leading and trailing whitespace from CSS.
-              if ( t.name === 'CSS' ) t.template = t.template.split('\n').map(function(s) { return s.trim(); }).join('\n');
-              t.code = TemplateUtil.compile(t);
-              t.clearProperty('template');
+            function precompile(model) {
+              for ( var j = 0 ; j < model.templates.length ; j++ ) {
+                var t = model.templates[j];
+                // It's safe to remove leading and trailing whitespace from CSS.
+                if ( t.name === 'CSS' ) t.template = t.template.split('\n').map(function(s) { return s.trim(); }).join('\n');
+                t.code = TemplateUtil.compile(t, model);
+                t.clearProperty('template');
+              }
+              model.models.forEach(precompile)
             }
-            model.models.forEach(precompile)
-          }
 
-          precompile(model);
+            precompile(model);
+          }
+          contents += 'CLASS(';
+          var formatter = this.precompileTemplates ? this.formatter : JSONUtil.compact;
+          contents += formatter.where(NOT_TRANSIENT).stringifyObject(models[ids[i]], 'Model');
+          contents += ')\n';
+        } else {
+          // Simple case for other kinds of models (eg. Enums).
+          console.log('Outputting ' + model.id + ' which is of model ' + model.model_.id);
+          contents += '__DATA(';
+          contents += JSONUtil.compact.where(NOT_TRANSIENT).stringifyObject(model);
+          contents += ')\n';
         }
-        contents += 'CLASS(';
-        var formatter = this.precompileTemplates ? this.formatter : JSONUtil.compact;
-        contents += formatter.where(NOT_TRANSIENT).stringifyObject(models[ids[i]], 'Model');
-        contents += ')\n';
       }
 
       ret(contents);
@@ -488,7 +507,7 @@ CLASS({
     }
   },
   templates: [
-    function HTML() {/*<html<% if ( this.appcacheManifest ) { %> manifest="%%getManifestFileName"<% } %>><head><meta charset="utf-8"><%= this.htmlHeaders.join('') %><% if ( this.includeFoamCSS ) { %><link rel="stylesheet" type="text/css" href="foam.css"/><% } %><% if ( this.icon ) { %><link rel="icon" sizes="128x128" href="<%= this.icon %>"/><% } %><script src="%%jsFileName"></script></head><body><foam model="<%= this.controller %>"<% if ( this.defaultView ) { %> view="<%= this.defaultView %>"<% } %>></foam></body></html>*/},
+    function HTML() {/*<html<% if ( this.appcacheManifest ) { %> manifest="app.manifest"<% } %>><head><meta charset="utf-8"><%= this.htmlHeaders.join('') %><% if ( this.includeFoamCSS ) { %><link rel="stylesheet" type="text/css" href="foam.css"/><% } %><% if ( this.icon ) { %><link rel="icon" sizes="128x128" href="<%= this.icon %>"/><% } %><script src="%%jsFileName"></script></head><body style="margin:0px"><foam model="<%= this.controller %>"<% if ( this.defaultView ) { %> view="<%= this.defaultView %>"<% } %>></foam></body></html>*/},
     function MANIFEST() {/*CACHE MANIFEST
 # version <%= this.version %>
 <% if ( this.appDefinition ) { %># hash: <%= this.appDefinition.hashCode() %><% } %>

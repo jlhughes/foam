@@ -16,10 +16,10 @@
  */
 
 CLASS({
-  name: 'MenuView',
   package: 'com.google.mail',
-  extendsModel: 'foam.ui.View',
-  
+  name: 'MenuView',
+  extends: 'foam.ui.View',
+
   traits: ['foam.ui.layout.PositionedDOMViewTrait'],
   requires: [
     'com.google.mail.MenuLabelCitationView',

@@ -18,12 +18,11 @@
 CLASS({
   package: 'foam.graphics.webgl.matrix',
   name: 'StackMatrix4',
-  extendsModel: 'foam.graphics.webgl.matrix.Matrix4',
+  extends: 'foam.graphics.webgl.matrix.Matrix4',
 
   properties: [
     {
       name: 'stack',
-      type: 'Array[Matrix4]',
       help: 'The stack of matrices to multiply.',
       preSet: function(old, nu) {
         if ( old && old.length ) {

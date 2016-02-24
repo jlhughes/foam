@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'DestructiveDataView',
-  extendsModel: 'foam.ui.BaseView',
+  extends: 'foam.ui.BaseView',
 
   requires: [ 'SimpleValue' ],
 
@@ -52,7 +52,7 @@ CLASS({
     },
     {
       name: 'dataLinkedChildren',
-      type: 'Array[foam.patterns.ChildTreeTrait]',
+      //type: 'Array[foam.patterns.ChildTreeTrait]',
       factory: function() { return []; }
     }
   ],

@@ -91,7 +91,7 @@ return JSONUtil.arrayToObjArray(X, [
   {
     name: 'Fading Circles',
     model: 'foam.demos.graphics.FadingCircles',
-    description: 'An reactive-programming animation which demonstrates the use of Events.dynamic() and Movement.animate().',
+    description: 'An reactive-programming animation which demonstrates the use of Events.dynamicFn() and Movement.animate().',
     keywords: ['animation'],
     image: 'FadingCircles.png'
   },
@@ -201,7 +201,7 @@ return JSONUtil.arrayToObjArray(X, [
   {
     name: 'Complements',
     model: 'foam.demos.graphics.Complements',
-    description: 'An animated colour wheel.  Shows use of Events.dynamic().<br>Ported from the <a href="http://elm-lang.org/edit/examples/Intermediate/Complements.elm">Elm demo</a>.',
+    description: 'An animated colour wheel.  Shows use of Events.dynamicFn().<br>Ported from the <a href="http://elm-lang.org/edit/examples/Intermediate/Complements.elm">Elm demo</a>.',
     keywords: ['animation'],
     image: 'Complements.png'
   },
@@ -211,6 +211,13 @@ return JSONUtil.arrayToObjArray(X, [
     description: 'Mesmerizing animation.',
     keywords: ['animation'],
     image: 'Complements2a.png'
+  },
+  {
+    name: 'Complements2b',
+    model: 'foam.demos.graphics.Complements2b',
+    description: 'Mesmerizing animation with shadowBlur.',
+    keywords: ['animation'],
+    image: 'Complements2b.png'
   },
   {
     name: 'Spin',
@@ -380,6 +387,13 @@ return JSONUtil.arrayToObjArray(X, [
     image: 'Snake.png'
   },
   {
+    name: 'Tudor Wall',
+    model: 'foam.demos.graphics.TudorWall',
+    description: 'An animated rainbow coloured wall.',
+    keywords: [ 'animation', 'graphics' ],
+    image: 'TudorWall.png'
+  },
+  {
     name: 'Task Manager',
     model: 'foam.apps.ctm.TaskManager',
     description: 'Prototype Chrome Task Manager that adds Material Design, search, and graphing.',
@@ -389,11 +403,19 @@ return JSONUtil.arrayToObjArray(X, [
   {
     name: 'Robot',
     xxxmodel: 'foam.demos.supersnake.Robot',
-    path: '/index.html?model=foam.demos.supersnake.Robot&x=100&scaleX=3&scaleY=3&width=1000&height=10000',
+    path: '../index.html?model=foam.demos.supersnake.Robot&x=200&y=200&scaleX=3&scaleY=3&width=1000&height=10000',
     src: '../js/foam/demos/supersnake/Robot.js',
     description: 'Simple animated robot written by an eleven year old.',
     keywords: [ 'graphics', 'animation' ],
     image: 'Robot.png'
+  },
+  {
+    name: 'FOAM Presentation',
+    model: 'foam.demos.empire.Preso3',
+    description: 'Presentation on FOAM written in FOAM. Press the + button to see all 25 slides run at once (which includes 50k objects, 20k one and two-way data bindings, and 7k animated objects).',
+    src: '../js/foam/demos/empire/Preso3_toHTML.ft',
+    keywords: [ 'animation', 'graphics', 'game', 'presentation', 'DAO', 'database', 'search' ],
+    image: 'Preso3.png'
   },
   {
     name: 'FOAM Demo Catalog',

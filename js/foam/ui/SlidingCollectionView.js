@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'SlidingCollectionView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   traits: ['foam.ui.layout.PositionedDOMViewTrait'],
 
   requires: [
@@ -22,22 +22,22 @@ CLASS({
 
   properties: [
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'arr',
       lazyFactory: function() { return []; }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'realIdx',
       defaultValue: -1
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'uiIdx',
       defaultValue: -1
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'queuedListeners',
       lazyFactory: function() { return []; }
     },
@@ -65,7 +65,7 @@ CLASS({
     init: function() {
       this.SUPER();
       var self = this;
-      this.X.dynamic(function() { self.width; self.height; }, this.layout);
+      this.X.dynamicFn(function() { self.width; self.height; }, this.layout);
     },
     maybeWrapView: function(view) {
       return view.model_.Z ? view : this.FloatingView.create({ view: view });

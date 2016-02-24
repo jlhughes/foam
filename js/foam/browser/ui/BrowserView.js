@@ -17,7 +17,7 @@
 CLASS({
   package: 'foam.browser.ui',
   name: 'BrowserView',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
   requires: [
     'foam.browser.BrowserConfig',
     'foam.browser.ui.StackView',
@@ -41,7 +41,7 @@ CLASS({
   models: [
     {
       name: 'InnerBrowserView',
-      extendsModel: 'foam.ui.DetailView',
+      extends: 'foam.ui.DetailView',
       requires: [
         'foam.ui.md.FlatButton',
         'foam.ui.PopupChoiceView',
@@ -51,9 +51,10 @@ CLASS({
       imports: [
         'document',
         'stack',
+        'selection$',
       ],
       exports: [
-        'selection$',
+        'selection',
       ],
       properties: [
         {
@@ -62,6 +63,9 @@ CLASS({
             if (old) old.unsubscribe(old.MENU_CLOSE, this.onMenuTouch);
             if (nu) nu.subscribe(nu.MENU_CLOSE, this.onMenuTouch);
             this.onMenuTouch();
+
+            old.dao && old.dao.unlisten(this);
+            nu.dao && nu.dao.listen(this);
           },
         },
         {
@@ -72,16 +76,21 @@ CLASS({
           name: 'selection',
           documentation: 'Used in the list view.',
           postSet: function(old, nu) {
-            if (nu) {
+            if (nu && this.data && this.data.dao ) {
               this.data.dao.find(nu.id, {
                 put: function(obj) {
                   this.stack.pushView(this.data.detailView({
                     data: obj,
+                    controllerMode: 'update',
                     innerView: this.data.innerDetailView
                   }, this.Y.sub({ dao: this.data.dao })));
+                }.bind(this),
+                error: function() {
+                  this.selection = null;
                 }.bind(this)
               });
-              this.selection = '';
+            } else {
+              this.stack.popChildViews();
             }
           }
         },
@@ -152,15 +161,15 @@ CLASS({
         },
         {
           name: 'minWidth',
-          getter: function() { return this.listView_.minWidth; }
+          getter: function() { return this.listView_.minWidth || 300; }
         },
         {
           name: 'preferredWidth',
-          getter: function() { return this.listView_.preferredWidth; }
+          getter: function() { return this.listView_.preferredWidth || 400; }
         },
         {
           name: 'maxWidth',
-          getter: function() { return this.listView_.maxWidth; }
+          getter: function() { return this.listView_.maxWidth || 1280; }
         },
         {
           name: '$menuContainer',
@@ -191,7 +200,15 @@ CLASS({
           if ( menuBodyElem ) this.$menuBody.removeEventListener('transitionend', this.onMenuClosed);
           var menuElem = this.$menuContainer;
           if ( menuElem ) menuElem.outerHTML = "";
-        }
+        },
+
+        function remove(selection) {
+          /* when dao items change, make sure we don't leave the view open */
+          if ( this.selection && this.selection.id && this.selection.id == selection.id ) {
+            //this.listView_ && this.listView_.stack && this.listView_.stack.popView();
+            this.selection = null;
+          }
+        },
       ],
 
       actions: [
@@ -243,8 +260,19 @@ CLASS({
         {
           name: 'onMenuClosed',
           code: function(evt) {
-            if ( evt.propertyName && ! this.menuOpen ) this.updateHTML();
+            if ( evt.propertyName && ! this.menuOpen ) {
+              this.selection = null;
+              this.updateHTML();
+            }
           },
+        },
+        {
+          name: 'onViewDestroyed',
+          code: function(sender, topic, view) {
+            if (view.data && this.selection && view.data.id == this.selection.id) {
+              this.selection = null;
+            }
+          }
         },
       ],
       templates: [
@@ -367,6 +395,7 @@ CLASS({
           <div id="<%= this.id %>" <%= this.cssClassAttr() %>>
             <style>
               .browser-header-color { background-color: <%= this.data.headerColor %>; }
+              .browser-body-color { background-color: <%= this.data.backgroundColor %>; }
             </style>
 
             <div id="<%= this.id %>-header" class="browser-header browser-header-color">
@@ -400,7 +429,7 @@ CLASS({
                   !self.searchMode);
               if ( self.searchMode ) self.searchView.focus();
             }); %>
-            <div class="browser-body">
+            <div class="browser-body browser-body-color">
               <%= this.listView_ = this.data.listView({ data$: this.data.filteredDAO$ }, this.Y) %>
             </div>
             <% if (this.data.showAdd) { %>
@@ -480,7 +509,7 @@ CLASS({
     function initHTML() {
       this.SUPER();
       this.stack.initHTML();
-      this.stack.pushView_(-1, this.InnerBrowserView.create({
+      this.stack.pushView(this.InnerBrowserView.create({
         parent: this,
         data$: this.data$
       }, this.Y));

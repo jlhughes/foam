@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.core.dao',
   name: 'DelayedPutDAO',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   help: function() {/*
    Apply this decorator to a DAO to enforce a delay between put operations.
@@ -24,12 +24,12 @@ CLASS({
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'rowDelay',
       defaultValue: 500,
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'onPut',
       defaultValue: function() {
         throw 'DelayedPutDAO: Put before merged listener initialized';
@@ -46,7 +46,7 @@ CLASS({
 
   methods: [
     function init() {
-      this.X.dynamic(
+      this.X.dynamicFn(
           function() { this.rowDelay; }.bind(this),
           function() {
             this.onPut = EventService.merged(

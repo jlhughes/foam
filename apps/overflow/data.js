@@ -47,7 +47,7 @@ var questions = JSONUtil.arrayToObjArray(X, [
   {
     id: 2,
     title: 'My dynamic function which depends on multiple values isn\'t updating properly.',
-    labels: [ 'action', 'dynamic', 'reactive' ],
+    labels: [ 'action', 'dynamicFn', 'reactive' ],
     question: function() {/*
     */},
     answer: function() {/*
@@ -266,13 +266,13 @@ MyTableDAO.
 Output:
 <code>
 {
-   "model_": "MyTable",
+   model_: "MyTable",
    "id": 139,
    "columnA": "ABC",
    "columnB": "123thd"
 }
 {
-   "model_": "MyTable",
+   model_: "MyTable",
    "id": 140,
    "columnA": "DFT",
    "columnB": "123thd"
@@ -310,7 +310,7 @@ CLASS({
     { name: 'id' },
     { name: 'name' },
     { name: 'sex', defaultValue: 'M' },
-    { model_: 'IntProperty', name: 'age' }
+    { type: 'Int', name: 'age' }
   ]
 });
 
@@ -339,21 +339,21 @@ dao.removeAll();
 Output:
 <code>
 {
-   "model_": "Person",
+   model_: "Person",
    "id": "8",
    "name": "Allan",
    "sex": "M",
    "age": 26
 }
 {
-   "model_": "Person",
+   model_: "Person",
    "id": "6",
    "name": "Daniel",
    "sex": "F",
    "age": 29
 }
 {
-   "model_": "Person",
+   model_: "Person",
    "id": "5",
    "name": "John",
    "sex": "M",
@@ -445,8 +445,8 @@ CLASS({
 
 CLASS({
   name: 'Bar',
-  extendsModel: 'Foo',
-  properties: [ { model_: 'IntProperty', name: 'counter' } ],
+  extends: 'Foo',
+  properties: [ { type: 'Int', name: 'counter' } ],
   methods: {
     say: function() {
       this.SUPER();

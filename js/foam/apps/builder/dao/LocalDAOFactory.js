@@ -13,7 +13,7 @@ CLASS({
   name: 'LocalDAOFactory',
   package: 'foam.apps.builder.dao',
 
-  extendsModel: 'foam.apps.builder.dao.DAOFactory',
+  extends: 'foam.apps.builder.dao.DAOFactory',
 
   label: 'Simple local storage on your device',
 
@@ -32,7 +32,7 @@ CLASS({
       name: 'label',
     },
     {
-      model_: 'FactoryProperty',
+      type: 'Factory',
       hidden: true,
       name: 'factory', //TODO(jacksonic): Should be named .create, but can't until Model.create is moved
       defaultValue: function(name, model, X) {

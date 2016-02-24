@@ -18,14 +18,13 @@
 CLASS({
   package: 'foam.ui.search',
   name: 'GroupByMultiSearchView',
-  extendsModel: 'foam.ui.search.GroupBySearchView',
+  extends: 'foam.ui.search.GroupBySearchView',
 
   requires: [ 'foam.ui.MultiChoiceView' ],
 
   properties: [
     {
       name: 'view',
-      type: 'view',
       factory: function() {
         return this.MultiChoiceView.create({size:this.size, cssClass: 'foamSearchChoiceView'});
       }
@@ -72,7 +71,7 @@ CLASS({
     {
       name: 'updatePredicate',
       isFramed: true,
-      code: function(_, _, _, choices) {
+      code: function(_, __, ___, choices) {
         if ( choices[''] ) { this.view.data = {}; return; }
         var keys = Object.keys(choices);
         this.predicate = keys.length ? this.op(this.property, keys) : TRUE ;

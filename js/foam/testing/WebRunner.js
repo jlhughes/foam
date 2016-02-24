@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.testing',
   name: 'WebRunner',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   requires: [
     'foam.core.bootstrap.BrowserFileDAO',
     'foam.core.dao.OrDAO',
@@ -30,7 +30,7 @@ CLASS({
   ],
   properties: [
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'targets',
       adapt: function(_, a) {
         if ( typeof a === 'string' ) return a.split(',');
@@ -45,11 +45,11 @@ CLASS({
       },
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'allPassed'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'finished',
       defaultValue: false
     },
@@ -129,7 +129,7 @@ CLASS({
                         (model.tests[i].hasFailed() ? 'failing' : 'passing') + '">';
                     s += '<div class="test-result-header">Test Case: ' +
                         model.tests[i].name + '</div>';
-                    s += model.tests[i].results;
+                    s += model.tests[i].results.replace(/\n/g, '<br/>');
                     s += '</div>';
                     this.log(s);
                   }

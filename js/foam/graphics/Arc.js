@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.graphics',
   name:  'Arc',
 
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   properties: [
     {
@@ -52,8 +52,7 @@ CLASS({
   ],
 
   methods: [
-    function paintSelf() {
-      var c = this.canvas;
+    function paintSelf(c) {
       if ( ! c ) return;
 
       c.globalAlpha = this.alpha;

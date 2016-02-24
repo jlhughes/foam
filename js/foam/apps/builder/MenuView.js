@@ -12,25 +12,28 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'MenuView',
-  extendsModel: 'foam.ui.SimpleView',
-  traits: [
-  ],
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.ui.DAOListView',
-  ],
-  imports: [
-  ],
-  exports: [
+    'foam.ui.ImageView',
+    'foam.ui.md.FlatButton',
   ],
 
   properties: [
     {
-      model_:'ViewFactoryProperty',
+      name: 'data',
+    },
+    {
+      type: 'ViewFactory',
       name: 'selectionList',
     },
     {
-      model_:'ViewFactoryProperty',
+      type: 'ViewFactory',
+      name: 'accountList',
+    },
+    {
+      type: 'ViewFactory',
       name: 'viewList',
     },
   ],
@@ -42,12 +45,22 @@ CLASS({
           <content>
             <icons>
               <wrench><i class="material-icons-extended" style="font-size: 90px;color:#fff;">build</i></wrench>
-              <display><i class="material-icons-extended" style="font-size: 225px;color:#000">campaign_display</i></display>
+              <display><i class="material-icons-extended" style="font-size: 225px;color:#000">campaign_show</i></display>
               <dot></dot>
             </icons>
           </content>
         </logo>
         %%selectionList()
+        <% if ( this.accountList ) { %>
+          <hr />
+          %%accountList()
+          <div class="flush-right">
+            $$addAccount{
+              model_: 'foam.ui.md.FlatButton',
+              displayMode: 'ICON_ONLY',
+            }
+          </div>
+        <% } %>
         <% if ( this.viewList ) { %>
           <hr />
           %%viewList()
@@ -86,11 +99,15 @@ CLASS({
         position: absolute;
         transform: rotate(180deg);
         transform-origin: 15px 15px;
-        animation: torque 300ms ease 0s 5 alternate;
+        animation: torque 600ms ease 3s 2;
         top: 55px;
         left: 55px;
       }
-      @keyframes torque { from { transform: rotate(120deg); } to { transform: rotate(180deg); }  }
+      @keyframes torque {
+        0% { transform: rotate(180deg); }
+        50% { transform: rotate(120deg); }
+        100% { transform: rotate(180deg); }
+      }
 
       logo dot {
         display: block;
@@ -106,9 +123,17 @@ CLASS({
 
       logo display {
         display: block;
-        padding-top: 4px;
-        padding-left: 25px;
+        padding-top: 8px;
+        padding-left: 32px;
       }
+
+      .flush-right {
+        display: flex;
+        justify-content: flex-end;
+        color: #02A8F3;
+      }
+
+      .profile-image { border-radius: 50%; }
     */},
   ],
 });

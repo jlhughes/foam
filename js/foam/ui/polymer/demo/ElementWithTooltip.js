@@ -19,16 +19,16 @@ CLASS({
   name: 'ElementWithTooltip',
   package: 'foam.ui.polymer.demo',
 
-  extendsModel: 'foam.ui.polymer.View',
+  extends: 'foam.ui.polymer.View',
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'tagName',
       defaultValue: 'div'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'data',
       defaultValue: 'Text with tooltip'
     },

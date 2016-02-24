@@ -18,7 +18,7 @@
 CLASS({
   name: 'AnalyticsDAO',
   package: 'com.google.analytics',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
   requires: [
     'Binding',
     'PersistentContext',
@@ -41,33 +41,33 @@ CLASS({
       ],
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'debug',
       defaultValue: false
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'propertyId'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'appName'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'appId'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'appVersion'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'endpoint',
       defaultValue: 'http://www.google-analytics.com/collect'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'debugEndpoint',
       defaultValue: 'https://www.google-analytics.com/debug/collect'
     },
@@ -129,7 +129,7 @@ CLASS({
   methods: [
     function init() {
       this.SUPER();
-      this.X.dynamic(
+      this.X.dynamicFn(
           function() { this.debug; this.endpoint; this.debugEndpoint; }.bind(this),
           function() {
             this.metricsFutureDAO.future(function(metricsDAO) {

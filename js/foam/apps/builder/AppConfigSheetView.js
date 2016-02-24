@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'AppConfigSheetView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   imports: [
     'popup',
@@ -28,7 +28,7 @@ CLASS({
       },
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'innerView',
       defaultValue: 'foam.ui.md.DetailView'
     },

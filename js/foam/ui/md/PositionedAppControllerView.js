@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui.md',
   name: 'PositionedAppControllerView',
   traits: ['foam.ui.layout.PositionedDOMViewTrait'],
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [ 'foam.graphics.CanvasScrollView' ],
 
@@ -27,7 +27,7 @@ CLASS({
     init: function() {
       this.SUPER();
       var self = this;
-      this.X.dynamic(function() { self.width; self.height; }, this.layout);
+      this.X.dynamicFn(function() { self.width; self.height; }, this.layout);
     },
     toInnerHTML: function() {
       this.destroy();

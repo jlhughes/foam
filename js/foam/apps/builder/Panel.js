@@ -12,12 +12,12 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'Panel',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   traits: [ 'foam.apps.builder.ZIndexTrait' ],
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'zIndex',
       defaultValue: 2,
     },
@@ -36,7 +36,7 @@ CLASS({
       ],
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'innerView',
       defaultValue: 'foam.ui.md.DetailView'
     },

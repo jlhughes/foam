@@ -16,10 +16,9 @@
  */
 
 CLASS({
-  "model_": "Model",
   "package": "foam.lib.email",
   "name": "ConversationAction",
-  "extendsModel": "Action",
+  "extends": "Action",
   "properties": [
     {
       "name": "name",
@@ -36,7 +35,7 @@ CLASS({
       "defaultValueFn": function () { return this.delegate.help; },
     },
     {
-      "model_": "ModelProperty",
+      type: 'Model',
       "name": "delegate"
     },
     {

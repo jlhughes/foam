@@ -18,12 +18,14 @@
 CLASS({
   package: 'foam.demos',
   name: 'PageView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
+
   requires: [
     'foam.ui.navigation.PageView',
     'foam.ui.navigation.TopToolbar',
-    'foam.ui.StaticHTML',
+    'foam.ui.StaticHTML'
   ],
+
   templates: [
     function toHTML() {/*
       <%=
@@ -40,5 +42,5 @@ CLASS({
         })
       %>
     */}
-  ],
+  ]
 });

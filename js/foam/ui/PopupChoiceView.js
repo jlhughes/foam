@@ -20,7 +20,7 @@ CLASS({
   package: 'foam.ui',
   name: 'PopupChoiceView',
 
-  extendsModel: 'foam.ui.AbstractChoiceView',
+  extends: 'foam.ui.AbstractChoiceView',
 
   requires: ['foam.ui.ChoiceListView'],
 
@@ -42,16 +42,16 @@ CLASS({
       defaultValue: 'popupChoiceView'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showValue'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'opened',
       transient: true
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'updateListener'
     },
     {

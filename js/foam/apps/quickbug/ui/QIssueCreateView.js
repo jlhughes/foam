@@ -18,7 +18,7 @@
 CLASS({
   name: 'QIssueCreateView',
   package: 'foam.apps.quickbug.ui',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.ui.ActionButton',
@@ -40,7 +40,7 @@ CLASS({
       factory: function() { return this.X.QIssue; }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'saving',
       defaultValue: false
     },

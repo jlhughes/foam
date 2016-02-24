@@ -18,20 +18,24 @@
 CLASS({
   package: 'com.google.watlobby',
   name: 'TopicDetailView',
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
   methods: [
     function initHTML() {
       this.SUPER();
       this.data.model$.addListener(this.onModelChange);
       this.onModelChange();
+
     }
   ],
   listeners: [
     {
       name: 'onModelChange',
-      code: function(_, _, _, model) {
-        this.videoView.$.style.display = model === 'Video' ? 'block' : 'none'; 
-        this.textView.$.style.display = model !== 'Video' ? 'block' : 'none'; 
+      isFramed: true,
+      code: function() {
+        var model = this.data.model;
+        this.videoView.$.style.display = model === 'Video' ? 'block' : 'none';
+        this.textView.$.style.display  = ( model === 'Video' || model === 'Background' || model === 'Redirect' ) ? 'none' : 'block';
+        this.redirectView.$.style.display  = model === 'Redirect' ? 'block' : 'none';
       }
     }
   ]

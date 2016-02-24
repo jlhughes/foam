@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.demos.physics',
   name: 'Bubbles',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [
     'foam.demos.physics.PhysicalCircle',
@@ -36,9 +36,6 @@ CLASS({
     [ 'background', '#ccf' ],
     { name: 'collider',   factory: function() {
       return this.Collider.create();
-    }},
-    { name: 'anchor',     factory: function() {
-      return this.PhysicalCircle.create({r: 9, x: 1400, y: 400});
     }}
   ],
 
@@ -50,8 +47,6 @@ CLASS({
         this.timer = this.Timer.create();
         this.timer.start();
       }
-
-      this.addChild(this.anchor);
 
       var N = this.n;
 
@@ -115,7 +110,7 @@ CLASS({
     },
 
     bounceOnWalls: function (c, w, h) {
-      Events.dynamic(function() { c.x; c.y; }, function() {
+      Events.dynamicFn(function() { c.x; c.y; }, function() {
         var r = c.r + c.borderWidth;
         if ( c.x < r ) c.vx = Math.abs(c.vx);
         if ( c.x > w - r ) c.vx = -Math.abs(c.vx);

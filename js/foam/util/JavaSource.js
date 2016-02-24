@@ -36,6 +36,10 @@ CLASS({
     },
 
     function generate(model) {
+      if ( model.javaSource ) {
+        return model.javaSource();
+      }
+
       model = this.prepModel_(model);
 
       var filter = function(m) {
@@ -59,9 +63,9 @@ CLASS({
   var className       = this.javaClassName;
   var parentClassName = 'AbstractFObject';
   var parentModel = '';
-  if (this.extendsModel) {
-    parentClassName = this.extendsModel;
-    parentModel = this.extendsModel + '.MODEL(), ';
+  if (this.extends) {
+    parentClassName = this.extends;
+    parentModel = this.extends + '.MODEL(), ';
   }
   if ( GLOBAL[parentClassName] && GLOBAL[parentClassName].abstract )
     parentClassName = 'Abstract' + parentClassName;
@@ -77,15 +81,29 @@ public<%= this.abstract ? ' abstract' : '' %> class <%= className %>
     extends <%= parentClassName %> {
 <% for ( var key in this.properties ) {
   var prop = this.properties[key];
+  if ( prop.labels && prop.labels.indexOf('compiletime') != -1  )
+    continue;
   javaSource.propertySource.call(this, out, prop);
-} %>
-<% if (this.relationships && this.relationships.length) {
+}
+if (this.relationships && this.relationships.length) {
   for ( var i = 0; i < this.relationships.length; i++) {
     var rel = this.relationships[i];
     javaSource.relationshipSource.call(this, out, rel);
   }
-} %>
-final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] {<% var allProps = this.getRuntimeProperties(); for (var i = 0; i < allProps.length; i++) { var prop = allProps[i]; %> <%= constantize(prop.name) %>,<% } %>} , new Relationship[] {<% if (this.relationships && this.relationships.length) { for (var i = 0; i < this.relationships.length; i++) { %> <%= constantize(this.relationships[i].name) %>, <% } } %> }) {
+}
+
+var allProps = this.getRuntimeProperties();
+allProps = allProps.filter(function(m) {
+  if ( m.labels &&
+        ( m.labels.indexOf('java') == -1 ||
+          m.labels.indexOf("compiletime") != -1 ) ) {
+    return false;
+  }
+  return true;
+});
+
+ %>
+final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] {<% for (var i = 0; i < allProps.length; i++) { var prop = allProps[i]; %> <%= constantize(prop.name) %>,<% } %>} , new Relationship[] {<% if (this.relationships && this.relationships.length) { for (var i = 0; i < this.relationships.length; i++) { %> <%= constantize(this.relationships[i].name) %>, <% } } %> }) {
     public String getName() { return "<%= this.id %>"; }
     public String getShortName() { return "<%= this.name %>"; }
     public String getLabel() { return "<%= this.label %>"; }
@@ -108,19 +126,6 @@ final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] 
     return hash;
   }
 
-  public int compareTo(Object obj) {
-    if ( obj == this ) return 0;
-    if ( obj == null ) return 1;
-
-    <%= this.name %> other = (<%= this.name %>) obj;
-
-    int cmp;
-<% for (var i = 0; i < allProps.length; i++) { var prop = allProps[i]; %>
-    if ( ( cmp = compare(get<%= prop.name.capitalize() %>(), other.get<%= prop.name.capitalize() %>()) ) != 0 ) return cmp;<% } %>
-
-    return 0;
-  }
-
   public StringBuilder append(StringBuilder b) {
     return b<% for (var i = 0; i < allProps.length; i++) { var prop = allProps[i]; %>
         .append("<%= prop.name %>=").append(get<%= prop.name.capitalize() %>())<%= i < allProps.length - 1 ? '.append(", ")' : '' %><% } %>;
@@ -131,6 +136,19 @@ final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] 
 <% for (var i = 0; i < allProps.length; i++) { var prop = allProps[i]; %>
     c.set<%= prop.name.capitalize() %>(get<%= prop.name.capitalize() %>());<% } %>
     return c;
+  }
+
+  public <%= className %>() {
+<%
+for (var i = 0; i < allProps.length; i++) {
+  var prop = allProps[i];
+  if (prop.javaFactory) {
+%>
+    get<%= prop.name.capitalize() %>();
+<%
+  }
+}
+%>
   }
 <%
   function feature(f) {
@@ -150,6 +168,7 @@ final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] 
       return name === 'int'  ? 'Integer' :
           name === 'double'  ? 'Double'  :
           name === 'float'   ? 'Float'   :
+          name === 'long'    ? 'Long'   :
           name === 'boolean' ? 'Boolean' : name;
     };
 
@@ -198,6 +217,14 @@ final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] 
       }
       extraText += '  public void initChoices_() { choices_ = Arrays.asList(' + choices.join(', ') + '); }\u000a  ';
       extraText += '  public int getType() { return Property.TYPE_STRING; }\u000a  ';
+    } else if (EnumProperty.isInstance(prop)) {
+      wrapperType = toWrapperClass(rawType);
+      genericPropertyType = 'Property<' + wrapperType + '>';
+      baseClass = 'AbstractEnumProperty<' + wrapperType + '>';
+    } else if (FObjectProperty.isInstance(prop)) {
+      wrapperType = toWrapperClass(rawType);
+      genericPropertyType = 'Property<' + wrapperType + '>';
+      baseClass = 'AbstractObjectProperty<' + wrapperType + '>';
     } else {
       wrapperType = toWrapperClass(rawType);
       genericPropertyType = 'Property<' + wrapperType + '>';
@@ -214,28 +241,84 @@ final static Model model__ = new AbstractModel(<%= parentModel %>new Property[] 
     public String getLabel() { return "<%= prop.label %>"; }
     public <%= wrapperType %> get(Object o) { return ((<%= this.name %>) o).get<%= prop.name.capitalize() %>(); }
     public void set(Object o, <%= wrapperType %> v) { ((<%= this.name %>) o).set<%= prop.name.capitalize() %>(v); }
-    public int compare(Object o1, Object o2) { return compareValues(((<%= this.name%>)o1).<%= prop.name %>_, ((<%= this.name%>)o2).<%= prop.name %>_); }
+<% if (prop.type == 'Enum') {
+     var values = this.X.lookup(prop.enum).values;
+     var choices = [];
+     values.forEach(function(value) {
+       choices.push('new LabeledItem<' + wrapperType + '>("' +
+           value.label + '", ' + wrapperType + '.' + value.name + ')');
+     });
+%>
+    protected void initChoices_() {
+      choices_ = Arrays.asList(<%= choices.join(',') %>);
+    }
+<% } %>
 <%= extraText %>};
 
+<% var propName = prop.name.capitalize() %>
+<% var propFactory = prop.javaFactory || prop.javaLazyFactory %>
+
+  protected boolean _<%= prop.name %>_inited_ = false;
   protected <%= rawType %> <%= prop.name %>_;
 
-  public <%= rawType %> get<%= prop.name.capitalize() %>() {
+  public <%= rawType %> get<%= propName %>() {
+    if (_<%= prop.name %>_inited_) {
+      return <%= prop.name %>_;
+    }
+
+<% if (prop.javaDefaultValue) { %>
+    return <%= prop.javaDefaultValue %>;
+<% } else if (propFactory) { %>
+    set<%= propName %>(_<%= propName %>_factory());
     return <%= prop.name %>_;
+<% } else { %>
+    return <%= prop.name %>_;
+<% } %>
   }
+
+<% if (propFactory) { %>
+  private <%= rawType %> _<%= propName %>_factory() { <%= propFactory %> }
+<% } %>
+
 <% if (asDAO) { %>
   DAO <%= prop.name %>DAO_;
-  public DAO get<%= prop.name.capitalize() %>AsDAO() {
+  public DAO get<%= propName %>AsDAO() {
     if (<%= prop.name %>DAO_ == null) <%= prop.name %>DAO_ = new ArrayDAO(<%= prop.subType %>.MODEL(), <%= prop.name %>_);
     return <%= prop.name %>DAO_;
   }
 <% } %>
-  public void set<%= prop.name.capitalize() %>(<%= rawType, ' ', prop.name %>) {
+
+  private <%= rawType %> _<%= propName %>_adapt_(<%= rawType %> oldValue, <%= rawType %> newValue) {
+<% if ( prop.javaAdapt ) { %><%= prop.javaAdapt %><% } else { %>    return newValue; <% } %>
+  }
+  private <%= rawType %> _<%= propName %>_preSet_(<%= rawType %> oldValue, <%= rawType %> newValue) {
+<% if ( prop.javaPreSet ) { %><%= prop.javaPreSet %><% } else { %>    return newValue; <% } %>
+  }
+  private void _<%= propName %>_postSet_(<%= rawType %> oldValue, <%= rawType %> newValue) {
+<%= prop.javaPostSet %>
+  }
+  protected <%= rawType %> <%= propName %>_adapt(<%= rawType %> oldValue, <%= rawType %> newValue) {
+    return <% if ( this.extends ) { %>super.<%= propName %>_adapt(oldValue, <% }
+%>_<%= propName %>_adapt_(oldValue, newValue)<% if ( this.extends ) { %>)<% } %>;
+  }
+  protected <%= rawType %> <%= propName %>_preSet(<%= rawType %> oldValue, <%= rawType %> newValue) {
+    return <% if ( this.extends ) { %>super.<%= propName %>_preSet(oldValue, <% }
+%>_<%= propName %>_preSet_(oldValue, newValue)<% if ( this.extends ) { %>)<% } %>;
+  }
+  protected void <%= propName %>_postSet(<%= rawType %> oldValue, <%= rawType %> newValue) {
+<% if ( this.extends ) { %>    super.<%= propName %>_postSet(oldValue, newValue);
+<% } %>    _<%= propName %>_postSet_(oldValue, newValue);
+  }
+
+  public void set<%= propName %>(<%= rawType, ' ', prop.name %>) {
     if (isFrozen()) throw new FrozenObjectModificationException();
     <%= rawType %> oldValue = <%= prop.name %>_;
-    <%= prop.name %>_ = <%= prop.name %>;
+    <%= prop.name %>_ = <%= propName %>_adapt(oldValue, <%= propName %>_preSet(oldValue, <%= prop.name %>));
+    _<%= prop.name %>_inited_ = true;
     if (<%= constantize(prop.name) %>.compareValues(oldValue, <%= prop.name %>) != 0) {
       firePropertyChange(<%= constantize(prop.name) %>, oldValue, <%= prop.name %>);
     }
+    <%= propName %>_postSet(oldValue, <%= prop.name %>_);
   }
 */},
 

@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.demos',
   name: 'ChoiceRadioViewDemo',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.ui.md.ChoiceRadioView',
@@ -52,16 +52,16 @@ CLASS({
       defaultValue: 'none'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'booly'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'enabledButton',
       defaultValue: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showButton',
       defaultValue: true
     },
@@ -138,6 +138,7 @@ CLASS({
           $$data{model_:'foam.ui.md.TextFieldView', inlineStyle: false, floatingLabel: false }
           $$data{model_: 'foam.ui.md.PopupChoiceView', inlineStyle: false,  choices:this.choices, floatingLabel: true, label: 'Data label:'}
           $$data{model_:'foam.ui.md.EditableView', inlineStyle: false }
+          $$data{model_:'foam.ui.md.ImagePickerView', inlineStyle: false, mode:'read-only' }
         </div>
         <hr/>
         <h3>Inline style, with no padding and margins</h3>
@@ -148,6 +149,7 @@ CLASS({
           $$data{model_:'foam.ui.md.TextFieldView', inlineStyle: true, floatingLabel: false }
           $$data{model_: 'foam.ui.md.PopupChoiceView', inlineStyle: true,  choices:this.choices}
           $$data{model_:'foam.ui.md.EditableView', inlineStyle: true }
+          $$data{model_:'foam.ui.md.ImagePickerView', inlineStyle: true }
         </div>
         <hr/>
         $$data{model_:'foam.ui.md.ChoiceRadioView', choices:this.choices, orientation: 'vertical'}

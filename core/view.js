@@ -207,9 +207,68 @@ CLASS({
   }
 });
 
-// Utility function for creating U2 elements in a short format.
+
+// U2 Support
+
+var __element_map__ = {
+  INPUT:    'foam.u2.tag.Input',
+  TEXTAREA: 'foam.u2.tag.TextArea',
+  SELECT:   'foam.u2.tag.Select'
+};
+
+X.__element_map__ = __element_map__;
+
+function elementForName(nodeName) {
+  nodeName = nodeName ? nodeName : 'div' ;
+  var modelName = this.__element_map__[nodeName.toUpperCase()];
+  if ( modelName ) {
+    var model = this.lookup(modelName);
+    console.assert(model, 'Missing Model, Add "' + modelName + '" to your requires: block.');
+    return model.create(null, this);
+  }
+
+  var i = nodeName.indexOf(':');
+  if ( i != -1 ) {
+    return this.elementForFeature(nodeName.substring(0, i), nodeName.substring(i+1));
+  }
+
+  return null;
+}
+X.elementForName = elementForName;
+
+function elementForFeature(objName, featureName) {
+  var data = this[objName || 'data'];
+  var X    = objName ? this.sub({data: this[objName]}) : this;
+  return data.model_.getFeature(featureName).toE(X);
+}
+X.elementForFeature = elementForFeature;
+
+function registerE(name, model) {
+  var m = { __proto__: this.__element_map__ };
+  m[name.toUpperCase()] = model;
+  this.set('__element_map__', m);
+  return this;
+}
+X.registerE = registerE;
+
+// Utility function for creating U2 elements in a short format. Expects to be
+// run on a conteXt object.
 function E(opt_nodeName) {
-  var e = foam.u2.Element.create();
-  if ( opt_nodeName ) e.nodeName = opt_nodeName;
+  if (this === X || this === window) {
+    console.log('Deprecated global E() call', new Error());
+  }
+  var e = this.elementForName && this.elementForName(opt_nodeName);
+
+  if ( ! e ) {
+    e = this.lookup('foam.u2.Element').create(null, this);
+    if ( opt_nodeName ) e.nodeName = opt_nodeName;
+  }
+
   return e;
 }
+X.E = E;
+
+function start(opt_nodeName) {
+  return this.E(opt_nodeName);
+}
+X.start = start;

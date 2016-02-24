@@ -16,15 +16,14 @@
  */
 
 CLASS({
-  name: 'Link',
   package: 'foam.graphics.diagram',
-
-  extendsModel: 'foam.graphics.CView',
+  name: 'Link',
+  extends: 'foam.graphics.CView',
 
   properties: [
     {
       name: 'start',
-      type: 'foam.graphics.diagram.LinkPoint[]',
+//       type: 'foam.graphics.diagram.LinkPoint[]',
       documentation: function () {/* The potential starting points of the link. */},
       postSet: function (old, nu) {
         if (old) old.forEach(function (pt) {
@@ -37,7 +36,7 @@ CLASS({
     },
     {
       name: 'end',
-      type: 'foam.graphics.diagram.LinkPoint[]',
+//      type: 'foam.graphics.diagram.LinkPoint[]',
       documentation: function () {/* The potential ending points of the link. */},
       postSet: function (old, nu) {
         if (old) old.forEach(function (pt) {
@@ -56,7 +55,7 @@ CLASS({
     },
     {
       name: 'arrowLength',
-      model_: 'IntProperty',
+      type: 'Int',
       defaultValue: 20,
       documentation: function() {/* The pixel length of the arrowhead. */},
     },
@@ -84,12 +83,11 @@ CLASS({
       }
     }
   ],
-  
-  methods: {
-    paintSelf: function()  {
-      this.SUPER();
 
-      var c = this.canvas;
+  methods: {
+    paintSelf: function(c)  {
+      this.SUPER(c);
+
       c.save();
 
       // get back to global coordinates
@@ -106,18 +104,18 @@ CLASS({
       var s = points.start.offsetBy(this.arrowLength);
       var e = points.end.offsetBy(this.arrowLength);
 
-      this.paintArrows(points, s, e);
+      this.paintArrows(c, points, s, e);
 
       // draw connector
       if (this.style === 'manhattan')
-      {        
+      {
         // hor/vert orientation of points
         var sOr = (points.start.side==='left' || points.start.side==='right')? H : V;
         var eOr = (points.end.side==='left' || points.end.side==='right')? H : V;
-        
+
         var sDir = sideDirs[points.start.side];
         var eDir = sideDirs[points.end.side];
-        
+
         // check if the ideal direction is no good
         if (sOr === H) {
           if ((sDir > 0 && s.x > e.x)
@@ -145,7 +143,7 @@ CLASS({
             eDir = 0;
           }
         }
-        
+
         // if we reset the direction, find the new one
         if (sDir === 0) {
           if (sOr === V) {
@@ -163,20 +161,20 @@ CLASS({
           }
           eDir = eDir / Math.abs(eDir); // normalize
         }
-                
+
         if (sOr !== eOr) { // corner
           c.moveTo(s.x, s.y);
           if (sOr===H) {
-            c.lineTo(e.x, s.y); 
+            c.lineTo(e.x, s.y);
           } else {
-            c.lineTo(s.x, e.y); 
+            c.lineTo(s.x, e.y);
           }
-          
+
           c.moveTo(e.x, e.y);
           if (eOr===H) {
-            c.lineTo(s.x, e.y); 
+            c.lineTo(s.x, e.y);
           } else {
-            c.lineTo(e.x, s.y); 
+            c.lineTo(e.x, s.y);
           }
         } else { // center split
           c.moveTo(s.x, s.y);
@@ -191,7 +189,7 @@ CLASS({
           }
           c.lineTo(e.x, e.y);
         }
-        
+
         c.stroke();
       }
 
@@ -232,7 +230,7 @@ CLASS({
 
       return byDist[smallest];
     },
-    
+
     isBannedConfiguration: function(startP, endP, offsS, offsE, H,V,directions,orientations,shortAxisOr, shortAxisDist) {
       /* Returns true if the given set of points and directions produces a bad
       looking link. This can include protruding back into the owner, creating
@@ -282,13 +280,13 @@ CLASS({
     isBlocked: function(startP, endP, offsS, offsE, canvas) {
       /* Check whether any other blocking items are touching the bounding box
       of this configuration. */
-     
+
       var boundX1 = Math.min(startP.x, endP.x, offsS.x, offsE.x);
       var boundY1 = Math.min(startP.y, endP.y, offsS.y, offsE.y);
       var boundX2 = Math.max(startP.x, endP.x, offsS.x, offsE.x);
       var boundY2 = Math.max(startP.y, endP.y, offsS.y, offsE.y);
       var pad = 2;
-      var boundRect = { x1: boundX1+pad, x2: boundX2-pad, y1: boundY1+pad, y2: boundY2-pad }; 
+      var boundRect = { x1: boundX1+pad, x2: boundX2-pad, y1: boundY1+pad, y2: boundY2-pad };
       var self = this;
       // TODO(jacksonic): Implement a quad tree index, or some kind of range index
       var failed = false;
@@ -306,7 +304,7 @@ CLASS({
       }
       return failed;
     },
-    
+
     isPointInsideItem: function(point, item) {
       return point.x <= item.globalX+item.width
           && point.x >= item.globalX
@@ -316,14 +314,13 @@ CLASS({
     isIntersecting: function(rect1, rect2) {
       var isect = function(a,b) {
         return ((a.x1 > b.x1 && a.x1 < b.x2) || (a.x2 > b.x1 && a.x2 < b.x2))
-            && ((a.y1 > b.y1 && a.y1 < b.y2) || (a.y2 > b.y1 && a.y2 < b.y2));       
+            && ((a.y1 > b.y1 && a.y1 < b.y2) || (a.y2 > b.y1 && a.y2 < b.y2));
       }
       return isect(rect1, rect2) || isect(rect2, rect1);
     },
 
-    paintArrows: function(points, s, e) {
+    paintArrows: function(c, points, s, e) {
       // draw arrows
-      var c = this.canvas;
       c.save();
       c.beginPath();
 
@@ -335,7 +332,7 @@ CLASS({
 
       if (this.arrowStyle === 'association') {
         c.moveTo(points.start.x, points.start.y);
-        c.lineTo(s.x, s.y);        
+        c.lineTo(s.x, s.y);
         c.stroke();
         c.beginPath();
       } else {
@@ -345,7 +342,7 @@ CLASS({
         if (points.start.side==='top') c.rotate(-Math.PI/2);
         if (points.start.side==='bottom') c.rotate(Math.PI/2);
         if (points.start.side==='left') c.rotate(Math.PI);
-        
+
         c.moveTo(0,0);
         if (this.arrowStyle === 'aggregation' || this.arrowStyle === 'composition' ) {
           c.lineTo(this.arrowLength/2, -this.arrowLength/4);
@@ -369,13 +366,10 @@ CLASS({
           c.beginPath();
         }
         c.restore();
-      }      
+      }
       c.restore();
     }
 
   }
 
 });
-
-
-

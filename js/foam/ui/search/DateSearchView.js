@@ -18,8 +18,7 @@
 CLASS({
   package: 'foam.ui.search',
   name: 'DateSearchView',
-
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [ 'foam.ui.md.DateFieldView' ],
 
@@ -28,12 +27,10 @@ CLASS({
       name: 'model'
     },
     {
-      name: 'property',
-      type: 'Property'
+      name: 'property'
     },
     {
       name: 'predicate',
-      type: 'Object',
       defaultValue: TRUE
     },
     {
@@ -47,7 +44,6 @@ CLASS({
     },
     {
       name: 'view',
-      type: 'view',
       factory: function() { return this.DateFieldView.create({label: this.label}); }
     },
   ],
@@ -69,7 +65,7 @@ CLASS({
   listeners: [
     {
       name: 'updateValue',
-      code: function(_, _, _, date) {
+      code: function(_, __, ___, date) {
         this.predicate = date ? this.op(this.property, date) : TRUE ;
       }
     },

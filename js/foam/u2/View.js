@@ -18,69 +18,44 @@
 CLASS({
   package: 'foam.u2',
   name: 'View',
-//  extendsModel: 'foam.u2.Element'
+  extends: 'foam.u2.Element',
 
-  constants: {
-    INITIAL: {
-
-    },
-    LOADED: {
-
-    },
-    UNLOADED: {
-
-    },
-    DESTROYED: { // Needed?
-
-    }
-  },
+  imports: [ 'controllerMode' ],
 
   properties: [
+    'data',
     {
-      name: 'data'
+      name: 'visibility',
+      choices: [ 'rw', 'final', 'disabled', 'ro', 'hidden' ],
+      postSet: function(_, visibility) {
+        this.updateMode_(this.mode);
+      },
+      attribute: true,
+      defaultValue: 'rw'
     },
     {
-      name: 'viewState',
-     // defaultValue: foam.u2.view.INITIAL
+      name: 'mode',
+      choices: [ 'rw', 'disabled', 'ro', 'hidden' ],
+      postSet: function(_, mode) { this.updateMode_(mode); },
+      defaultValueFn: function() {
+        if ( this.visibility === 'ro' ) return 'ro';
+        if ( this.visibility === 'final' && 'create' !== this.controllerMode ) return 'ro';
+        return 'view' === this.controllerMode ? 'ro' : 'rw';
+      },
+      attribute: true
     }
   ],
 
   methods: [
-    function output(out) {
-      out('<', this.nodeName);
-      if ( this.id ) out(' id="', this.id, '"');
-
-      for ( key in this.attributeMap_ ) {
-        var value = this.attributeMap_[key].value;
-
-        out(' ', key);
-        if ( value !== undefined )
-          out(this.attributeMap_[key].value, '"');
-      }
-      if ( ! this.sILLEGAL_CLOSE_TAGS[this.nodeName] &&
-           ( ! this.OPTIONAL_CLOSE_TAGS[this.nodeName] || this.childNodes.length ) ) {
-        out('>');
-        this.outputInnerHTML(out);
-        out('</', this.nodeName);
-      }
-      out('>');
-      return out;
+    function init() {
+      this.SUPER();
+      this.updateMode_(this.mode);
     },
-    function outputInnerHTML(out) {
-      for ( var i = 0 ; i < this.childNodes.length ; i++ )
-        out(this.childNodes[i]/*.toString()*/);
-      return out;
+    function updateMode_() {
+      // Template method, to be implemented in sub-models
     },
-    function toHTML() {
-      var out = this.createOutputStream;
-      this.output(out);
-      return out.toString();
-    },
-    function initHTML() {
-
-    },
-    function destroy() {
-
+    function fromProperty(p) {
+      this.visibility = p.visibility;
     }
   ]
 });

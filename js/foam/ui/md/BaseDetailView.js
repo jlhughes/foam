@@ -18,7 +18,7 @@
 CLASS({
   name: 'BaseDetailView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.ui.md.TextFieldView',
@@ -28,6 +28,8 @@ CLASS({
     'foam.ui.md.ChoiceRadioView',
     'foam.ui.md.DateFieldView',
     'foam.ui.md.DateTimeFieldView',
+    'foam.ui.md.ColorFieldView',
+    'foam.ui.md.ImagePickerView'
   ],
 
   properties: [
@@ -47,6 +49,7 @@ CLASS({
       this.Y.registerModel(this.ChoiceRadioView, 'foam.ui.ChoiceListView');
       this.Y.registerModel(this.DateFieldView, 'foam.ui.DateFieldView');
       this.Y.registerModel(this.DateTimeFieldView, 'foam.ui.DateTimeFieldView');
+      this.Y.registerModel(this.ChoiceRadioView, 'foam.ui.ChoiceView');
       this.SUPER();
     },
     titleHTML:    function() { return ''; },

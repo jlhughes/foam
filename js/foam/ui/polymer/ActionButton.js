@@ -19,7 +19,7 @@ CLASS({
   name: 'ActionButton',
   package: 'foam.ui.polymer',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.ui.polymer.gen.PaperButton'
@@ -123,7 +123,7 @@ CLASS({
         var style = '<style>' + '#' + this.button.id +
             '::shadow #ripple { color: ' + this.haloColor + '; }</style>';
 
-        this.X.dynamic(function() {
+        this.X.dynamicFn(function() {
           this.action.labelFn.call(this.data, this.action);
           this.updateHTML();
         }.bind(this));

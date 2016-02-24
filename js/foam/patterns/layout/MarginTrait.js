@@ -32,13 +32,13 @@ CLASS({
     {
       model_: 'Model',
       name: 'MarginProxy',
-      extendsModel: 'foam.patterns.layout.LayoutItemLinearConstraintsProxy',
+      extends: 'foam.patterns.layout.LayoutItemLinearConstraintsProxy',
 
       documentation: function() {/* Adds an $$DOC{ref:'foam.patterns.layout.MarginTrait.MarginProxy.addAmount'} to the proxied constraints. */},
 
       properties: [
         {
-          model_: 'IntProperty',
+          type: 'Int',
           name: 'addAmount',
           documentation: function() {/* The amount to add to the proxied pixel values. */},
           defaultValue: 0,
@@ -72,28 +72,28 @@ CLASS({
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'top',
       label: 'Top Margin',
       documentation: function() {/* Margin in pixels. */},
       defaultValue: 0
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'left',
       label: 'Left Margin',
       documentation: function() {/* Margin in pixels. */},
       defaultValue: 0
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'right',
       label: 'Right Margin',
       documentation: function() {/* Margin in pixels. */},
       defaultValue: 0
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'bottom',
       label: 'Bottom Margin',
       documentation: function() {/* Margin in pixels. */},
@@ -107,7 +107,7 @@ CLASS({
       this.horizontalConstraints = this.MarginProxy.create({},this.Y);
       this.verticalConstraints = this.MarginProxy.create({},this.Y);
 
-      Events.dynamic(
+      Events.dynamicFn(
         function(){ this.top; this.left; this.right; this.bottom;
                     this.width; this.height; }.bind(this),
         this.updateMargins);

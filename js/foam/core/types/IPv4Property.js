@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.core.types',
   name: 'IPv4Property',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   documentation: function() {/*
       An IP Address v4 property.
   */},
@@ -29,7 +29,7 @@ CLASS({
           Whether or not this IP address falls into the private addresses range,
           according to rfc1918.
       */},
-      type: 'boolean',
+      type: 'Boolean',
       defaultValue: false
     }
   ],

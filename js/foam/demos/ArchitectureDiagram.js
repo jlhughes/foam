@@ -19,7 +19,7 @@
 CLASS({
   package: 'foam.demos',
   name: 'ArchitectureDiagram',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [
     'foam.ui.DetailView',
@@ -73,7 +73,7 @@ CLASS({
       var intersects = {f:function(shape) {
         return shape !== dev && dev.x > shape.x && dev.x < shape.x + shape.width && dev.y+dev.r > shape.y;
       }};
-      Events.dynamic(function() { dev.x; }, function() {
+      Events.dynamicFn(function() { dev.x; }, function() {
         dev.y += ++dev.v;
         this.children.find(intersects, {put:function(child) {dev.y = child.y-dev.r-1; dev.v *= -.45; }});
       }.bind(this));
@@ -129,27 +129,27 @@ CLASS({
     },
 
     // TODO: Make a trait
-    paintChildren: function() {
+    paintChildren: function(canvas) {
       // paint children inverted and slated below reflection point
-      this.canvas.save();
-      this.canvas.translate(850*0.6,850);
-      this.canvas.scale(1,-1);
-      this.canvas.translate(0,-850);
-      this.canvas.transform(1,0,-0.6,1,0,0);
+      canvas.save();
+      canvas.translate(850*0.6,850);
+      canvas.scale(1,-1);
+      canvas.translate(0,-850);
+      canvas.transform(1,0,-0.6,1,0,0);
 
-      this.SUPER();
+      this.SUPER(canvas);
 
       // cause fading with white gradient
-      var fade = this.canvas.createLinearGradient(0,750,0,-1000);
+      var fade = canvas.createLinearGradient(0,750,0,-1000);
       fade.addColorStop(0,   'rgba(255,255,255,0.82)');
       fade.addColorStop(0.2, 'rgba(255,255,255,1)');
       fade.addColorStop(1,   'rgba(255,255,255,1)');
-      this.canvas.fillStyle = fade;
-      this.canvas.fillRect(0, 850, 1500, -1000);
-      this.canvas.restore();
+      canvas.fillStyle = fade;
+      canvas.fillRect(0, 850, 1500, -1000);
+      canvas.restore();
 
       // paint children in normally
-      this.SUPER();
+      this.SUPER(canvas);
     }
   }
 });

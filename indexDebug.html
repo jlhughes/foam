@@ -3,9 +3,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <link rel="stylesheet" href="core/foam.css" />
-    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:400,500" />
-    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons" />
-    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons+Extended" />
+    <link rel="stylesheet" href="fonts.css" />
   </head>
   <body>
     <div id="_DEBUG_OUTPUT_" style="position:fixed; z-index:1000; width: 200px; height: 20px; background-color: rgba(200,200,255,0.9); display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; overflow-x: hidden; overflow-y: auto;"
@@ -42,6 +40,8 @@
 
           out.appendChild(e);
           out.scrollTop = e.offsetTop + e.offsetHeight;
+          document.body.appendChild(out);
+          out.style.top = 0;
         }
 
         var console = window.console;
@@ -103,5 +103,5 @@
     </script>
     <script src="core/bootFOAM.js"></script>
     <script src="demos/demos.js"></script>
-    <script src="index.js"></script>  
+    <script src="index.js"></script>
 </html>

@@ -18,8 +18,7 @@
 CLASS({
   package: 'foam.patterns.layout',
   name: 'LayoutItemLinearConstraintsProxy',
-
-  extendsModel: 'foam.patterns.layout.LayoutItemLinearConstraints',
+  extends: 'foam.patterns.layout.LayoutItemLinearConstraints',
 
   documentation: function() {/* The information layout items provide for a
                             single axis of linear layout. */},
@@ -27,7 +26,7 @@ CLASS({
   properties: [
     {
       name: 'data',
-      type: 'foam.patterns.layout.LayoutItemLinearConstraints',
+      // type: 'foam.patterns.layout.LayoutItemLinearConstraints',
       preSet: function(old,nu) {
         if (old) {
           this.unbind(old);

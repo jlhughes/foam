@@ -13,7 +13,7 @@ CLASS({
   package: 'foam.apps.builder.questionnaire',
   name: 'QuestionnaireController',
 
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.apps.builder.AppController',
 
   requires: [
     'foam.ui.md.DetailView',
@@ -37,16 +37,13 @@ CLASS({
         }
         if ( nu ) {
           nu.getDataConfig().model$.addListener(this.configChange);
-          this.configChange(null, null, null, nu.model);
+          this.configChange(null, null, null, nu.getDataConfig().model);
         }
       }
     },
     {
       name: 'dao',
       help: 'The store of questionnaires filled in by users.',
-      lazyFactory: function() {
-        return this.Y.submissionsDAO;
-      }
     },
     {
       name: 'content',
@@ -55,6 +52,13 @@ CLASS({
       lazyFactory: function() {
         return this.data.getDataConfig().model.create({}, this.Y);
       }
+    },
+  ],
+
+  methods: [
+    function exportDAOs() {
+      this.SUPER();
+      this.dao = this.Y.submissionsDAO;
     },
   ],
 
@@ -81,7 +85,7 @@ CLASS({
   actions: [
     {
       name: 'save',
-      iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAASUlEQVR4AWPADUaBFmnKQxh+MzSQpvw/Q8PwU87KsIohkBTTI4CSvxiCSHAMUPI/UFEQunLCWoLRlBPWglBOpBaYcqK1YCgfBQDw0y1mS9NLDAAAAABJRU5ErkJggg==',
+      ligature: 'done',
       //isAvailable: function() { return this.data.enableHomeBttn; },
       code: function() {
         this.dao.put(this.content, {
@@ -97,7 +101,7 @@ CLASS({
     },
     {
       name: 'reload',
-      iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAwElEQVR4Ad3SP04CURDA4a8RlpNYEP5zQbBGIYT4Ck5iZbwEcStj9AQW7JrI2LLxuYmx45tuMr9uXKSJpFT7VErGgIWsnr1ozElSWIr8+ZNwtDLV1TGzUQsvIh/shVd958Y+RD6YCEd9TTciH5CElaal+D0ohalzC9EW1EJXi38Hz8LMH9wLd3K2wq0fRk4qg8y+9uVaRhLeDJ0behfWsgqPQmVtrqcwt1EJD64gnyQnzefb6mg1snNQqR3sDFygb3rVYPgYJpUVAAAAAElFTkSuQmCC',
+      ligature: 'refresh',
       //isAvailable: function() { return this.data.enableReloadBttn; },
       code: function() {
         this.content = this.data.getDataConfig().model.create({}, this.Y);

@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-
 CLASS({
   name: 'DiagramRoot',
   package: 'foam.graphics.diagram',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
+
   traits: ['foam.graphics.diagram.DiagramItemTrait', 'foam.graphics.diagram.DiagramRootTrait'],
   
   documentation: function() {/* Use a $$DOC{ref:'foam.graphics.diagram.DiagramRoot'} as the root

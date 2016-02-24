@@ -18,7 +18,8 @@
 CLASS({
   name: 'CheckboxView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
+
   requires: ['foam.ui.md.HaloView'],
   traits: ['foam.ui.md.MDStyleTrait'],
 
@@ -65,7 +66,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showBorder',
       defaultValue: false,
     }

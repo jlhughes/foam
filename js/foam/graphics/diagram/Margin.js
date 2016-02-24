@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
- 
 CLASS({
-  name: 'Margin',
   package: 'foam.graphics.diagram',
-  extendsModel: 'foam.graphics.Margin',
+  name: 'Margin',
+  extends: 'foam.graphics.Margin',
+
   traits: ['foam.graphics.diagram.DiagramItemTrait'],
 
   documentation: function() {/* Overridden from 

@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.flow',
   name: 'Glossary',
-  extendsModel: 'foam.flow.Section',
+  extends: 'foam.flow.Section',
 
   requires: [ 'foam.ui.DAOListView' ],
   imports: [ 'glossaryTerms' ],
@@ -23,7 +23,7 @@ CLASS({
       defaultValue: 'Glossary'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'enumerate',
       defaultValue: false
     },

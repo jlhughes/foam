@@ -14,21 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 CLASS({
   package: 'foam.ui.md',
   name: 'AutocompleteView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
+
   requires: [
     'foam.ui.ChoiceListView',
   ],
 
   properties: [
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'acRowView'
     },
     {
-      name: 'autocompleter',
+      name: 'autocompleter'
     },
     {
       name: 'target',
@@ -156,7 +158,7 @@ CLASS({
       if ( this.maxHeight ) {
         div.style.maxHeight = this.maxHeight + 'px';
       }
-    },
+    }
   ],
 
   listeners: [
@@ -203,7 +205,7 @@ CLASS({
       code: function() {
         this.close();
       }
-    },
+    }
   ],
 
   templates: [
@@ -234,6 +236,6 @@ CLASS({
           <%= this.view_ %>
         </div>
       </span>
-    */},
+    */}
   ]
 });

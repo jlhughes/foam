@@ -18,7 +18,7 @@
 CLASS({
   name: 'FOAMletDecoratorDAO',
   package: 'foam.navigator.dao',
-  extendsModel: 'foam.core.dao.AbstractAdapterDAO',
+  extends: 'foam.core.dao.AbstractAdapterDAO',
 
   requires: [
     'foam.navigator.WrappedFOAMlet'
@@ -27,7 +27,7 @@ CLASS({
   properties: [
     {
       name: 'model',
-      model_: 'ModelProperty',
+      type: 'Model',
       documentation: function() {/* If a valid WrappedFOAMlet is not specified
         here, model-for-model will attempt to load the closest it can find.
       */},  

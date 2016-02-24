@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'AbstractDAOView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   documentation: function() { /*
      <p>For $$DOC{ref:'foam.ui.View',usePlural:true} that take data items from a $$DOC{ref:'DAO'}
@@ -28,7 +28,7 @@ CLASS({
       re-rendered.</p>
   */},
 
-  exports: [ 'dao$ as daoViewCurrentDAO$' ],
+  exports: [ 'dao as daoViewCurrentDAO' ],
 
   properties: [
     {

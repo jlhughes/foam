@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.dao',
   name: 'EasyDAO',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   requires: [
     'MDAO',
@@ -28,6 +28,8 @@ CLASS({
     'foam.core.dao.StorageDAO',
     'foam.core.dao.SyncDAO',
     'foam.core.dao.SyncTrait',
+    'foam.core.dao.sync.PollingSyncDAO',
+    'foam.core.dao.sync.SocketSyncDAO',
     'foam.core.dao.VersionNoDAO',
     'foam.dao.CachingDAO',
     'foam.dao.ContextualizingDAO',
@@ -35,7 +37,9 @@ CLASS({
     'foam.dao.EasyClientDAO',
     'foam.dao.GUIDDAO',
     'foam.dao.IDBDAO',
-    'foam.dao.SeqNoDAO'
+    'foam.dao.SeqNoDAO',
+    'foam.dao.LoggingDAO',
+    'foam.dao.TimingDAO'
   ],
 
   imports: [ 'document' ],
@@ -57,17 +61,17 @@ CLASS({
   properties: [
     {
       name: 'name',
-      defaultValueFn: function() { return this.model.plural; },
+      defaultValueFn: function() { return this.model.id; },
       documentation: "The developer-friendly name for this $$DOC{ref:'.'}."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'seqNo',
       defaultValue: false,
       documentation: "Have $$DOC{ref:'.'} use a sequence number to index items. Note that $$DOC{ref:'.seqNo'} and $$DOC{ref:'.guid'} features are mutually exclusive."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'guid',
       label: 'GUID',
       defaultValue: false,
@@ -79,37 +83,37 @@ CLASS({
       documentation: "The property on your items to use to store the sequence number or guid. This is required for $$DOC{ref:'.seqNo'} or $$DOC{ref:'.guid'} mode."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'cache',
       defaultValue: false,
       documentation: "Enable local caching of the $$DOC{ref:'DAO'}."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'dedup',
       defaultValue: false,
       documentation: "Enable value de-duplication to save memory when caching."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'logging',
       defaultValue: false,
       documentation: "Enable logging on the $$DOC{ref:'DAO'}."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'timing',
       defaultValue: false,
       documentation: "Enable time tracking for concurrent $$DOC{ref:'DAO'} operations."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'contextualize',
       defaultValue: false,
       documentation: "Contextualize objects on .find"
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'cloning',
       defaultValue: false,
       documentation: "True to clone results on select"
@@ -130,30 +134,37 @@ CLASS({
        */}
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'autoIndex',
       defaultValue: false,
       documentation: "Automatically generate an index."
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'migrationRules',
       subType: 'foam.core.dao.MigrationRule',
       documentation: "Creates an internal $$DOC{ref:'MigrationDAO'} and applies the given array of $$DOC{ref:'MigrationRule'}."
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'syncWithServer'
     },
     {
-      model_: 'StringProperty',
+      type: 'Boolean',
+      name: 'sockets',
+      defaultValue: false
+    },
+    {
+      type: 'String',
       name: 'serverUri',
       defaultValueFn: function() {
-        return this.document.location.origin + '/api'
+        return this.document && this.document.location ?
+            this.document.location.origin + '/api' :
+            '';
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isServer',
       defaultValue: false
     },
@@ -205,23 +216,23 @@ CLASS({
 
       if ( MDAO.isInstance(dao) ) {
         this.mdao = dao;
-        if ( this.dedup ) dao = this.DeDupDAO.create({delegate: dao});
+        if ( this.dedup ) dao = this.DeDupDAO.create({delegate: dao}, this.Y);
       } else {
         if ( this.migrationRules && this.migrationRules.length ) {
           dao = this.MigrationDAO.create({
             delegate: dao,
             rules: this.migrationRules,
-            name: this.model.name + "_" + daoModel.name + "_" + this.name
+            name: this.model.id + "_" + daoModel.id + "_" + this.name
           }, this.Y);
         }
         if ( this.cache ) {
-          this.mdao = this.MDAO.create(params);
+          this.mdao = this.MDAO.create(params, this.Y);
           dao = this.CachingDAO.create({
             cache: this.dedup ?
               this.mdao :
               this.DeDupDAO.create({delegate: this.mdao}),
             src: dao,
-            model: this.model});
+            model: this.model}, this.Y);
         }
       }
 
@@ -230,22 +241,14 @@ CLASS({
       if ( this.seqNo ) {
         var args = {__proto__: params, delegate: dao, model: this.model};
         if ( this.seqProperty ) args.property = this.seqProperty;
-        dao = this.SeqNoDAO.create(args);
+        dao = this.SeqNoDAO.create(args, this.Y);
       }
 
       if ( this.guid ) {
         var args = {__proto__: params, delegate: dao, model: this.model};
         if ( this.seqProperty ) args.property = this.seqProperty;
-        dao = this.GUIDDAO.create(args);
+        dao = this.GUIDDAO.create(args, this.Y);
       }
-
-      if ( this.contextualize ) dao = this.ContextualizingDAO.create({
-        delegate: dao
-      });
-
-      if ( this.cloning ) dao = this.CloningDAO.create({
-        delegate: dao
-      });
 
       var model = this.model;
 
@@ -254,32 +257,36 @@ CLASS({
       if ( this.syncWithServer || this.isServer ) {
         if ( ! this.syncProperty || ! this.deletedProperty ) {
           if ( model.traits.indexOf('foam.core.dao.SyncTrait') != -1 ) {
-            this.syncProperty = model.SYNC_PROPERTY;
-            this.deletedProperty = model.DELETED;
+            // TODO(adamvy): This doesn't work without getPrototype();
+            // should models be built such that getPrototype() is unnecessary?
+            this.syncProperty = model.getPrototype().SYNC_PROPERTY;
+            this.deletedProperty = model.getPrototype().DELETED;
           } else {
-            throw "Syncing with server requires the foam.core.dao.SyncTrait be applied to your model.";
+            throw "Syncing with server requires the foam.core.dao.SyncTrait be applied to your model, '" + this.model.id + "'.";
           }
         }
       }
 
       if ( this.syncWithServer ) {
-        dao = this.SyncDAO.create({
-          model: model,
-          delegate: dao,
+        var syncStrategy = this.sockets ? this.SocketSyncDAO : this.PollingSyncDAO;
+        dao = syncStrategy.create({
           remoteDAO: this.EasyClientDAO.create({
             serverUri: this.serverUri,
             model: model,
-          }),
+            sockets: this.sockets,
+            reconnectPeriod: 5000
+          }, this.Y),
           syncProperty: this.syncProperty,
           deletedProperty: this.deletedProperty,
-          syncRecordDAO: foam.dao.EasyDAO.create({
-            model: this.SyncDAO.SyncRecord,
-            cache: true,
-            daoType: this.daoType,
-            name: this.name + '_SyncRecords'
-          })
-        });
-        window.setInterval(function() { this.sync(); }.bind(dao), 1000);
+          delegate: dao,
+          period: 1000
+        }, this.Y);
+        dao.syncRecordDAO = foam.dao.EasyDAO.create({
+          model: dao.SyncRecord,
+          cache: true,
+          daoType: this.daoType,
+          name: this.name + '_SyncRecords'
+        }, this.Y);
       }
 
       if ( this.isServer ) {
@@ -287,11 +294,20 @@ CLASS({
           delegate: dao,
           property: this.syncProperty,
           version: 2
-        });
+        }, this.Y);
       }
 
-      if ( this.timing  ) dao = TimingDAO.create(this.name + 'DAO', dao);
-      if ( this.logging ) dao = LoggingDAO.create(dao);
+      if ( this.contextualize ) dao = this.ContextualizingDAO.create({
+        delegate: dao
+      }, this.Y);
+
+      if ( this.cloning ) dao = this.CloningDAO.create({
+        delegate: dao
+      }, this.Y);
+
+
+      if ( this.timing  ) dao = this.TimingDAO.create({ name: this.model.plural + 'DAO', delegate: dao }, this.Y);
+      if ( this.logging ) dao = this.LoggingDAO.create({ delegate: dao }, this.Y);
 
       this.delegate = dao;
     },

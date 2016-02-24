@@ -12,7 +12,7 @@
 CLASS({
   name: 'ExpandableSection',
   package: 'foam.flow',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
 
   requires: [
     'foam.ui.md.SectionView',
@@ -21,15 +21,15 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'heading'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'content'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'expanded',
       defaultValue: false
     },

@@ -14,7 +14,7 @@
 CLASS({
   package: 'foam.demos.wat',
   name: 'Grid',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
 
   properties: [
     {
@@ -43,6 +43,7 @@ CLASS({
     .card-grid {
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
       padding: 10px;
     }
 

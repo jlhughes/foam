@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.documentation',
   name: 'DocRefView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   label: 'Documentation Reference View',
   documentation: 'The view of a documentation reference link.',
 
@@ -89,7 +89,7 @@ CLASS({
     },
     {
       name: 'acceptInvalid',
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       defaultValue: false,
       documentation: function() { /*
         If true, an invalid reference will just render as static text, rather than show an error.

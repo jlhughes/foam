@@ -34,7 +34,7 @@ CLASS({
   package: 'com.google.watlobby',
   name: 'Bubble',
 
-  extendsModel: 'foam.demos.physics.PhysicalGLCircle',
+  extends: 'foam.demos.physics.PhysicalGLCircle',
 
   requires: [
     'foam.graphics.webgl.flat.Image',
@@ -135,7 +135,7 @@ CLASS({
   package: 'com.google.watlobby',
   name: 'VideoBubble',
 
-  extendsModel: 'com.google.watlobby.Bubble',
+  extends: 'com.google.watlobby.Bubble',
 
   requires: [
     'foam.graphics.webgl.flat.Image',
@@ -217,7 +217,7 @@ CLASS({
   package: 'com.google.watlobby',
   name: 'PhotoAlbumBubble',
 
-  extendsModel: 'com.google.watlobby.Bubble',
+  extends: 'com.google.watlobby.Bubble',
 
   requires: [
     'foam.graphics.webgl.primitives.Rectangle',
@@ -296,9 +296,9 @@ CLASS({
 
 
 CLASS({
-  package: 'com.google.watlobby',
+  package: 'com.google.watlobby.orphanage',
   name: 'LobbyGL',
-  extendsModel: 'foam.graphics.webgl.flat.Scene',
+  extends: 'foam.graphics.webgl.flat.Scene',
 
   requires: [
     'com.google.watlobby.Bubble',
@@ -315,6 +315,7 @@ CLASS({
     'foam.graphics.Circle',
     'foam.graphics.webgl.PerformanceScaler',
     'foam.graphics.CView',
+    'foam.graphics.webgl.CViewGLView',
   ],
 
   imports: [ 'timer' ],
@@ -570,7 +571,7 @@ CLASS({
 //     },
 
 //     function bounceOnWalls(c, w, h) {
-//       c.cancelBounce_ = Events.dynamic(function() { c.x; c.y; }, function() {
+//       c.cancelBounce_ = Events.dynamicFn(function() { c.x; c.y; }, function() {
 //         var r = c.r;
 //         if ( c.x < r     ) { c.vx += 0.2; c.vy -= 0.19; }
 //         if ( c.x > w - r ) { c.vx -= 0.2; c.vy += 0.19; }

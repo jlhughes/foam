@@ -84,7 +84,7 @@ CLASS({
         */}
     },
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       documentation: 'The developer documentation.',
       labels: ['documentation']
@@ -100,7 +100,7 @@ CLASS({
         */}
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'isAvailable',
       label: 'Available',
       displayWidth: 70,
@@ -112,7 +112,7 @@ CLASS({
         */}
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'isEnabled',
       label: 'Enabled',
       displayWidth: 70,
@@ -124,7 +124,7 @@ CLASS({
         */}
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'labelFn',
       label: 'Label Function',
       defaultValue: function(action) { return action.label; },
@@ -168,7 +168,6 @@ CLASS({
       subType: 'Action',
       view: 'foam.ui.ArrayView',
       help: 'Child actions of this action.',
-      persistent: false,
       documentation: function() { /*
             Child $$DOC{ref:'Action',usePlural:true} of this instance.
         */}
@@ -182,7 +181,7 @@ CLASS({
         */}
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'code',
       displayWidth: 80,
       displayHeight: 20,
@@ -193,7 +192,7 @@ CLASS({
         */}
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'action',
       displayWidth: 80,
       displayHeight: 20,
@@ -208,7 +207,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'keyboardShortcuts',
       documentation: function() { /*
             Keyboard shortcuts for the $$DOC{ref:'Action'}.
@@ -248,8 +247,12 @@ CLASS({
         */}
     }
   ],
-  methods: {
-    maybeCall: function(X, that) { /* Executes this action if $$DOC{ref:'.isEnabled'} is allows it. */
+  methods: [
+    function toE(X) {
+      console.assert(X, 'X required for Action.toE().');
+      return X.lookup('foam.u2.ActionButton').create({data: X.data, action: this}, X);
+    },
+    function maybeCall(X, that) { /* Executes this action if $$DOC{ref:'.isEnabled'} is allows it. */
       if ( this.isAvailable.call(that, this) && this.isEnabled.call(that, this) ) {
         this.code.call(that, X, this);
         that.publish(['action', this.name], this);
@@ -257,7 +260,7 @@ CLASS({
       }
       return false;
     }
-  }
+  ]
 });
 
 
@@ -349,6 +352,12 @@ CLASS({
       defaultValueFn: function() { return this.type; },
     },
     {
+      name: 'swiftIsMutable',
+      type: 'Boolean',
+      labels: ['swift'],
+      defaultValue: false,
+    },
+    {
       name:  'name',
       type:  'String',
       required: true,
@@ -362,7 +371,7 @@ CLASS({
          */}
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'required',
       defaultValue: true,
       labels: ['debug'],
@@ -405,7 +414,7 @@ CLASS({
         */}
     },
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       documentation: 'The developer documentation.',
       labels: ['debug']
@@ -437,7 +446,7 @@ CLASS({
 
       name: 'javaSource',
       description: 'Java Source',
-      template: '<%= this.type %> <%= this.name %>',
+      template: '<%= this.javaType %> <%= this.name %>',
       labels: ['debug'],
     },
     {
@@ -518,7 +527,7 @@ CLASS({
       documentation: "A human readable description of the $$DOC{ref:'.'}."
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'args',
       type: 'Array[Arg]',
       subType: 'Arg',
@@ -534,7 +543,6 @@ CLASS({
       type: 'String',
       displayWidth: 180,
       displayHeight: 30,
-      rows: 30, cols: 80,
       defaultValue: '',
       view: 'foam.ui.TextAreaView',
       // Doesn't work because of bootstrapping issues.
@@ -563,7 +571,7 @@ CLASS({
        help: 'Sub-templates of this template.'
        },*/
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       labels: ['debug'],
     },
@@ -577,6 +585,9 @@ CLASS({
     {
       name: 'labels'
     }
+  ],
+  methods: [
+    function toE(X) { return X.data[this.name](); }
   ]
 });
 
@@ -609,6 +620,14 @@ CLASS({
          */}
     },
     {
+      type: 'String',
+      name: 'swiftType',
+    },
+    {
+      type: 'String',
+      name: 'swiftValue',
+    },
+    {
       name: 'description',
       type: 'String',
       displayWidth: 70,
@@ -619,7 +638,7 @@ CLASS({
          */}
     },
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       documentation: 'The developer documentation.',
       labels: ['debug']
@@ -638,78 +657,6 @@ CLASS({
       label: 'Description for Translation',
       type: 'String',
       defaultValue: ''
-    }
-  ]
-});
-
-
-CLASS({
-  name: 'Message',
-  plural: 'messages',
-
-  tableProperties: [
-    'name',
-    'value',
-    'translationHint'
-  ],
-
-  documentation: function() {/*
-  */},
-
-  properties: [
-    {
-      name:  'name',
-      type:  'String',
-      required: true,
-      displayWidth: 30,
-      displayHeight: 1,
-      defaultValue: '',
-      help: 'The coding identifier for the message.',
-      documentation: function() { /* The identifier used in code to represent this $$DOC{ref:'.'}.
-        $$DOC{ref:'.name'} should generally only contain identifier-safe characters.
-        $$DOC{ref:'.'} names should use camelCase staring with a lower case letter.
-         */}
-    },
-    {
-      name: 'value',
-      type: 'String',
-      help: 'The message itself.'
-    },
-    {
-      name: 'meaning',
-      type: 'String',
-      help: 'Linguistic clarification to resolve ambiguity.',
-      documentation: function() {/* A human readable discussion of the
-        $$DOC{ref:'.'} to resolve linguistic ambiguities.
-      */}
-    },
-    {
-      model_: 'ArrayProperty',
-      name: 'placeholders',
-      help: 'Placeholders to inject into the message.',
-      documentation: function() {/* Array of plain Javascript objects
-        describing in-message placeholders. The data can be expanded into
-        $$DOC{ref:'foam.i18n.Placeholder'}, for example.
-      */}
-    },
-    {
-      model_: 'FunctionProperty',
-      name: 'replaceValues',
-      documentation: function() {/* Function that binds values to message
-        contents.
-      */},
-      defaultValue: function() { return this.value; }
-    },
-    {
-      name: 'translationHint',
-      type: 'String',
-      displayWidth: 70,
-      displayHeight: 1,
-      defaultValue: '',
-      help: 'A brief description of this message and the context in which it used.',
-      documentation: function() {/* A human readable description of the
-        $$DOC{ref:'.'} and its context for the purpose of translation.
-      */}
     }
   ]
 });
@@ -739,7 +686,7 @@ CLASS({
       <li><code>this.methodName</code> calls another $$DOC{ref:'Method'} of this
               $$DOC{ref:'Model'}</li>
       <li><p><code>this.SUPER()</code> calls the $$DOC{ref:'Method'} implementation from the
-                base $$DOC{ref:'Model'} (specified in $$DOC{ref:'Model.extendsModel'}).</p>
+                base $$DOC{ref:'Model'} (specified in $$DOC{ref:'Model.extends'}).</p>
                 <ul>
                   <li>
                       <p>Calling
@@ -798,7 +745,7 @@ CLASS({
         */}
     },
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       documentation: 'The developer documentation.',
       labels: ['debug']
@@ -842,12 +789,17 @@ CLASS({
       labels: ['debug']
     },
     {
-      name: 'swiftReturnType',
-      labels: ['swift'],
-      defaultValueFn: function() { return this.returnType; }
+      name:  'javaReturnType',
+      labels: ['java'],
+      defaultValue: 'void',
     },
     {
-      model_: 'BooleanProperty',
+      name: 'swiftReturnType',
+      labels: ['swift'],
+      defaultValue: 'Void',
+    },
+    {
+      type: 'Boolean',
       name: 'returnTypeRequired',
       defaultValue: true,
       documentation: function() { /*
@@ -856,7 +808,7 @@ CLASS({
       labels: ['debug']
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'args',
       type: 'Array[Arg]',
       subType: 'Arg',
@@ -866,7 +818,13 @@ CLASS({
       documentation: function() { /*
           The $$DOC{ref:'Arg',text:'Arguments'} for the method.
         */},
-      labels: ['debug']
+      labels: ['debug'],
+      adapt: function(_, n) {
+        n.forEach(function(arg, i) {
+          n[i] = Arg.create(arg);
+        }.bind(this));
+        return n;
+      },
     },
     {
       name: 'whenIdle',
@@ -884,7 +842,7 @@ CLASS({
         */}
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isFramed',
       help: 'As a listener, should this be animated?',
       defaultValue: false,
@@ -897,21 +855,127 @@ CLASS({
       name: 'labels'
     },
     {
+      type: 'String',
+      name: 'swiftCode',
+      labels: ['swift'],
+    },
+    {
+      type: 'String',
+      name: 'javaCode',
+      labels: ['java']
+    },
+    {
       model_: 'TemplateProperty',
       name: 'swiftSource',
       labels: ['swift'],
-      defaultValue: '<% true; %>',
+      defaultValue: function() {/*<%
+var model = arguments[1];
+var extendsModel = model && model.extends;
+var self = this;
+var filter = function(m) {
+  if ( m.name === self.name) {
+    return true;
+  }
+};
+var name = this.name == 'init' ? '_foamInit_' : this.name;
+
+var override = this.name == 'init' ? 'override' : '';
+var args = this.args;
+var swiftReturnType = this.swiftReturnType;
+while (extendsModel) {
+  extendsModel = model.X.lookup(extendsModel);
+  var method = extendsModel.methods.filter(filter).concat(
+      extendsModel.listeners.filter(filter));
+  method = method.length > 0 && method[0];
+  override = override || method ? 'override' : '';
+  args = method && method.args || args;
+  swiftReturnType = method && method.swiftReturnType || swiftReturnType;
+  extendsModel = extendsModel.extends
+}
+
+
+%><% if ( this.isMerged || this.isFramed ) {
+%>  var <%= name %>_fired_: Bool = false
+  <%=override%> func <%= name %>() {
+    if <%= name %>_fired_ {
+      return
+    }
+    <%= name %>_fired_ = true
+    NSTimer.scheduledTimerWithTimeInterval(
+      <%= ( this.isFramed ) ? 0.016 : ( this.isMerged / 1000 ) %>,
+      target: self,
+      selector: "_<%= name %>_wrapper_",
+      userInfo: nil,
+      repeats: false)
+  }
+  <%=override%> func _<%= name %>_wrapper_() {
+    <%= name %>_fired_ = false
+    <%= name %>_code()
+  }
+  <%=override%> func <%= name %>_code() {
+<%= this.swiftCode %>
+  }
+<% } else if ( this.swiftCode ) { %>
+  <%=override%> func `<%= name %>`(<%
+for ( var i = 0 ; i < args.length ; i++ ) {
+%><%= args[i].swiftIsMutable ? ' var ' : '' %><%= args[i].name %>: <%= args[i].swiftType %><%
+if ( i != args.length - 1 ) { %>, <% }
+}
+%>) -> <%= swiftReturnType %> {
+<%= this.swiftCode %>
+  }
+<% } %>
+<% if ( this.swiftCode && !override && args.length == 0 ) { %>
+    lazy var <%= name %>Listener_: PropertyChangeListener = {
+      return PropertyChangeListener(callback: { _, _, _, _ in
+        self.`<%= name %>`()
+      })
+    }()
+<% } %>*/}
     },
     {
       model_: 'TemplateProperty',
       name: 'javaSource',
       labels: ['java'],
-      defaultValue: function() {/*
-    <%= this.returnType || "void" %> <%= this.name %>(<%
- for ( var i = 0 ; this.args && i < this.args.length ; i++ ) { var arg = this.args[i];
-%><%= arg.javaSource() %><% if ( i < this.args.length-1 ) out(", ");
-%><% } %>) {}\n*/}
+      defaultValue: function() {/*<%
+if ( !this.javaCode ) return;
+
+var model = arguments[1];
+var extendsModel = model && model.extends;
+var self = this;
+var filter = function(m) {
+  if ( m.name === self.name) {
+    return true;
+  }
+};
+var name = this.name;
+
+var override = '';
+var args = this.args;
+var returnType = this.javaReturnType;
+while (extendsModel) {
+  extendsModel = model.X.lookup(extendsModel);
+  var method = extendsModel.methods.filter(filter).concat(
+      extendsModel.listeners.filter(filter));
+  method = method.length > 0 && method[0];
+  override = override || method ? '@Override' : '';
+  args = method && method.args || args;
+  returnType = method && method.javaReturnType || returnType;
+  extendsModel = extendsModel.extends
+}
+%>
+  <%= override %>
+  public <%= returnType %> <%= this.name %>(<%
+ for ( var i = 0 ; args && i < args.length ; i++ ) { var arg = args[i];
+%><%= arg.javaSource() %><% if ( i < args.length-1 ) out(", ");
+%><% } %>) {
+    <%= this.javaCode %>
+  }\n*/}
     }
+  ],
+
+  methods: [
+    function toE(X) { return X.data[this.name](); },
   ],
 
   templates:[
@@ -1033,7 +1097,7 @@ CLASS({
       }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'chapters',
       type: 'Array[Document]',
       subtype: 'Documentation',

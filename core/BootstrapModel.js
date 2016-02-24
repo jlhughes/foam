@@ -48,9 +48,15 @@ this.Relationship = null;
  * Override a method, making calling the overridden method possible by
  * calling this.SUPER();
  **/
-
+var CCC = 0;
 function override(cls, methodName, method) {
   var super_ = cls[methodName];
+
+  // No need to decorate if SUPER not called
+  if ( method.toString().indexOf('SUPER') == -1 ) {
+    cls[methodName] = method;
+    return;
+  }
 
   var SUPER = function() { return super_.apply(this, arguments); };
 
@@ -91,17 +97,35 @@ var BootstrapModel = {
     var name       = parentName + '_ExtendedWith_' + traitName;
 
     if ( ! lookup(name) ) {
-      var model = traitModel.clone();
-      model.package = '';
-      model.name = name;
-      model.extendsModel = parentModel && parentModel.id;
-      model.models = traitModel.models; // unclone sub-models, we don't want multiple copies of them floating around
-      GLOBAL.X.registerModel(model);
+      var models = traitModel.models;
+      traitModel = traitModel.clone();
+      traitModel.package = '';
+      traitModel.name = name;
+      traitModel.extends = parentModel && parentModel.id;
+      traitModel.models = models; // unclone sub-models, we don't want multiple copies of them floating around
+      traitModel.X.registerModel(traitModel);
     }
 
-    var ret = GLOBAL.X.lookup(name);
+    var ret = traitModel.X.lookup(name);
     console.assert(ret, 'Error adding Trait to Model, unknown name: ', name);
     return ret;
+  },
+
+  createMethod_: function(X, name, fn) {
+    var method = Method.create({
+      name: name,
+      code: fn
+    });
+
+    if ( FEATURE_ENABLED(['debug']) && Arg ) {
+      var str = fn.toString();
+      var match = str.match(/^function[ _$\w]*\(([ ,\w]+)/);
+      if ( match )
+        method.args = match[1].split(',').
+        map(function(name) { return Arg.create({name: name.trim()}); });
+    }
+
+    return method;
   },
 
   buildProtoImports_: function(props) {
@@ -115,13 +139,8 @@ var BootstrapModel = {
         alias = alias.slice(0, alias.length-1);
 
       if ( ! this.getProperty(alias) ) {
-        var prop = Property.create({
-          name:      alias,
-          transient: true,
-          hidden:    true
-        });
         // Prevent imports from being cloned.
-        prop.cloneProperty = prop.deepCloneProperty = null;
+        var prop = ImportedProperty.create({ name: alias });
         props.push(prop);
       }
     }.bind(this));
@@ -196,9 +215,9 @@ var BootstrapModel = {
     // extra memory in DEBUG mode.
     if ( _DOC_ ) BootstrapModel.saveDefinition(this);
 
-    if ( this.extendsModel && ! this.X.lookup(this.extendsModel) ) throw 'Unknown Model in extendsModel: ' + this.extendsModel;
+    if ( this.extends && ! this.X.lookup(this.extends) ) throw new Error('Unknown Model in extends: ' + this.extends);
 
-    var extendsModel = this.extendsModel && this.X.lookup(this.extendsModel);
+    var extendsModel = this.extends && this.X.lookup(this.extends);
 
     if ( this.traits ) for ( var i = 0 ; i < this.traits.length ; i++ ) {
       var trait      = this.traits[i];
@@ -234,12 +253,20 @@ var BootstrapModel = {
     //        });
     // Workaround for crbug.com/258552
     this.models && Object_forEach(this.models, function(m) {
-      //cls.model_[m.name] = cls[m.name] = JSONUtil.mapToObj(X, m, Model);
-      if ( this[m.name] ) cls[m.name] = this[m.name];
+      if ( this[m.name] ) {
+        var model = this[m.name];
+        defineLocalProperty(cls, m.name, function() {
+          var Y = this.Y;
+          return {
+            __proto__: model,
+            create: function(args, opt_X) {
+              return model.create(args, opt_X || Y);
+            }
+          };
+        });
+      }
     }.bind(this));
 
-// TODO(adamvy): This shouldn't be required, commenting out for now.
-//    if ( extendsModel ) this.requires = this.requires.concat(extendsModel.requires);
     // build requires
     Object_forEach(this.requires, function(i) {
       var imp  = i.split(' as ');
@@ -322,7 +349,7 @@ var BootstrapModel = {
     }
 
     // add messages
-    if ( this.messages && this.messages.length > 0 && Message ) {
+    if ( this.messages && this.messages.length > 0 && GLOBAL.Message ) {
       Object_forEach(this.messages, function(m, key) {
         if ( ! Message.isInstance(m) ) {
           m = this.messages[key] = Message.create(m);
@@ -340,6 +367,10 @@ var BootstrapModel = {
 
     var self = this;
     // add relationships
+    this.instance_.relationships_ = this.relationships;
+
+    if ( extendsModel ) this.instance_.relationships_ = this.instance_.relationships_.concat(extendsModel.instance_.relationships_);
+
     this.relationships && this.relationships.forEach(function(r) {
       // console.log('************** rel: ', r, r.name, r.label, r.relatedModel, r.relatedProperty);
 
@@ -347,12 +378,11 @@ var BootstrapModel = {
       if ( ! self[name] ) self[name] = r;
       defineLazyProperty(cls, r.name, function() {
         var m = this.X.lookup(r.relatedModel);
-        var lcName = m.name[0].toLowerCase() + m.name.substring(1);
-        var dao = this.X[lcName + 'DAO'] || this.X[m.name + 'DAO'] ||
-            this.X[m.plural];
+        var name = daoize(m.name);
+        var dao = this.X[name];
         if ( ! dao ) {
-          console.error('Relationship ' + r.name + ' needs ' + (m.name + 'DAO') + ' or ' +
-              m.plural + ' in the context, and neither was found.');
+          console.error('Relationship ' + r.name + ' needs ' + name +
+              ' in the context, and it was not found.');
         }
 
         dao = RelationshipDAO.create({
@@ -474,7 +504,7 @@ var BootstrapModel = {
     var requires = {};
     this.requires.forEach(function(r) { requires[r.split(' ')[0]] = true; });
     this.traits.forEach(function(t) { requires[t] = true; });
-    if ( this.extendsModel ) requires[this.extendsModel] = true;
+    if ( this.extends ) requires[this.extends] = true;
 
     function setModel(o) { if ( o && o.model_ ) requires[o.model_.id] = true; }
 
@@ -488,13 +518,11 @@ var BootstrapModel = {
 
   getPrototype: function() { /* Returns the definition $$DOC{ref:'Model'} of this instance. */
     if ( ! this.instance_.prototype_ ) {
-      //console.profile('getPrototype' + this.name);
-      //for ( var i = 0 ; i < 0 ; i++ ) this.buildPrototype();
-      //console.profileEnd();
-    return this.instance_.prototype_ = this.buildPrototype();
+      this.instance_.prototype_ = this.buildPrototype();
+      this.onLoad && this.onLoad();
     }
+
     return this.instance_.prototype_;
-//    return this.instance_.prototype_ || ( this.instance_.prototype_ = this.buildPrototype() );
   },
 
   saveDefinition: function(self) {
@@ -559,6 +587,11 @@ var BootstrapModel = {
     return this.instance_.actions_;
   },
 
+  getRuntimeRelationships: function() {
+    if ( ! this.instance_.relationships_ ) this.getPrototype();
+    return this.instance_.relationships_;
+  },
+
   getProperty: function(name) { /* Returns the requested $$DOC{ref:'Property'} of this instance. */
     // NOTE: propertyMap_ is invalidated in a few places
     // when properties[] is updated.
@@ -606,7 +639,7 @@ var BootstrapModel = {
     var go = function() {
       var args = [], model = this, i;
 
-      if ( this.extendsModel ) args.push(this.X.arequire(this.extendsModel));
+      if ( this.extends ) args.push(this.X.arequire(this.extends));
 
       if ( this.models ) {
         for ( i = 0; i < this.models.length; i++ ) {
@@ -663,7 +696,7 @@ var BootstrapModel = {
     else
       go();
 
-    return this.required__
+    return this.required__;
   },
 
   getMyFeature: function(featureName) {
@@ -744,8 +777,8 @@ var BootstrapModel = {
        inherited features. */
     var feature = this.getMyFeature(featureName);
 
-    if ( ! feature && this.extendsModel ) {
-      var ext = this.X.lookup(this.extendsModel);
+    if ( ! feature && this.extends ) {
+      var ext = this.X.lookup(this.extends);
       if ( ext ) return ext.getFeature(featureName);
     } else {
       return feature;
@@ -756,8 +789,8 @@ var BootstrapModel = {
   getAllRawFeatures: function() {
     var featureList = this.getAllMyRawFeatures();
 
-    if ( this.extendsModel ) {
-      var ext = this.X.lookup(this.extendsModel);
+    if ( this.extends ) {
+      var ext = this.X.lookup(this.extends);
       if ( ext ) {
         ext.getAllFeatures().map(function(subFeat) {
           var subName = subFeat.name.toUpperCase();

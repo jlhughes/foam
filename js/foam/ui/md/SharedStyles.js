@@ -18,7 +18,7 @@
 CLASS({
   name: 'SharedStyles',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   templates: [
     function CSS() {/*
 body, .md-font, .md-quote {
@@ -283,6 +283,7 @@ input[name=q]::-webkit-input-placeholder {
 
 .md-button:not(.icon-only) {
   min-width: 64px;
+  min-height: 36px;
   height: 36px;
 }
 
@@ -293,6 +294,30 @@ input[name=q]::-webkit-input-placeholder {
   font-weight: 500;
   letter-spacing: 0;
 }
+
+.md-flex-row {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+}
+.md-flex-row-baseline {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  overflow: hidden;
+}
+.md-flex-row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.md-flex-col {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
 
 .floatingActionButton {
   position: absolute;
@@ -409,7 +434,7 @@ input[name=q]::-webkit-input-placeholder {
 
 @media (max-width: 600px) {
   .md-card-shell {
-    margin: 0;
+    margin: 4;
   }
   .md-popup-view-content {
     max-width: 100%;

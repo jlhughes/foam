@@ -20,7 +20,7 @@ CLASS({
   name: 'IDBDAO',
   label: 'IndexedDB DAO',
 
-  extendsModel: 'AbstractDAO',
+  extends: 'AbstractDAO',
 
   documentation: function() {/*
   Usage:<br/>
@@ -45,16 +45,16 @@ CLASS({
       label: 'Store Name',
       type:  'String',
       defaultValueFn: function() {
-        return this.model.plural;
+        return this.model.id;
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'useSimpleSerialization',
       defaultValue: true
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'indicies'
     }
   ],

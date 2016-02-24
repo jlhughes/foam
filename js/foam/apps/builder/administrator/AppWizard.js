@@ -12,14 +12,13 @@
 CLASS({
   package: 'foam.apps.builder.administrator',
   name: 'AppWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   requires: [
     'foam.apps.builder.administrator.PickAppWizard',
   ],
 
   imports: [
-    'selection$',
     'wizardStack',
   ],
 
@@ -36,8 +35,7 @@ CLASS({
 
   methods: [
     function onNext() {
-      this.SUPER(); // puts the app into the main dao
-      this.selection = this.data; // imported selection from browser's main list
+      //this.SUPER(); // puts the app into the main dao
     },
     function onCancel() {
       this.SUPER();

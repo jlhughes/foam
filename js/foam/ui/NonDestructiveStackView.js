@@ -23,7 +23,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'NonDestructiveStackView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.ui.layout.OverlaySlider',
@@ -34,12 +34,12 @@ CLASS({
 
   properties: [
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'stack',
       lazyFactory: function() { return []; }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'currentView',
       defaultValue: -1
     },
@@ -55,11 +55,11 @@ CLASS({
       }
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'slideAmount',
       defaultValue: 0
     },
-    { model_: 'BooleanProperty', name: 'sliderOpen', defaultValue: false },
+    { type: 'Boolean', name: 'sliderOpen', defaultValue: false },
     { model_: 'foam.core.types.DOMElementProperty', name: 'slideArea' },
     'slideLatch'
   ],
@@ -72,7 +72,7 @@ CLASS({
     init: function() {
       this.SUPER();
       var self = this;
-      this.X.dynamic(function() { self.width; self.height; self.sliderOpen; self.slideAmount }, this.layout);
+      this.X.dynamicFn(function() { self.width; self.height; self.sliderOpen; self.slideAmount }, this.layout);
     },
     setPreview: function(){ console.warn('Preview removed from stack view, do it yourself.'); },
     pushView: function(view, opt_label, opt_back, opt_transition) {

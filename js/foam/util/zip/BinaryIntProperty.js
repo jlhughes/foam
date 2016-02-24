@@ -13,16 +13,16 @@
 CLASS({
   package: 'foam.util.zip',
   name: 'BinaryIntProperty',
-  extendsModel: 'IntProperty',
+  extends: 'IntProperty',
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'size',
       defaultValue: 2,
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'offset',
     },
     {

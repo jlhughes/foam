@@ -18,8 +18,7 @@
 CLASS({
   package: 'foam.graphics',
   name: 'ActionButtonCView',
-
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [
     'foam.ui.md.Halo',
@@ -37,8 +36,8 @@ CLASS({
       }
     },
     {
-      name:  'font',
       type:  'String',
+      name:  'font',
       defaultValue: ''
     },
     {
@@ -86,17 +85,14 @@ CLASS({
     },
     {
       name:  'iconWidth',
-      type:  'int',
       defaultValue: 0
     },
     {
       name:  'iconHeight',
-      type:  'int',
       defaultValue: 0
     },
     {
       name:  'radius',
-      type:  'int',
       defaultValue: 0,
       postSet: function(_, r) {
         if ( r ) this.width = this.height = 2 * r;
@@ -148,7 +144,7 @@ CLASS({
     init: function() {
       this.SUPER();
 
-      this.X.dynamic(function() {
+      this.X.dynamicFn(function() {
           this.iconUrl; this.iconWidth; this.iconHeight;
         }.bind(this),
         function() {
@@ -170,7 +166,7 @@ CLASS({
       if ( ! this.action || ! this.data ) return;
 
       var self = this;
-      this.X.dynamic(
+      this.X.dynamicFn(
           function() {
             self.action.isAvailable.call(self.data, self.action);
             self.action.isEnabled.call(self.data, self.action);
@@ -237,9 +233,7 @@ CLASS({
       }
     },
 
-    erase: function() {
-      var c = this.canvas;
-
+    erase: function(c) {
       c.clearRect(0, 0, this.width, this.height);
 
       // TODO(jacksonic): Why is drawing a circle the default behaviour?
@@ -251,8 +245,7 @@ CLASS({
       c.fill();
     },
 
-    paintSelf: function() {
-      var c = this.canvas;
+    paintSelf: function(c) {
 
       if ( this.font ) c.font = this.font;
 

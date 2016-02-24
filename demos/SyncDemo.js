@@ -2,24 +2,24 @@ CLASS({
   name: 'Abc',
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'id'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'data'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'flags'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'remoteVersion',
       hidden: true
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'localVersion',
       hidden: true
     }
@@ -28,7 +28,7 @@ CLASS({
 
 CLASS({
   name: 'AbcCitationView',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
   templates: [
     function toHTML() {/*
       <div style="border 1px grey;" id="%%id">

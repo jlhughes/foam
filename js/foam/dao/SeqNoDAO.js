@@ -20,7 +20,7 @@ CLASS({
   name: 'SeqNoDAO',
   label: 'foam.dao.SeqNoDAO',
 
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   documentation: function() {/*
    Set a specified properties value with an auto-increment
@@ -39,7 +39,7 @@ CLASS({
       transient: true
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'sequenceValue',
       defaultValue: 1
     }

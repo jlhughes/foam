@@ -18,14 +18,14 @@
 CLASS({
   package: 'foam.ui.layout',
   name: 'ResponsiveView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   requires: [
     'foam.ui.layout.ResponsiveViewOption'
   ],
   imports: ['window'],
   properties: [
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'foam.ui.layout.ResponsiveViewOption',
       name: 'options',
       preSet: function(_, v) {
@@ -34,7 +34,7 @@ CLASS({
     },
     {
       name: 'current',
-      type: 'foam.ui.layout.ResponsiveViewOption',
+      subType: 'foam.ui.layout.ResponsiveViewOption',
       postSet: function(old, v) {
         if ( old !== v ) this.updateHTML();
       }

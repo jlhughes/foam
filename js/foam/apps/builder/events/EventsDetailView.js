@@ -13,10 +13,13 @@ CLASS({
   package: 'foam.apps.builder.events',
   name: 'EventsDetailView',
 
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
 
   requires: [
     'foam.ui.ImageView',
+    'foam.ui.StringArrayView',
+    'foam.ui.md.ColorFieldView',
+    'foam.ui.DAOKeyView',
   ],
 
   properties: [
@@ -27,9 +30,12 @@ CLASS({
     function toHTML() {/*
       <div id="%%id" <%= this.cssClassAttr() %>>
         <div class='md-card-shell'>
-          $$image{ model_: 'foam.ui.ImageView' }
+          <div class="img-content">
+            $$image{ model_: 'foam.ui.ImageView' }
+          </div>
           $$name{ model_: 'foam.ui.md.TextFieldView', floatingLabel: false, mode: 'read-only', extraClassName: 'md-subhead' }
           $$date{ model_: 'foam.ui.md.TextFieldView', floatingLabel: false, mode: 'read-only' }
+          $$presenters
           <div class="description-box" style="background: <%= this.data.color %>">
             $$description{ model_: 'foam.ui.md.TextFieldView', floatingLabel: false, mode: 'read-only' }
           </div>
@@ -42,6 +48,15 @@ CLASS({
         display: flex;
         flex-direction: column;
         padding: 16px;
+      }
+
+      .events-detail-view .img-content {
+        max-height: 400px;
+        overflow-y: hidden;
+      }
+
+      .events-detail-view img {
+        max-width: 100%;
       }
 
       .events-detail-view .description-box {

@@ -18,6 +18,7 @@
 CLASS({
   package: 'foam.documentation',
   name: 'DocModelFeatureDAOTrait',
+
   documentation: "Generates a featureDAO of all the inherited features of a $$DOC{ref:'Model'}.",
 
   requires: [
@@ -61,7 +62,7 @@ CLASS({
     },
     {
       name: 'processBaseModels',
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       defaultValue: true
     },
     {
@@ -140,7 +141,7 @@ CLASS({
         return;
       }
 
-      console.log("Generating FeatureDAO...", this.data.id );
+      // console.log("Generating FeatureDAO...", this.data.id );
 
 //       this.featureDAO.removeAll();
 //       this.modelDAO.removeAll();
@@ -184,8 +185,8 @@ CLASS({
       }.bind(this));
       // runs the trait finds first, and when they are done recurse to the next ancestor
       apar.apply(this, findFuncs)(function() {
-        if ( model.extendsModel ) {
-          this._DEV_ModelDAO.find(model.extendsModel, {
+        if ( model.extends ) {
+          this._DEV_ModelDAO.find(model.extends, {
               put: function(ext) {
                 map[ext.id] = ext;
                 this.agetInheritanceMap(ret, ext, map);
@@ -198,7 +199,6 @@ CLASS({
       }.bind(this));
 
     },
-
 
     debugLogFeatureDAO: function() {
       /* For debugging purposes, prints out the state of the FeatureDAO. */
@@ -240,8 +240,6 @@ CLASS({
       }
       this.SUPER(isParentDestroyed);
     }
-
-
   },
 
   listeners: [
@@ -251,7 +249,7 @@ CLASS({
       code: function(extendersOf) {
         this._DEV_ModelDAO.select(MAP(
           function(obj) {
-            if ( obj.extendsModel == extendersOf.id ) {
+            if ( obj.extends == extendersOf.id ) {
               this.subModelDAO.put(obj);
               // for performance, spread out the load
               // TODO(jacksonic): disabled recursion for speed
@@ -339,7 +337,7 @@ CLASS({
 
         if ( ! isTrait && this.processBaseModels ) {
           // Check if we extend something, and recurse.
-          if (!model.extendsModel) {
+          if (!model.extends) {
             newModelTr.inheritanceLevel = 0;
           } else {
             // add the tracker we're building to the list, for updates from our base models
@@ -347,7 +345,7 @@ CLASS({
             // inheritance level will bubble back up the stack once we know where the bottom is.
             // pass a copy of previousExtenderTrackers so we know what to update in the traits section after.
             newModelTr.inheritanceLevel = 1 + this.loadFeaturesOfModel(
-              { __proto__: map, data: map[model.extendsModel] },
+              { __proto__: map, data: map[model.extends] },
               previousExtenderTrackers.slice(0));
           }
 

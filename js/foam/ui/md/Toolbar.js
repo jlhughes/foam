@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.ui.md',
   name: 'Toolbar',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.ui.ActionButton',
@@ -25,6 +25,7 @@ CLASS({
   properties: [
     'data',
     'title',
+    [ 'extraClassName', 'browser-header-color' ],
     {
       name: 'leftActionList',
       lazyFactory: function() {
@@ -39,7 +40,7 @@ CLASS({
       },
     },
     {
-      type: 'foam.ui.md.OverflowActionList',
+      // type: 'foam.ui.md.OverflowActionList',
       name: 'rightActionList',
       lazyFactory: function() {
         return this.OverflowActionList.create({
@@ -48,7 +49,7 @@ CLASS({
       },
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'foam.ui.md.ToolbarAction',
       name: 'leftActions',
       postSet: function(old, nu) {
@@ -61,7 +62,7 @@ CLASS({
       },
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'foam.ui.md.ToolbarAction',
       name: 'rightActions',
     },
@@ -80,15 +81,15 @@ CLASS({
     },
     function addRightAction(action) {
       if ( ! action ) return;
-      this.addRightActions('right', [action]);
+      this.addRightActions([action]);
     },
     function removeLeftAction(action) {
       if ( ! action ) return;
-      this.removeActions('left', [action]);
+      this.removeLeftActions([action]);
     },
     function removeRightAction(action) {
       if ( ! action ) return;
-      this.removeActions('right', [action]);
+      this.removeRightActions([action]);
     },
     function addLeftActions(actions) { return this.addActions('left', actions); },
     function addRightActions(actions) { return this.addActions('right', actions); },

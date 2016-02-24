@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'ArrayTileView',
 
-  extendsModel: 'foam.ui.AbstractDAOView',
+  extends: 'foam.ui.AbstractDAOView',
 
   properties: [
     {
@@ -32,7 +32,7 @@ CLASS({
       name: 'lastView'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'painting',
       defaultValue: false
     }

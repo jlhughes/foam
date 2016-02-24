@@ -166,6 +166,9 @@ var XMLUtil = {
       else if ( obj instanceof Function ) {
         this.outputFunction_(out, obj);
       }
+      else if ( obj instanceof Date ) {
+        out(obj.getTime());
+      }
       else if ( obj instanceof Object ) {
         if ( obj.model_ )
           this.outputObject_(out, obj);
@@ -190,7 +193,7 @@ var XMLUtil = {
 
           if ( Array.isArray(val) && val.length == 0 ) continue;
 
-          if ( val == prop.defaultValue ) continue;
+          if ( equals(val, prop.defaultValue) ) continue;
 
           out('<property name="', XMLUtil.escapeAttr(prop.name), '" ' +
               (typeof val === 'function' ? 'type="function"' : '') + '>');
@@ -253,6 +256,9 @@ var XMLUtil = {
       }
       else if ( obj instanceof Function ) {
         this.outputFunction_(out, obj, indent);
+      }
+      else if ( obj instanceof Date ) {
+        out(obj.getTime());
       }
       else if ( obj instanceof Object ) {
         try {

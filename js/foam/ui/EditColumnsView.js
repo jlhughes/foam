@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'EditColumnsView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
@@ -27,11 +27,11 @@ CLASS({
       type: 'Model'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'properties'
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'availableProperties'
     }
   ],

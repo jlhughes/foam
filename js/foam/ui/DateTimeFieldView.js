@@ -20,15 +20,15 @@ CLASS({
   name:  'DateTimeFieldView',
   label: 'Date-Time Field',
 
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'name'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'mode',
       defaultValue: 'read-write'
     },

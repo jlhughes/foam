@@ -13,15 +13,11 @@ CLASS({
   package: 'foam.apps.builder',
   name: 'SourceManager',
 
-  imports: [
-    'xhrManager',
-  ],
-
   models: [
     {
       name: 'File',
       properties: [
-        { model_: 'StringProperty', name: 'path' },
+        { type: 'String', name: 'path' },
         { name: 'contents' },
       ],
     },
@@ -29,12 +25,17 @@ CLASS({
 
   properties: [
     {
-      model_: 'ArrayProperty',
+      name: 'xhrManager',
+      required: true,
+      transient: true,
+    },
+    {
+      type: 'Array',
       name: 'sources',
       transient: true,
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'agetFile',
       defaultValue: null,
     },
@@ -65,9 +66,10 @@ CLASS({
       config.toManifest(out);
       sources.push(this.createFile('manifest.json', out.toString()));
 
+      var jsonConfig = ObjectToJSON.visit(config);
       sources.push(this.createFile(
           'config.json',
-          JSONUtil.compact.where(NOT_TRANSIENT).stringify(config)));
+          JSONUtil.compact.where(NOT_TRANSIENT).stringify(jsonConfig)));
 
       return sources;
     },

@@ -17,22 +17,30 @@
 CLASS({
   package: 'foam.node.dao',
   name: 'JSONFileDAO',
-  extendsModel: 'MDAO',
+  extends: 'MDAO',
+
+  imports: [ 'console' ],
 
   properties: [
     {
+      model_: 'foam.node.NodeRequireProperty',
       name: 'fs',
-      factory: function() {
-        return require('fs');
+    },
+    {
+      model_: 'foam.node.NodeRequireProperty',
+      name: 'path'
+    },
+    {
+      name:  'filename',
+      label: 'File Name',
+      defaultValueFn: function() {
+        return this.model.name + '.json';
       }
     },
     {
-      name:  'name',
-      label: 'File Name',
-      model_: 'StringProperty',
-      defaultValueFn: function() {
-        return this.model.plural + '.json';
-      }
+      type: 'Boolean',
+      name: 'writing',
+      defaultValue: false
     }
   ],
 
@@ -40,9 +48,16 @@ CLASS({
     init: function() {
       this.SUPER();
 
-      if ( this.fs.existsSync(this.name) ) {
-        var content = this.fs.readFileSync(this.name, { encoding: 'utf-8' });
-        JSONUtil.parse(this.X, content).select(this);
+      if ( Array.isArray(this.filename) ) {
+        for ( var i = 0; i < this.filename.length; ++i ) {
+          if ( this.loadFile(this.filename[i]) ) {
+            this.filename = this.filename[i];
+            break;
+          }
+          this.console.warn('Failed to load JSON file:', this.filename[i]);
+        }
+      } else {
+        this.loadFile(this.filename);
       }
 
       this.addRawIndex({
@@ -55,16 +70,45 @@ CLASS({
         put: this.updated,
         remove: this.updated
       });
+    },
+    loadFile: function(filename) {
+      var path = this.path.normalize(filename).split(this.path.sep);
+      var s = path[0];
+      for ( var i = 1 ; i < path.length - 1 ; i++ ) {
+        try {
+          s += this.path.sep + path[i];
+          var stat = this.fs.statSync(s);
+          if ( ! stat.isDirectory() ) return undefined;
+        } catch( e ) {
+          this.fs.mkdirSync(s);
+        }
+      }
+
+      if ( ! this.fs.existsSync(filename) ) return undefined;
+      var content = this.fs.readFileSync(filename, { encoding: 'utf-8' });
+      var data = JSONUtil.parse(this.X, content);
+      if ( ! data ) return undefined;
+      data.select(this);
+      return data;
     }
   },
 
   listeners: [
     {
       name: 'updated',
-      isMerged: 100,
+      isMerged: 1000,
       code: function() {
+        if ( this.writing ) {
+          this.updated();
+          return;
+        }
         this.select()(function(a) {
-          this.fs.writeFileSync(this.name, JSONUtil.where(NOT_TRANSIENT).stringify(a), { encoding: 'utf-8' });
+          this.writing = true;
+          this.fs.writeFile(
+            this.filename,
+            JSONUtil.where(NOT_TRANSIENT).stringify(a),
+            { encoding: 'utf-8' },
+            function() { this.writing = false; }.bind(this));
         }.bind(this));
       }
     }

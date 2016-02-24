@@ -31,7 +31,7 @@ CLASS({
       name: 'parent',
       transient: true,
       hidden: true,
-      type: 'foam.apps.builder.AppConfig',
+      compareProperty: function() { return 0; },
       postSet: function(old,nu) {
         if ( nu ) {
           var id = nu.appId + "_" + this.name;
@@ -39,7 +39,7 @@ CLASS({
           if ( this.model && this.model.name !== id ) {
             this.model.name = id;
             this.model.label = capitalize(camelize(name));
-            this.model.extendsModel = nu.baseModelId;
+            this.model.extends = nu.baseModelId;
           }
           if ( this.dao && this.dao.name !== name ) this.dao.name = name;
         }
@@ -61,7 +61,7 @@ CLASS({
       },
       lazyFactory: function() {
         return this.Model.create({
-          extendsModel: this.parent.baseModelId,
+          extends: this.parent.baseModelId,
           name: this.parent.appId,
           label: capitalize(camelize(this.appName+" "+this.name))
         });
@@ -82,11 +82,14 @@ CLASS({
         if ( old ) old.removeListener(this.modelChange);
         if ( nu ) nu.addListener(this.modelChange);
         this.modelChange();
+
+        // HACK until deserialization checks the right context,
+        // then registerModel in this.X instead
+        X.registerModel(nu, nu.id);
       },
     },
     {
       name: 'dao',
-      type: 'foam.apps.builder.dao.DAOFactory',
       help: 'The data source type and location.',
       lazyFactory: function() {
         return this.LocalDAOFactory.create({
@@ -119,7 +122,7 @@ CLASS({
     function resetModel() {
       // this initialization case is the only time the name is synced to appName
       this.model = this.Model.create({
-        extendsModel: this.parent.baseModelId,
+        extends: this.parent.baseModelId,
         name: this.parent.appId + "_" + this.name,
         label: capitalize(camelize(this.parent.appName+" "+this.name))
       });

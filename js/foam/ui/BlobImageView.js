@@ -20,7 +20,7 @@ CLASS({
   package: 'foam.ui',
   name: 'BlobImageView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
 
   help: 'Image view for rendering a blob as an image.',
@@ -31,11 +31,11 @@ CLASS({
       postSet: function() { this.onValueChange(); }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'displayWidth'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'displayHeight'
     }
   ],

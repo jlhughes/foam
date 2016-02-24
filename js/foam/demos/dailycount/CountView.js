@@ -18,14 +18,14 @@
 CLASS({
   package: 'foam.demos.dailycount',
   name: 'CountView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [ 'foam.demos.dailycount.DailyCount' ],
   imports: [ 'counts' ],
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'count'
     }
   ],

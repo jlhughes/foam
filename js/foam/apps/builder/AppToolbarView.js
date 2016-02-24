@@ -12,7 +12,11 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'AppToolbarView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
+
+  requires: [
+    'foam.ui.md.FlatButton',
+  ],
 
   properties: [
     {

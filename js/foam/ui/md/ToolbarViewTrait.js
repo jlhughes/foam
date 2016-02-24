@@ -38,7 +38,7 @@ CLASS({
       },
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'foam.ui.md.ToolbarAction',
       name: 'toolbarActions_',
       postSet: function(old, nu) {
@@ -54,7 +54,7 @@ CLASS({
       },
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'foam.ui.md.ToolbarAction',
       name: 'dataToolbarActions_',
       postSet: function(old, nu) {
@@ -64,7 +64,7 @@ CLASS({
       },
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'hideOwnActions',
       help: "If true, do not autoxmatically add the view's own actions to the toolbar, just the data's actions",
       defaultValue: false,
@@ -102,10 +102,10 @@ CLASS({
         data: data,
         action: action,
       }, this.Y);
-      this.X.dynamic(function() {
+      this.X.dynamicFn(function() {
         toolbarAction.available = isAvailable.apply(data, action);
       });
-      this.X.dynamic(function() {
+      this.X.dynamicFn(function() {
         toolbarAction.enabled = isEnabled.apply(data, action);
       });
       return toolbarAction;

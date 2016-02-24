@@ -18,7 +18,7 @@
 CLASS({
   name: 'PaperButtonBase',
   package: 'foam.ui.polymer.gen',
-  extendsModel: 'foam.ui.polymer.gen.View',
+  extends: 'foam.ui.polymer.gen.View',
   traits: [],
   constants: {
     POLYMER_PROPERTIES: []
@@ -66,7 +66,7 @@ CLASS({
     },
     {
       name: 'tagName',
-      model_: 'StringProperty',
+      type: 'String',
       defaultValue: 'paper-button-base'
     }
   ]

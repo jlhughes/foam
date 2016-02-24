@@ -29,7 +29,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'TableView',
-  extendsModel: 'foam.ui.AbstractDAOView',
+  extends: 'foam.ui.AbstractDAOView',
 
   label: 'Table View',
 
@@ -55,20 +55,20 @@ CLASS({
 
   properties: [
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name:  'model',
       defaultValueFn: function() { return this.X.model ||
                                    ( this.data && this.data.model ); }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'className',
       lazyFactory: function() {
         return 'foamTable ' + this.model.name + 'Table';
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name:  'properties',
       postSet: function() { this.paintTable(); }
     },
@@ -81,12 +81,12 @@ CLASS({
     },
     {
       name:  'children',
-      type:  'Array[View]',
+      // type:  'Array[View]',
       factory: function() { return []; }
     },
     {
       name:  'sortOrder',
-      type:  'Comparator',
+      // type:  'Comparator',
       postSet: function() { this.paintTable(); },
       defaultValue: undefined
     },
@@ -111,27 +111,27 @@ CLASS({
       }
     },
     {
-      model_: 'IntProperty',
+      type:  'Int',
       name: 'height'
     },
     {
-      model_: 'BooleanProperty',
+      type:  'Boolean',
       name: 'scrollEnabled',
       defaultValue: false
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'columnResizeEnabled',
       defaultValue: false
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'editColumnsEnabled',
       defaultValue: false
     },
     {
       name: 'scrollbar',
-      type: 'ScrollCView',
+      // type: 'ScrollCView',
       factory: function() {
         return this.ScrollCView.create({height:800, width: 24, x: 1, y: 0, size: 200, extent: 10});
       },
@@ -153,27 +153,27 @@ CLASS({
       defaultValue: 0
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'selectionListeners_',
       lazyFactory: function() { return []; }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'hardSelectionListeners_',
       lazyFactory: function() { return []; }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'mouseX',
       defaultValue: 0
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'mouseY',
       defaultValue: 0
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'mouseOverRow',
       defaultValue: false
     },
@@ -723,7 +723,7 @@ CLASS({
 
   templates: [
     function toHTML() {/*
-      <div tabindex="99" class="tableView" style="display:flex;display:-webkit-flex;width:100%;">
+      <div tabindex="99" class="tableView" style="display:flex;display:-webkit-flex;width:100%;overflow:hidden">
         <span id="%%id" style="flex:1 1 100%;-webkit-flex:1 1 100%;overflow-x:auto;overflow-y:hidden;">
           <% this.tableToHTML(out); %>
         </span>

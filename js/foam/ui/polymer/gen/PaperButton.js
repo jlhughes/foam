@@ -18,7 +18,7 @@
 CLASS({
   name: 'PaperButton',
   package: 'foam.ui.polymer.gen',
-  extendsModel: 'foam.ui.polymer.gen.View',
+  extends: 'foam.ui.polymer.gen.View',
   traits: [
     'foam.ui.polymer.gen.PaperButtonBase'
   ],
@@ -77,7 +77,7 @@ CLASS({
     },
     {
       name: 'tagName',
-      model_: 'StringProperty',
+      type: 'String',
       defaultValue: 'paper-button'
     },
     {
@@ -117,7 +117,7 @@ CLASS({
       postSet: function() { this.updateStyleCSS(); }
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'polymerDownAction_',
       defaultValue: anop
     }

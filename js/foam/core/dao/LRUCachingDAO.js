@@ -19,11 +19,11 @@ CLASS({
   name: 'LRUCachingDAO',
   package: 'foam.core.dao',
 
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'maxSize',
       defaultValue: 100
     },
@@ -50,7 +50,7 @@ CLASS({
           name: 'obj',
         },
         {
-          model_: 'DateTimeProperty',
+          type: 'DateTime',
           name: 'timestamp'
         }
       ]
@@ -142,7 +142,7 @@ CLASS({
 
       var self = this;
       this.cache.remove(obj.id, {
-        put: function() {
+        remove: function() {
           self.delegate.remove(obj, sink);
         },
         error: function() {

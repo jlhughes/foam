@@ -18,7 +18,7 @@
 CLASS({
   name: 'ManuallyDelayedPutDAO',
   package: 'foam.core.dao',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   requires: [ 'foam.dao.ProxyDAO' ],
 
@@ -28,7 +28,7 @@ CLASS({
       factory: function() { return []; }
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'put_',
       factory: function() { return this.ProxyDAO.getFeature('put').code; }
     }

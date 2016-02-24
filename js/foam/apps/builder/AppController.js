@@ -13,7 +13,7 @@ CLASS({
   package: 'foam.apps.builder',
   name: 'AppController',
 
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
 
 
   documentation: function() {/*
@@ -34,7 +34,6 @@ CLASS({
   properties: [
     {
       name: 'data',
-      type: 'foam.apps.builder.AppConfig',
       help: 'The configuration for app parameters, data store location, etc.',
       postSet: function(old, nu) {
         // change the DAOs on this.Y

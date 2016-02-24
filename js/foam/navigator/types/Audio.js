@@ -18,7 +18,7 @@
 CLASS({
   name: 'Audio',
   package: 'foam.navigator.types',
-  extendsModel: 'foam.navigator.BasicFOAMlet',
+  extends: 'foam.navigator.BasicFOAMlet',
 
   requires: [
     'foam.navigator.types.AudioSource',
@@ -27,7 +27,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'name',
       dynamicValue: function() {
         return [
@@ -49,15 +49,15 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'title'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'creator'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'collection'
     },
     {

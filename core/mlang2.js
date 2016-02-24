@@ -17,8 +17,7 @@
 
 CLASS({
   name: 'ExplainExpr',
-
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   documentation: 'Pseudo-expression which outputs a human-readable description of its subexpression, and the plan for evaluating it.',
 
@@ -52,7 +51,7 @@ function EXPLAIN(arg) {
 CLASS({
   name: 'OrExpr',
 
-  extendsModel: 'NARY',
+  extends: 'NARY',
 
   documentation: 'N-ary expression which is true if any one of its 0 or more subexpressions is true. OR() === FALSE',
 
@@ -208,7 +207,7 @@ CLASS({
 CLASS({
   name: 'NotExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
   abstract: true,
 
   documentation: 'Unary expression which inverts the truth value of its argument.',
@@ -256,7 +255,7 @@ CLASS({
 
 CLASS({
   name: 'HasExpr',
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   documentation: 'Unary expression that checks if its argument has a ' +
       'meaningful, non-empty value (nonempty strings, nonempty arrays, etc.)',
@@ -292,7 +291,7 @@ CLASS({
 CLASS({
   name: 'ContainedInICExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   documentation: 'Checks if the first argument is contained in the array-valued right argument, ignoring case in strings.',
 
@@ -300,7 +299,7 @@ CLASS({
     {
       name:  'arg2',
       label: 'Argument',
-      type:  'Expr',
+      // type:  'Expr',
       help:  'Sub-expression',
       preSet: function(_, a) { return a.map(function(o) { return o.toUpperCase(); }); }
     }
@@ -335,7 +334,7 @@ CLASS({
 CLASS({
   name: 'ContainsExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   //documentation: 'Checks
 
@@ -376,13 +375,13 @@ CLASS({
 CLASS({
   name: 'ContainsICExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   properties: [
     {
       name:  'arg2',
       label: 'Argument',
-      type:  'Expr',
+      // type:  'Expr',
       help:  'Sub-expression',
       defaultValue: TRUE,
       postSet: function(_, value) { this.pattern_ = undefined; }
@@ -434,7 +433,7 @@ CLASS({
 CLASS({
   name: 'StartsWithExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   methods: {
     toSQL: function() { return this.arg1.toSQL() + " like '%' + " + this.arg2.toSQL() + "+ '%'"; },
@@ -475,7 +474,7 @@ CLASS({
 CLASS({
   name: 'StartsWithICExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   methods: {
     toSQL: function() { return this.arg1.toSQL() + " like '%' + " + this.arg2.toSQL() + "+ '%'"; },
@@ -504,7 +503,7 @@ CLASS({
 
 CLASS({
   name: 'ConcatExpr',
-  extendsModel: 'NARY',
+  extends: 'NARY',
 
   label: 'concat',
 
@@ -531,12 +530,11 @@ CLASS({
 CLASS({
   name: 'SumExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   properties: [
     {
       name:  'sum',
-      type:  'int',
       help:  'Sum of values.',
       factory: function() { return 0; }
     },
@@ -551,7 +549,7 @@ CLASS({
 
   methods: {
     pipe: function(sink) { sink.put(this); },
-    put: function(obj) { this.instance_.sum += this.arg1.f(obj); },
+    put: function(obj) { this.instance_.sum += +this.arg1.f(obj); },
     remove: function(obj) { this.sum -= this.arg1.f(obj); },
     toString: function() { return this.sum; }
   }
@@ -561,23 +559,21 @@ CLASS({
 CLASS({
   name: 'AvgExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   properties: [
     {
       name:  'count',
-      type:  'int',
+      type:  'Int',
       defaultValue: 0
     },
     {
       name:  'sum',
-      type:  'int',
       help:  'Sum of values.',
       defaultValue: 0
     },
     {
       name:  'avg',
-      type:  'floag',
       help:  'Average of values.',
       getter: function() { return this.sum / this.count; }
     },
@@ -602,21 +598,18 @@ CLASS({
 CLASS({
   name: 'MinExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   properties: [
     {
       name:  'min',
-      type:  'int',
       help:  'Minimum value.',
       defaultValue: undefined
     },
     {
       name: 'value',
       compareProperty: function() { return 0; },
-      getter: function() {
-        return this.min;
-      }
+      getter: function() { return this.min; }
     }
   ],
 
@@ -625,7 +618,7 @@ CLASS({
       return o1.compareTo(o2) > 0 ? o2 : o1;
     },
     reduce: function(other) {
-      return MinExpr.create({max: this.mininum(this.min, other.min)});
+      return MinExpr.create({min: this.mininum(this.min, other.min)});
     },
     reduceI: function(other) {
       this.min = this.minimum(this.min, other.min);
@@ -633,7 +626,7 @@ CLASS({
     pipe: function(sink) { sink.put(this); },
     put: function(obj) {
       var v = this.arg1.f(obj);
-      this.min = this.min === undefined ? v : this.minimum(this.min, v);
+      this.min = this.hasOwnProperty('min') ? this.minimum(this.min, v) : v ;
     },
     remove: function(obj) { },
     toString: function() { return this.min; }
@@ -644,7 +637,7 @@ CLASS({
 CLASS({
   name: 'DistinctExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   properties: [
     {
@@ -684,12 +677,12 @@ CLASS({
 CLASS({
   name: 'GroupByExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   properties: [
     {
       name:  'groups',
-      type:  'Map[Expr]',
+      // type:  'Map[Expr]',
       help:  'Groups.',
       factory: function() { return {}; }
     },
@@ -794,45 +787,45 @@ CLASS({
 CLASS({
   name: 'GridByExpr',
 
-  extendsModel: 'Expr',
+  extends: 'Expr',
 
   properties: [
     {
       name:  'xFunc',
       label: 'X-Axis Function',
-      type:  'Expr',
+      // type:  'Expr',
       help:  'Sub-expression',
       defaultValue: TRUE
     },
     {
       name:  'yFunc',
       label: 'Y-Axis Function',
-      type:  'Expr',
+      // type:  'Expr',
       help:  'Sub-expression',
       defaultValue: TRUE
     },
     {
       name:  'acc',
       label: 'Accumulator',
-      type:  'Expr',
+      // type:  'Expr',
       help:  'Sub-expression',
       defaultValue: TRUE
     },
     {
       name:  'rows',
-      type:  'Map[Expr]',
+      // type:  'Map[Expr]',
       help:  'Rows.',
       factory: function() { return {}; }
     },
     {
       name:  'cols',
       label: 'Columns',
-      type:  'Map[Expr]',
+      // type:  'Map[Expr]',
       help:  'Columns.',
       factory: function() { return {}; }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'children'
     }
   ],
@@ -852,7 +845,7 @@ CLASS({
       self.addPropertyListener('acc', f);
       f();
       /*
-        Events.dynamic(
+        Events.dynamicFn(
         function() { self.xFunc; self.yFunc; self.acc; },
         function() {
         self.cols = GROUP_BY(self.xFunc, COUNT());
@@ -953,7 +946,7 @@ CLASS({
 CLASS({
   name: 'MapExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   methods: {
     reduce: function(other) {
@@ -999,7 +992,7 @@ CLASS({
 CLASS({
   name: 'FilterExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   methods: {
     reduce: function(other) {
@@ -1044,7 +1037,7 @@ CLASS({
 CLASS({
   name: 'SeqExpr',
 
-  extendsModel: 'NARY',
+  extends: 'NARY',
 
   properties: [
     {
@@ -1108,14 +1101,14 @@ CLASS({
 
 CLASS({
   name: 'UpdateExpr',
-  extendsModel: 'NARY',
+  extends: 'NARY',
 
   label: 'UpdateExpr',
 
   properties: [
     {
       name: 'dao',
-      type: 'DAO',
+      // type: 'DAO',
       transient: true,
       hidden: true
     }
@@ -1172,7 +1165,7 @@ CLASS({
   name: 'SetExpr',
   label: 'SetExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   methods: {
     toSQL: function() { return this.arg1.toSQL() + ' = ' + this.arg2.toSQL(); },
@@ -1272,7 +1265,7 @@ function CONCAT() {
 CLASS({
   name: 'TreeExpr',
 
-  extendsModel: 'Expr',
+  extends: 'Expr',
 
   properties: [
     {
@@ -1288,7 +1281,7 @@ CLASS({
       transient: true
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'roots'
     }
   ],
@@ -1329,7 +1322,7 @@ function TREE(parentProperty, childrenProperty) {
 CLASS({
   name: 'DescExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   methods: {
     toSQL: function() {
@@ -1347,7 +1340,7 @@ CLASS({
 CLASS({
   name: 'AddExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
 
   methods: {
     toSQL: function() {
@@ -1383,7 +1376,7 @@ var JOIN = function(dao, key, sink) {
 CLASS({
   name: 'MQLExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   documentation: 'Parse an MQL query string and use it as a predicate.',
 
@@ -1421,7 +1414,7 @@ function MQL(mql) { return MQLExpr.create({arg1: mql}); }
 CLASS({
   name: 'KeywordExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   documentation: 'Keyword search.',
 

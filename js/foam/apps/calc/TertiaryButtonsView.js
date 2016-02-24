@@ -12,7 +12,7 @@
 CLASS({
   name: 'TertiaryButtonsView',
   package: 'foam.apps.calc',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   requires: ['foam.apps.calc.CalcButton'],
   templates: [
     function toHTML() {/*
@@ -22,7 +22,7 @@ CLASS({
             height:     61,
             color:      'rgb(80, 80, 80)',
             background: 'rgb(29, 233, 182)',
-            font:       '300 18px RobotoDraft'
+            font:       '300 18px Roboto'
           }), 'foam.ui.ActionButton');
           %>
           <div id="%%id" class="buttons button-row tertiaryButtons">
@@ -42,9 +42,9 @@ CLASS({
             </div>
           </div>
           <%
-            var l = function(_, _, _, degrees) {
-              this.degView.font = degrees ? '600 18px RobotoDraft' : '300 18px RobotoDraft';
-              this.radView.font = degrees ? '300 18px RobotoDraft' : '600 18px RobotoDraft';
+            var l = function(_, __, ___, degrees) {
+              this.degView.font = degrees ? '600 18px Roboto' : '300 18px Roboto';
+              this.radView.font = degrees ? '300 18px Roboto' : '600 18px Roboto';
               if ( this.degView.view ) {
                 this.degView.view.paint();
                 this.radView.view.paint();

@@ -19,11 +19,11 @@ CLASS({
   name: 'View',
   package: 'foam.ui.polymer.gen',
 
-  extendsModel: 'foam.ui.polymer.View',
+  extends: 'foam.ui.polymer.View',
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'content',
       defaultValue: '',
       postSet: function() {

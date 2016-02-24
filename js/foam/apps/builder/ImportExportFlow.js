@@ -14,19 +14,29 @@ CLASS({
   name: 'ImportExportFlow',
 
   imports: [
+    'appBuilderAnalyticsEnabled$ as analyticsEnabled$',
     'mdToolbar as toolbar',
   ],
   properties: [
-    'config',
     'dao',
     'toolbar',
     {
-      model_: 'StringProperty',
+      name: 'config',
+      defaultValue: null,
+      postSet: function(old, nu) {
+        if ( old ) Events.unfollow(this.analyticsEnabled$,
+                                   old.appBuilderAnalyticsEnabled$);
+        if ( nu ) Events.follow(this.analyticsEnabled$,
+                                nu.appBuilderAnalyticsEnabled$);
+      },
+    },
+    {
+      type: 'String',
       name: 'title',
       defaultValue: 'Exporting App',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'actionName',
       defaultValue: 'exportApp',
     },
@@ -45,11 +55,11 @@ CLASS({
       ],
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'message',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'details',
       defaultValue: 'Still working...',
     },

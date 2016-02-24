@@ -12,15 +12,15 @@
 CLASS({
   name: 'Author',
   package: 'foam.flow',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'firstName'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'middleNames',
       singular: 'middleName',
       type: 'Array[String]',
@@ -31,15 +31,15 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'lastName'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'email'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'middleInitials',
       getter: function() {
         return this.middleNames.map(function(mn) {
@@ -48,7 +48,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'fullName',
       getter: function() {
         debugger;
@@ -58,7 +58,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'shortFullName',
       getter: function() {
         return this.firstName +
@@ -68,7 +68,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'invertedName',
       getter: function() {
         return this.lastName + ',' +
@@ -78,7 +78,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'shortInvertedName',
       getter: function() {
         return this.lastName + ',' +

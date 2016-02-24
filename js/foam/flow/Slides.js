@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.flow',
   name: 'Slides',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
   traits: ['foam.memento.MemorableTrait'],
 
   requires: [
@@ -32,7 +32,7 @@ CLASS({
       transient: true
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'position',
       memorable: true,
       displayWidth: 5,
@@ -123,9 +123,11 @@ CLASS({
         z-index: 2;
       }
       slides > controls input {
-        font-size: 20px;
+        font-size: 17px;
         margin: 0 10px 0 0;
+        padding: 0 0 0 6px;
         width: 50px;
+        height: 28px;
       }
       slides > controls .of {
         margin-top: 2px;

@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 CLASS({
   package: 'foam.ui.md',
   name: 'CitationView',
-  extendsModel: 'foam.ui.md.DetailView',
-  requires: [
-  ],
+  extends: 'foam.ui.md.DetailView',
 
   properties: [
     {
@@ -31,17 +30,13 @@ CLASS({
     {
       name: 'className',
       defaultValue: 'md-citation-view'
-    },
+    }
   ],
 
   methods: [
     function pickNameProperty() {
-      var prop;
-      if (this.model.LABEL) {
-        prop = this.model.LABEL;
-      } else if (this.model.NAME) {
-        prop = this.model.NAME;
-      } else {
+      var prop = this.model.getFeature('label') || this.model.getFeature('name');
+      if (!prop) {
         var props = this.model.getRuntimeProperties();
         var stringProps = [];
         for (var i = 0; i < props.length; i++) {
@@ -60,7 +55,7 @@ CLASS({
         }
         if (!prop && stringProps.length) prop = stringProps[0];
       }
-      if (!prop) prop = this.model.ID;
+      if (!prop) prop = this.model.getFeature('id');
       return prop;
     }
   ],
@@ -78,6 +73,6 @@ CLASS({
       <div id="<%= this.id %>" <%= this.cssClassAttr() %>>
         <%= this.createTemplateView(this.pickNameProperty().name, { mode: 'read-only', floatingLabel: false }) %>
       </div>
-    */},
+    */}
   ]
 });

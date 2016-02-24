@@ -70,7 +70,7 @@ CLASS({
       help: 'Help text associated with the relationship.'
     },
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       documentation: function() { /*
           The developer documentation.
@@ -87,6 +87,20 @@ CLASS({
       help: 'The name of the related Model.'
     },
     {
+      name: 'destinationModel',
+      type: 'String',
+      required: false,
+      displayWidth: 30,
+      displayHeight: 1
+    },
+    {
+      name: 'destinationProperty',
+      type: 'String',
+      required: false,
+      displayWidth: 30,
+      displayHeight: 1
+    },
+    {
       name:  'relatedProperty',
       type:  'String',
       required: true,
@@ -99,8 +113,29 @@ CLASS({
         $$DOC{ref:'Model',usePlural:true}.
       */},
       help: 'The join property of the related Model.'
+    },
+    {
+      name: 'toRelationshipE',
+      labels: ['javascript'],
+      defaultValue: function toRelationshipE(X) {
+        return X.lookup('foam.u2.DAOController').create(null, X);
+      },
+      adapt: function(_, nu) {
+        return typeof nu === 'string' ?
+            function(X) { return X.lookup(nu).create(null, X); } : nu;
+      }
     }
-  ]/*,
+  ],
+
+  methods: [
+    function toE(X) {
+      return X.lookup('foam.u2.RelationshipView').create({
+        relationship: this,
+        view: this.toRelationshipE(X)
+      }, X);
+    },
+  ]
+  /*,
   methods: {
     dao: function() {
       var m = this.X[this.relatedModel];
@@ -132,6 +167,8 @@ CLASS({
 // the model for that feature type ("Method", "Documentation", etc.) being
 // missing previously. This time the preSet for each should be fully operational.
 function recopyModelFeatures(m) {
+  GLOBAL[m.name] = X[m.name] = m;
+
   m.model_ = Model;
 
   // the preSet for each of these does the work

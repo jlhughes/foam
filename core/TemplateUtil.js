@@ -29,7 +29,7 @@
 
 MODEL({
   name: 'TemplateParser',
-  extendsModel: 'grammar',
+  extends: 'grammar',
 
   methods: {
     START: sym('markup'),
@@ -102,7 +102,9 @@ var TemplateOutput = {
           buf.push(o);
         } else if ( o && 'Element' === o.name_ ) {
           // Temporary bridge for working with foam.u2 Views
-          buf.push(o.toString());
+          var s = o.createOutputStream();
+          o.output(s);
+          buf.push(s.toString());
           // Needs to be bound, since o is a loop variable and will otherwise
           // be the final element of the arguments array, not the correct one.
           obj.addChild({ initHTML: o.load.bind(o) });
@@ -217,8 +219,7 @@ MODEL({
         "out('",
     FOOTERS: {
       html: "');return out.toString();",
-      css: "');return " +
-          'X.foam.grammars.CSS3.create().parser.parseString(out.toString()).toString();'
+      css: "');return X.foam.grammars.CSSDecl.create({model:this.model_}).parser.parseString(out.toString());"
     },
   },
 
@@ -252,17 +253,42 @@ MODEL({
         '(function() { ' +
           'var escapeHTML = XMLUtil.escape, TOC = TemplateOutput.create.bind(TemplateOutput); ' +
           'return function(' + args.join(',') + '){' + code + '};})()' +
-          (model ? '\n\n//# sourceURL=' + model.id.split('.').join('/') + '.' + t.name + '\n' : ''));
+          (model && model.id ? '\n\n//# sourceURL=' + model.id.replace(/\./g, '/') + '.' + t.name + '\n' : ''));
+    },
+    parseCSS: function(t, model) {
+      var parser = this.CSSParser_ || ( this.CSSParser_ = X.foam.grammars.CSSDecl.create());
+      parser.model = model;
+      return parser.parser.parseString(t).toString();
+    },
+    parseU2: function(template, t, model) {
+      X.foam.u2.ElementParser.getPrototype();
+
+      var parser = this.U2Parser_ || ( this.U2Parser_ = X.foam.u2.ElementParser.parser__.create() );
+      parser.modelName_ = cssClassize(model.id);
+      var out = parser.parseString(
+        t.trim(),
+        template.name === 'initE' ? parser.initTemplate : parser.template);
+      return out.toString();
     },
     compile: function(t, model) {
+      if ( t.name !== 'CSS' ) {
+        // TODO: this doesn't work
+        if ( model.isSubModel(X.lookup('foam.u2.Element')) ) {
+          return eval('(function() { return ' + this.parseU2(t, t.template, model) + '; })()');
+        }
+        if ( t.template.startsWith('#U2') ) {
+          var code = '(function() { return ' + this.parseU2(t, t.template.substring(3), model) + '; })()';
+          return eval(code);
+        }
+      }
       // Parse result: [isSimple, maybeCode]: [true, null] or [false, codeString].
       var parseResult = TemplateCompiler.parseString(t.template);
 
       // Simple case, just a string literal
       if ( parseResult[0] )
         return ConstantTemplate(t.language === 'css' ?
-            X.foam.grammars.CSS3.create().parser.parseString(t.template).toString() :
-            t.template);
+            this.parseCSS(t.template, model) :
+            t.template) ;
 
       var code = this.HEADER + parseResult[1] + this.FOOTERS[t.language];
 
@@ -321,7 +347,7 @@ MODEL({
         path = path.substring(0, path.lastIndexOf('/')+1);
         path += t.path ? t.path : self.name + '_' + t.name + '.ft';
 
-        if ( window.XMLHttpRequest ) {
+        if ( typeof vm == "undefined" || ! vm.runInThisContext ) {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", path);
           xhr.asend(function(data) {

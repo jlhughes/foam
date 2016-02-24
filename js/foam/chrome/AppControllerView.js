@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.chrome',
   name: 'AppControllerView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'CView',
@@ -30,7 +30,7 @@ CLASS({
       }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'loadCount_',
       defaultValue: 0
     }

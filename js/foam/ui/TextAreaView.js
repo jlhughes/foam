@@ -19,18 +19,18 @@ CLASS({
   package: 'foam.ui',
   name: 'TextAreaView',
 
-  extendsModel: 'foam.ui.TextFieldView',
+  extends: 'foam.ui.TextFieldView',
 
   label: 'Text-Area View',
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'displayHeight',
       defaultValue: 5
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'displayWidth',
       defaultValue: 70
     }

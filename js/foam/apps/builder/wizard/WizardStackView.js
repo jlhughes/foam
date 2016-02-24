@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.wizard',
   name: 'WizardStackView',
-  extendsModel: 'foam.ui.md.PopupView',
+  extends: 'foam.ui.md.PopupView',
 
   requires: [
     'foam.ui.md.UpdateDetailView',
@@ -20,7 +20,7 @@ CLASS({
   ],
 
   exports: [
-    'wizardStack'
+    'wizardStack',
   ],
 
   properties: [
@@ -30,7 +30,6 @@ CLASS({
     },
     {
       name: 'wizardStack',
-      type: 'ViewFactoryProperty[]',
       lazyFactory: function() { return []; },
       documentation: function() {/* If a nextViewFactory on a
         $$DOC{ref:'foam.apps.builder.wizard.WizardPage'}

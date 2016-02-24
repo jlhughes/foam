@@ -18,11 +18,11 @@
 CLASS({
   package: 'foam.graphics',
   name: 'DAOListCView',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   properties: [
     { model_: 'foam.core.types.DAOProperty', name: 'dao' },
-    { model_: 'IntProperty', name: 'scrollTop', preSet: function(_,t) { return Math.max(t, 0); }, postSet: function() { this.scroll(); } },
+    { type: 'Int', name: 'scrollTop', preSet: function(_,t) { return Math.max(t, 0); }, postSet: function() { this.scroll(); } },
     { name: 'rowRenderer' },
     { name: 'objs', postSet: function() { this.view && this.view.paint(); }, factory: function() { return []; } }
   ],
@@ -32,17 +32,17 @@ CLASS({
       this.SUPER(args);
       this.dao.listen(this.scroll);
     },
-    paintSelf: function() {
+    paintSelf: function(canvas) {
       var renderer = this.rowRenderer;
 
       var offset = -(this.scrollTop % renderer.height);
-      this.canvas.save();
-      this.canvas.translate(0, offset);
+      canvas.save();
+      canvas.translate(0, offset);
       for ( var i = 0; i < this.objs.length; i++ ) {
-        renderer.render(this.canvas, this.objs[i]);
-        this.canvas.translate(0, renderer.height);
+        renderer.render(canvas, this.objs[i]);
+        canvas.translate(0, renderer.height);
       }
-      this.canvas.restore();
+      canvas.restore();
     }
   },
 

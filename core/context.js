@@ -33,6 +33,11 @@ function lookup(key) {
 
   var ret = cache[key];
 
+  // Special case for unregistered global models.
+  if ( ret === undefined && key.indexOf('.') == -1 ) {
+    ret = GLOBAL[key];
+  }
+
   if ( ret === undefined ) {
     var path = key.split('.');
     for ( var i = 0 ; root && i < path.length ; i++ ) root = root[path[i]];
@@ -46,8 +51,8 @@ function lookup(key) {
 
 /** Update a Context binding. **/
 function set(key, value) {
-  // It looks like the chrome debug console is overwriting sub.window
-  // but this prevents it.
+  // It looks like the chrome debug console is overwriting
+  // sub.window, but this prevents it.
   Object.defineProperty(
     this,
     key,
@@ -55,21 +60,26 @@ function set(key, value) {
       value: value,
       writable: key !== 'window',
       configurable: true
-    }
-  );
+    });
+
+  if ( GLOBAL.SimpleReadOnlyValue && key !== '$' && key !== '$$' )
+    this[key + '$'] = SimpleReadOnlyValue.create({value: value});
 }
 
 
 function setValue(key, value) {
   var X = this;
+
   Object.defineProperty(
     this,
     key,
     {
-      get: function() { X.set(key, value.get()); return X[key]; },
+      get: function() { return value.get(); },
       configurable: true
     }
   );
+
+  if ( key !== '$' && key !== '$$' ) this[key + '$'] = value;
 }
 
 
@@ -79,7 +89,12 @@ function sub(opt_args, opt_name) {
 
   if ( opt_args ) for ( var key in opt_args ) {
     if ( opt_args.hasOwnProperty(key) ) {
-      sub.set(key, opt_args[key]);
+      var asValue = key !== '$' && key != '$$' && key.charAt(key.length-1) == '$';
+      if ( asValue ) {
+        sub.setValue(key.substring(0, key.length-1), opt_args[key]);
+      } else {
+        sub.set(key, opt_args[key]);
+      }
     }
   }
 
@@ -103,7 +118,15 @@ function subWindow(w, opt_name, isBackground) {
   return foam.ui.Window.create({window: w, name: opt_name, isBackground: isBackground}, this).Y;
 }
 
-var X = sub({});
+var X = {
+  lookupCache_: GLOBAL.lookupCache_,
+  sub: sub,
+  subWindow: subWindow,
+  set: set,
+  lookup: lookup,
+  setValue: setValue,
+  GLOBAL: GLOBAL
+};
 
 var foam = X.foam = {};
 

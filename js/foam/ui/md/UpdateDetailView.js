@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-
 CLASS({
   package: 'foam.ui.md',
   name: 'UpdateDetailView',
-  extendsModel: 'foam.ui.md.BaseDetailView',
+  extends: 'foam.ui.md.BaseDetailView',
 
   requires: [
     'foam.ui.PopupChoiceView',
@@ -29,7 +28,8 @@ CLASS({
 
   imports: [
     'dao',
-    'stack'
+    'stack',
+    'controllerMode'
   ],
   exports: [
     'toolbar as mdToolbar'
@@ -49,6 +49,20 @@ CLASS({
       postSet: function(old, nu) {
         if ( old ) old.removeListener(this.rawUpdate);
         if ( nu ) nu.addListener(this.rawUpdate);
+        // HACK(markdittmer): For envelope-based detail views.
+        // TODO(markdittmer): Remove this once foam.browser has U2 views that
+        // can do something like this on a case-by-case basis.
+        if ( nu.data && nu.data.model_ ) {
+          var modelClassName = nu.data.model_.id.replace(/[.]/g, '-');
+          if ( this.$ ) {
+            var className = this.$.className;
+            className = className.replace(new RegExp(modelClassName, 'g'), '');
+            className = className + ' ' + modelClassName;
+            this.$.className = className;
+          } else {
+            this.extraClassName = modelClassName;
+          }
+        }
       }
     },
     {
@@ -94,16 +108,16 @@ CLASS({
     {
       // Version of the data which changes whenever any property of the data is updated.
       // Used to help trigger isEnabled / isAvailable in Actions.
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'version'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showModelActions',
       defaultValue: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'outstandingChanges',
       hidden: true,
       dynamicValue: function() {
@@ -117,7 +131,7 @@ CLASS({
       }
     },
     {
-      type: 'foam.ui.md.Toolbar',
+      // type: 'foam.ui.md.Toolbar',
       name: 'toolbar',
       lazyFactory: function() {
         return this.Toolbar.create({
@@ -138,7 +152,7 @@ CLASS({
       }
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'innerView',
       defaultValue: 'foam.ui.md.DetailView'
     },
@@ -147,7 +161,7 @@ CLASS({
       defaultValue: 'md-update-detail-view'
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'leftActions_',
       lazyFactory: function() {
         var myModel = this.model_;
@@ -170,14 +184,18 @@ CLASS({
       }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'rightActions_',
       lazyFactory: function() {
         return [
           this.ToolbarAction.create({
             data: this,
             action: this.model_.getAction('save')
-          }, this.Y)
+          }),
+          this.ToolbarAction.create({
+            data: this,
+            action: this.model_.getAction('delete')
+          })
         ];
       },
       postSet: function(old, nu) {
@@ -197,7 +215,9 @@ CLASS({
       order: 0.0,
       iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAPUlEQVQ4y2NgGLbgf8P/BtKU////+78WacpDSFMeSlPlYaQo/0OacjyAcg1wJ4WTGmHDS4sWaVrqhm/mBQAoLpX9t+4i2wAAAABJRU5ErkJggg==',
       ligature: 'arrow_back',
-      isAvailable: function() { return this.liveEdit || ! this.outstandingChanges; },
+      isAvailable: function() {
+        return this.liveEdit || ! this.outstandingChanges;
+      },
       code: function() { this.stack.popView(); }
     },
     {
@@ -210,6 +230,26 @@ CLASS({
       isAvailable: function() { return  ! this.liveEdit && this.outstandingChanges; },
       code: function() {
         this.commit_();
+      }
+    },
+    {
+      name: 'delete',
+      ligature: 'delete',
+      iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAOklEQVQ4y2NgGPzgv8L/B/9h4MF/BXxK8QDqaCDH/aSaP6phVAMuDa+wqn+BW4P//5eYyv/7DvI8DwBDJ5LB6mdU8gAAAABJRU5ErkJggg==',
+      priority: 0,
+      order: 0,
+      isAvailable: function() {
+        return this.controllerMode && this.controllerMode == 'update';
+      },
+      code: function() {
+        this.dao.remove(this.data, {
+          remove: function() {
+            this.stack.popView();
+          }.bind(this),
+          error: function() {
+            // TODO:
+          }
+        });
       }
     },
     {
@@ -266,7 +306,6 @@ CLASS({
       .md-update-detail-view-body {
         overflow-x: hidden;
         overflow-y: auto;
-        display: flex;
       }
     */},
     function toHTML() {/*

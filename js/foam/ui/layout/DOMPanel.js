@@ -18,13 +18,13 @@
 CLASS({
   name: 'DOMPanel',
   package: 'foam.ui.layout',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   imports: [
     'window'
   ],
   properties: [
-    { model_: 'IntProperty', name: 'width' },
-    { model_: 'IntProperty', name: 'height' },
+    { type: 'Int', name: 'width' },
+    { type: 'Int', name: 'height' },
     { name: 'tagName', defaultValue: 'div' },
     { name: 'data', postSet: function() {
       this.updateHTML();
@@ -34,7 +34,7 @@ CLASS({
     init: function() {
       this.SUPER();
       var self = this;
-      this.X.dynamic(function() { self.width; self.height; },
+      this.X.dynamicFn(function() { self.width; self.height; },
                      this.layout);
     },
     initHTML: function() {

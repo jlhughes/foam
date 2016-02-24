@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.events',
   name: 'DesignerView',
-  extendsModel: 'foam.apps.builder.DesignerView',
+  extends: 'foam.apps.builder.DesignerView',
 
   traits: [
     'foam.metrics.ScreenViewTrait',
@@ -50,12 +50,12 @@ CLASS({
       },
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'panel',
       defaultValue: 'foam.apps.builder.templates.PanelView',
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'app',
       defaultValue: {
         factory_: 'foam.apps.builder.templates.AppView',

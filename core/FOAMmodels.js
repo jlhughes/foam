@@ -19,6 +19,11 @@ function IN_BROWSER() { return typeof vm == "undefined" || ! vm.runInThisContext
 function IN_NODEJS() { return ! IN_BROWSER(); }
 function IN_CHROME_APP() { return window.chrome && window.chrome.runtime && (!! window.chrome.runtime.id) };
 function IN_BROWSER_NOT_APP() { return IN_BROWSER() && ! IN_CHROME_APP(); }
+function IN_IE11() { return window.navigator &&
+                     window.navigator.appName == 'Netscape' &&
+                     window.navigator.userAgent.indexOf('Trident/') != -1; }
+function AND(a, b) { return function() { return a() && b(); }; }
+function NOT(a) { return function() { return ! a(); }; }
 
 var __EXTRA_PROPERTIES__;
 
@@ -29,6 +34,7 @@ var files = [
   [ 'safari',   function() { return window.navigator && navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1; }],
   [ 'internetexplorer',  function() { return ( window.Element && (!('remove' in Element.prototype))); }],
   [ 'node',     IN_NODEJS ],
+  [ 'XMLHttpRequest', IN_NODEJS],
   [ 'i18n',     IN_BROWSER ],
   'stdlib',
   ['WeakMap',  function() { return ! this['WeakMap']; }],
@@ -48,6 +54,7 @@ var files = [
 //  'experimental/fo',
 //  'experimental/protobuffeatures',
   'FObject',
+
   'BootstrapModel',
   'mm1Model',
   'mm2Property',
@@ -57,14 +64,15 @@ var files = [
   'mm5Debug',
   'mm6Misc',
   '../js/foam/core/bootstrap/OrDAO',
-  [ '../js/foam/core/bootstrap/BrowserFileDAO', IN_BROWSER_NOT_APP ],
+  [ '../js/foam/core/bootstrap/IE11ModelDAO', IN_IE11 ],
+  [ '../js/foam/core/bootstrap/BrowserFileDAO', AND(NOT(IN_IE11), IN_BROWSER_NOT_APP) ],
   [ '../js/node/dao/ModelFileDAO', IN_NODEJS ],
   '../js/foam/ui/Window',
   'value',
   'view',
   '../js/foam/ui/FoamTagView',
   'cview',
-  '../js/foam/grammars/CSS3',
+  '../js/foam/grammars/CSSDecl',
   'HTMLParser',
   'mlang',
   'mlang1',
@@ -79,7 +87,8 @@ var files = [
   'index',
   'models',
   'oauth',
-  [ 'ModelDAO', IN_BROWSER_NOT_APP ],
+  [ 'ModelDAO', AND(NOT(IN_IE11), IN_BROWSER_NOT_APP) ],
+  [ 'IE11ModelDAO', IN_IE11 ],
   [ '../js/foam/core/bootstrap/ChromeAppFileDAO', IN_CHROME_APP ],
   [ 'ChromeAppModelDAO', IN_CHROME_APP ],
   [ 'NodeModelDAO', IN_NODEJS ]

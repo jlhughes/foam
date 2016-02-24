@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.administrator',
   name: 'PickAppWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   requires: [
     'foam.apps.builder.AppConfig',
@@ -24,7 +24,7 @@ CLASS({
     'masterAppDAO',
   ],
   exports: [
-    'selection$'
+    'selection'
   ],
 
   properties: [
@@ -48,7 +48,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'emptyList',
       defaultValue: false,
       postSet: function(old, nu) {

@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.events',
   name: 'AppWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   imports: [
     'selection$',
@@ -40,7 +40,6 @@ CLASS({
   methods: [
     function onNext() {
       this.SUPER(); // puts the app into the main dao
-      this.selection = this.data; // imported selection from browser's main list
     },
     function onCancel() {
       this.SUPER();

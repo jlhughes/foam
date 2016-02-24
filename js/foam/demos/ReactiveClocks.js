@@ -17,9 +17,8 @@
 
 CLASS({
   package: 'foam.demos',
-
   name: 'ReactiveClocks',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.demos.ClockView',
@@ -28,6 +27,8 @@ CLASS({
     'foam.ui.DetailView',
     'foam.util.Timer'
   ],
+
+  imports: [ 'dynamic' ],
 
   properties: [
     {
@@ -39,7 +40,7 @@ CLASS({
     { name: 'space',  factory: function() { return this.CView.create({width: 1500, height: 1000, background:'white'}); } },
     { name: 'clock1', factory: function() { return this.ClockView.create({x:300, y:300, r:60, color:'red'}); } },
     { name: 'clock2', factory: function() { return this.ClockView.create({x:0, y:0, r:60, color:'green'}); } },
-    { model_: 'IntProperty', name: 'stage', defaultValue: 2 }
+    { type: 'Int', name: 'stage', defaultValue: 2 }
   ],
 
   templates: [
@@ -50,18 +51,18 @@ CLASS({
       this.SUPER();
 
       this.mouse.connect(this.space.$);
-      Events.dynamic(function () {
+      this.dynamic(function () {
         this.clock1.x = this.mouse.x;
         this.clock1.y = this.mouse.y;
       }.bind(this));
 
       if ( this.stage == 1 ) {
-        Events.dynamic(function () {
+        this.dynamic(function () {
           this.clock2.x = this.clock1.x + 200;
           this.clock2.y = this.clock1.y + 200;
         }.bind(this));
       } else if ( this.stage == 2 ) {
-        Events.dynamic(function () {
+        this.dynamic(function () {
           this.clock2.x = this.clock1.x + 200*Math.cos(this.timer.time*Math.PI/1000);
           this.clock2.y = this.clock1.y + 200*Math.sin(this.timer.time*Math.PI/1000);
         }.bind(this));

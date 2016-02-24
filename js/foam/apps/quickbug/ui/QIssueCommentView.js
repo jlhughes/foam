@@ -18,7 +18,7 @@
 CLASS({
   name: 'QIssueCommentView',
   package: 'foam.apps.quickbug.ui',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.apps.quickbug.model.QIssueComment',
@@ -71,7 +71,7 @@ CLASS({
         });
       s = s.replace(
         issue,
-        function(_, _, issue) {
+        function(_, __, issue) {
           var view = self.IssueLink.create({issue: issue});
           self.addChild(view);
           return view.toHTML();

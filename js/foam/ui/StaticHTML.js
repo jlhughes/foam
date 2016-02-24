@@ -18,15 +18,15 @@
 CLASS({
   package: 'foam.ui',
   name: 'StaticHTML',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'content'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'escapeHTML',
       defaultValue: false
     }

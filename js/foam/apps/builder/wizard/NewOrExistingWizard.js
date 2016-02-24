@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.wizard',
   name: 'NewOrExistingWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   requires: [
     'foam.ui.md.ChoiceRadioView',
@@ -20,7 +20,7 @@ CLASS({
   ],
 
   exports: [
-    'selection$'
+    'selection'
   ],
 
   properties: [

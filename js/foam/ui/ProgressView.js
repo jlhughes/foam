@@ -19,11 +19,11 @@ CLASS({
   package: 'foam.ui',
   name: 'ProgressView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
-      //model_: 'FloatProperty',
+      //type: 'Float',
       name: 'data',
       postSet: function () { this.updateValue(); }
     }

@@ -30,16 +30,16 @@ CLASS({
     'document'
   ],
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'horizontal',
       defaultValue: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'icons',
       defaultValueFn: function() {
         return this.horizontal;
@@ -61,7 +61,7 @@ CLASS({
       name: 'right'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'openedAsMenu',
       defaultValue: false
     },

@@ -19,11 +19,11 @@ CLASS({
   name: 'View',
   package: 'foam.ui.polymer',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name: 'tooltipModel',
       defaultValue: 'foam.ui.polymer.Tooltip'
     },

@@ -40,10 +40,22 @@ function compileArray_(args) {
 
 CLASS({
   name: 'Expr',
+  implements: ['ExprProtocol'],
 
   documentation: 'Parent model for all mLang expressions. Contains default implementations for many methods.',
 
   methods: [
+    {
+      name: 'f',
+      args: [
+        {
+          name: 'obj',
+          swiftType: 'AnyObject?',
+        },
+      ],
+      swiftReturnType: 'AnyObject?',
+      swiftCode: 'fatalError("You must extend and implement this.")',
+    },
     function toMQL() { /* Outputs MQL for this expression. */ return this.label_; },
     function toSQL() { /* Outputs SQL for this expression. */ return this.label_; },
     function toBQL() { /* Outputs yet another query language for this expression. */ return this.label_; },
@@ -122,11 +134,9 @@ CLASS({
   ]
 });
 
-
-var TRUE = (FOAM({
-  model_: 'Model',
+CLASS({
   name: 'TrueExpr',
-  extendsModel: 'Expr',
+  extends: 'Expr',
 
   documentation: 'Model for the primitive true value.',
 
@@ -138,15 +148,18 @@ var TRUE = (FOAM({
     function toSQL() { return '( 1 = 1 )'; },
     function toMQL() { return ''; },
     function toBQL() { return ''; },
-    function f() { return true; }
+    function readResolve() { return TRUE; },
+    {
+      name: 'f',
+      code: function() { return true; },
+      swiftCode: 'return true',
+    },
   ]
-})).create();
+});
 
-
-var FALSE = (FOAM({
-  model_: 'Model',
+CLASS({
   name: 'FalseExpr',
-  extendsModel: 'Expr',
+  extends: 'Expr',
 
   documentation: 'Model for the primitive false value.',
 
@@ -157,15 +170,18 @@ var FALSE = (FOAM({
     function toSQL(out) { return '( 1 <> 1 )'; },
     function toMQL(out) { return '<false>'; },
     function toBQL(out) { return '<false>'; },
-    function f() { return false; }
+    function readResolve() { return FALSE; },
+    {
+      name: 'f',
+      code: function() { return false; },
+      swiftCode: 'return false',
+    },
   ]
-})).create();
+});
 
-
-var IDENTITY = (FOAM({
-  model_: 'Model',
+CLASS({
   name: 'IdentityExpr',
-  extendsModel: 'Expr',
+  extends: 'Expr',
 
   documentation: 'The identity expression, which passes through its input unchanged.',
 
@@ -174,15 +190,19 @@ var IDENTITY = (FOAM({
     deepClone: function() { return this; },
     exprClone: function() { return this; },
     f: function(obj) { return obj; },
-    toString: function() { return 'IDENTITY'; }
+    toString: function() { return 'IDENTITY'; },
+    readResolve: function() { return IDENTITY; }
   }
-})).create();
+});
+
+var TRUE = TrueExpr.create();
+var FALSE = FalseExpr.create();
+var IDENTITY = IdentityExpr.create();
 
 /** An n-ary function. **/
 CLASS({
   name: 'NARY',
-
-  extendsModel: 'Expr',
+  extends: 'Expr',
   abstract: true,
 
   documentation: 'Parent model for expressions which take an arbitrary number of arguments.',
@@ -191,7 +211,9 @@ CLASS({
     {
       name:  'args',
       label: 'Arguments',
-      type:  'Expr[]',
+      // type:  'Expr[]',
+      swiftType:  'NSArray',
+      swiftFactory: 'return []',
       help:  'Sub-expressions',
       documentation: 'An array of subexpressions which are the arguments to this n-ary expression.',
       factory: function() { return []; }
@@ -248,17 +270,11 @@ CLASS({
   }
 });
 
-
-// Allow Singleton mLang's to be desearialized to properly.
-var TrueExpr     = { finished__: true, arequire: function(ret) { return afuture().set(this).get; }, create: function() { return TRUE;  } };
-var FalseExpr    = { finished__: true, arequire: function(ret) { return afuture().set(this).get; }, create: function() { return FALSE; } };
-var IdentityExpr = { finished__: true, arequire: function(ret) { return afuture().set(this).get; }, create: function() { return IDENTITY; } };
-
 /** An unary function. **/
 CLASS({
   name: 'UNARY',
 
-  extendsModel: 'Expr',
+  extends: 'Expr',
   abstract: true,
 
   documentation: 'Parent model for one-argument expressions.',
@@ -267,10 +283,11 @@ CLASS({
     {
       name:  'arg1',
       label: 'Argument',
-      type:  'Expr',
+      swiftType: 'AnyObject?',
       help:  'Sub-expression',
       documentation: 'The first argument to the expression.',
-      defaultValue: TRUE
+      defaultValue: TRUE,
+      swiftDefaultValue: 'TRUE',
     }
   ],
 
@@ -292,7 +309,7 @@ CLASS({
 CLASS({
   name: 'BINARY',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
   abstract: true,
 
   documentation: 'Parent model for two-argument expressions. Extends $$DOC{ref: "UNARY"} to include $$DOC{ref: ".arg2"}.',
@@ -301,7 +318,8 @@ CLASS({
     {
       name:  'arg2',
       label: 'Argument',
-      type:  'Expr',
+      swiftType: 'AnyObject?',
+      swiftDefaultValue: 'TRUE',
       help:  'Sub-expression',
       documentation: 'Second argument to the expression.',
       defaultValue: TRUE
@@ -325,12 +343,12 @@ CLASS({
 CLASS({
   name: 'CountExpr',
 
-  extendsModel: 'Expr',
+  extends: 'Expr',
 
   properties: [
     {
+      type:  'Int',
       name:  'count',
-      type:  'int',
       defaultValue: 0
     },
     {
@@ -363,8 +381,7 @@ function COUNT() {
 CLASS({
   name: 'EqExpr',
 
-  extendsModel: 'BINARY',
-  abstract: true,
+  extends: 'BINARY',
 
   documentation: function() { /*
     <p>Binary expression that compares its arguments for equality.</p>
@@ -372,22 +389,22 @@ CLASS({
     <p>If the first argument is an array, returns true if any of its value match the second argument.</p>
   */},
 
-  methods: {
-    toSQL: function() { return this.arg1.toSQL() + '=' + this.arg2.toSQL(); },
-    toMQL: function() {
+  methods: [
+    function toSQL() { return this.arg1.toSQL() + '=' + this.arg2.toSQL(); },
+    function toMQL() {
       if ( ! this.arg1.toMQL || ! this.arg2.toMQL ) return '';
       return this.arg2     === TRUE ? 'is:' + this.arg1.toMQL()   :
              this.arg2.f() == ''    ? '-has:' + this.arg1.toMQL() :
              this.arg1.toMQL() + '=' + this.arg2.toMQL()      ;
     },
 
-    toBQL: function() {
+    function toBQL() {
       if ( ! this.arg1.toBQL || ! this.arg2.toBQL ) return '';
       return this.arg2     === TRUE ? this.arg1.toBQL() + ':true' :
              this.arg1.toBQL() + ':' + this.arg2.toBQL()      ;
     },
 
-    partialEval: function() {
+    function partialEval() {
       var newArg1 = this.arg1.partialEval();
       var newArg2 = this.arg2.partialEval();
 
@@ -398,30 +415,33 @@ CLASS({
         EqExpr.create({arg1: newArg1, arg2: newArg2}) :
         this ;
     },
+    {
+      name: 'f',
+      code: function(obj) {
+        var arg1 = this.arg1.f(obj);
+        var arg2 = this.arg2.f(obj);
 
-    f: function(obj) {
-      var arg1 = this.arg1.f(obj);
-      var arg2 = this.arg2.f(obj);
-
-      if ( Array.isArray(arg1) ) {
-        if ( ! Array.isArray(arg2) ) {
-          return arg1.some(function(arg) {
-            return arg == arg2;
-          });
+        if ( Array.isArray(arg1) ) {
+          if ( ! Array.isArray(arg2) ) {
+            return arg1.some(function(arg) {
+              return arg == arg2;
+            });
+          }
+          if ( arg1.length !== arg2.length ) return false;
+          for ( var i = 0; i < arg1.length; i++ ) {
+            if ( arg1[i] != arg2[i] ) return false;
+          }
+          return true;
         }
-        if ( arg1.length !== arg2.length ) return false;
-        for ( var i = 0; i < arg1.length; i++ ) {
-          if ( arg1[i] != arg2[i] ) return false;
-        }
-        return true;
-      }
 
-      if ( arg2 === TRUE ) return !! arg1;
-      if ( arg2 === FALSE ) return ! arg1;
+        if ( arg2 === TRUE ) return !! arg1;
+        if ( arg2 === FALSE ) return ! arg1;
 
-      return equals(arg1, arg2);
+        return equals(arg1, arg2);
+      },
+      swiftCode: 'return equals(arg1?.f(obj), b: arg2?.f(obj))',
     }
-  }
+  ]
 });
 
 
@@ -437,53 +457,56 @@ function EQ(arg1, arg2) {
 CLASS({
   name: 'ConstantExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
-  methods: {
-    escapeSQLString: function(str) {
+  methods: [
+    function escapeSQLString(str) {
       return "'" +
         str.replace(/\\/g, "\\\\").replace(/'/g, "\\'") +
         "'";
     },
-    escapeMQLString: function(str) {
+    function escapeMQLString(str) {
       if ( str.length > 0 && str.indexOf(' ') == -1 && str.indexOf('"') == -1 && str.indexOf(',') == -1 ) return str;
       return '"' +
         str.replace(/\\/g, "\\\\").replace(/"/g, '\\"') +
         '"';
     },
-    toSQL: function() {
+    function toSQL() {
       return ( typeof this.arg1 === 'string' ) ?
         this.escapeSQLString(this.arg1) :
         this.arg1.toString() ;
     },
-    toMQL: function() {
+      function toMQL() {
       return ( typeof this.arg1 === 'string' ) ?
         this.escapeMQLString(this.arg1) :
         (this.arg1.toMQL ? this.arg1.toMQL() :
          this.arg1.toString());
     },
-    toBQL: function() {
+        function toBQL() {
       return ( typeof this.arg1 === 'string' ) ?
         this.escapeMQLString(this.arg1) :
         (this.arg1.toBQL ? this.arg1.toBQL() :
          this.arg1.toString());
     },
-    f: function(obj) { return this.arg1; }
-  }
+    {
+      name: 'f',
+      code: function(obj) { return this.arg1; },
+      swiftCode: 'return arg1',
+    },
+  ]
 });
 
 
 CLASS({
   name: 'AndExpr',
 
-  extendsModel: 'NARY',
-  abstract: true,
+  extends: 'NARY',
 
   documentation: 'N-ary expression which is true only if each of its 0 or more arguments is true. AND() === TRUE',
 
-  methods: {
+  methods: [
     // AND has a higher precedence than OR so doesn't need parenthesis
-    toSQL: function() {
+    function toSQL() {
       var s = '';
       for ( var i = 0 ; i < this.args.length ; i++ ) {
         var a = this.args[i];
@@ -492,7 +515,7 @@ CLASS({
       }
       return s;
     },
-    toMQL: function() {
+    function toMQL() {
       var s = '';
       for ( var i = 0 ; i < this.args.length ; i++ ) {
         var a = this.args[i];
@@ -505,7 +528,7 @@ CLASS({
       }
       return s;
     },
-    toBQL: function() {
+    function toBQL() {
       var s = '';
       for ( var i = 0 ; i < this.args.length ; i++ ) {
         var a = this.args[i];
@@ -518,19 +541,103 @@ CLASS({
       }
       return s;
     },
-    collectInputs: function(terms) {
+    function collectInputs(terms) {
       for ( var i = 0; i < this.args.length; i++ ) {
         this.args[i].collectInputs(terms);
       }
     },
-    minterm: function(index, term) {
+    function minterm(index, term) {
       var out = true;
       for ( var i = 0; i < this.args.length; i++ ) {
         out = this.args[i].minterm(index, term) && out;
       }
       return out;
+    },
+    function partialAnd(e1, e2) {
+      if ( OrExpr.isInstance(e2) ) { var tmp = e1; e1 = e2; e2 = tmp; }
+      if ( OrExpr.isInstance(e1) ) {
+        var args = [];
+        for ( var i = 0 ; i < e1.args.length ; i++ ) {
+          args.push(AND(e2, e1.args[i]));
+        }
+        return OrExpr.create({args: args}).partialEval();
+      }
+
+      if ( ! BINARY.isInstance(e1) ) return null;
+      if ( ! BINARY.isInstance(e2) ) return null;
+      if ( e1.arg1 != e2.arg1 ) return null;
+
+      var RULES = this.PARTIAL_AND_RULES;
+      for ( var i = 0 ; i < RULES.length ; i++ ) {
+        if ( e1.model_.name == RULES[i][0] && e2.model_.name == RULES[i][1] ) return RULES[i][2](e1, e2);
+        if ( e2.model_.name == RULES[i][0] && e1.model_.name == RULES[i][1] ) return RULES[i][2](e2, e1);
+      }
+
+      if ( DEBUG )
+        console.log('Unknown partialAnd combination: ', e1.name_, e2.name_);
+
+      return null;
+    },
+    function partialEval() {
+      var newArgs = [];
+      var updated = false;
+
+      for ( var i = 0 ; i < this.args.length ; i++ ) {
+        var a    = this.args[i];
+        var newA = this.args[i].partialEval();
+
+        if ( newA === FALSE ) return FALSE;
+
+        if ( AndExpr.isInstance(newA) ) {
+          // In-line nested AND clauses
+          for ( var j = 0 ; j < newA.args.length ; j++ ) {
+            newArgs.push(newA.args[j]);
+          }
+          updated = true;
+        }
+        else {
+          if ( newA === TRUE ) {
+            updated = true;
+          } else {
+            newArgs.push(newA);
+            if ( a !== newA ) updated = true;
+          }
+        }
+      }
+
+      for ( var i = 0 ; i < newArgs.length-1 ; i++ ) {
+        for ( var j = i+1 ; j < newArgs.length ; j++ ) {
+          var a = this.partialAnd(newArgs[i], newArgs[j]);
+          if ( a ) {
+            console.log('***************** ', newArgs[i].toMQL(), ' <PartialAnd> ', newArgs[j].toMQL(), ' -> ', a.toMQL());
+            if ( a === FALSE ) return FALSE;
+            newArgs[i] = a;
+            newArgs.splice(j, 1);
+          }
+        }
+      }
+
+      if ( newArgs.length == 0 ) return TRUE;
+      if ( newArgs.length == 1 ) return newArgs[0];
+
+      return updated ? AndExpr.create({args: newArgs}) : this;
+    },
+    {
+      name: 'f',
+      code: function(obj) {
+        return this.args.every(function(arg) {
+          return arg.f(obj);
+        });
+      },
+      swiftCode: function() {/*
+        for arg in args {
+          let b = arg.f(obj) as! Bool
+          if !b { return false }
+        }
+        return true
+      */},
     }
-  },
+  ],
 
   constants: {
     PARTIAL_AND_RULES: [
@@ -579,83 +686,6 @@ CLASS({
         }
       ]
     ],
-
-    partialAnd: function(e1, e2) {
-      if ( OrExpr.isInstance(e2) ) { var tmp = e1; e1 = e2; e2 = tmp; }
-      if ( OrExpr.isInstance(e1) ) {
-        var args = [];
-        for ( var i = 0 ; i < e1.args.length ; i++ ) {
-          args.push(AND(e2, e1.args[i]));
-        }
-        return OrExpr.create({args: args}).partialEval();
-      }
-
-      if ( ! BINARY.isInstance(e1) ) return null;
-      if ( ! BINARY.isInstance(e2) ) return null;
-      if ( e1.arg1 != e2.arg1 ) return null;
-
-      var RULES = this.PARTIAL_AND_RULES;
-      for ( var i = 0 ; i < RULES.length ; i++ ) {
-        if ( e1.model_.name == RULES[i][0] && e2.model_.name == RULES[i][1] ) return RULES[i][2](e1, e2);
-        if ( e2.model_.name == RULES[i][0] && e1.model_.name == RULES[i][1] ) return RULES[i][2](e2, e1);
-      }
-
-      if ( DEBUG )
-        console.log('Unknown partialAnd combination: ', e1.name_, e2.name_);
-
-      return null;
-    },
-
-    partialEval: function() {
-      var newArgs = [];
-      var updated = false;
-
-      for ( var i = 0 ; i < this.args.length ; i++ ) {
-        var a    = this.args[i];
-        var newA = this.args[i].partialEval();
-
-        if ( newA === FALSE ) return FALSE;
-
-        if ( AndExpr.isInstance(newA) ) {
-          // In-line nested AND clauses
-          for ( var j = 0 ; j < newA.args.length ; j++ ) {
-            newArgs.push(newA.args[j]);
-          }
-          updated = true;
-        }
-        else {
-          if ( newA === TRUE ) {
-            updated = true;
-          } else {
-            newArgs.push(newA);
-            if ( a !== newA ) updated = true;
-          }
-        }
-      }
-
-      for ( var i = 0 ; i < newArgs.length-1 ; i++ ) {
-        for ( var j = i+1 ; j < newArgs.length ; j++ ) {
-          var a = this.partialAnd(newArgs[i], newArgs[j]);
-          if ( a ) {
-            console.log('***************** ', newArgs[i].toMQL(), ' <PartialAnd> ', newArgs[j].toMQL(), ' -> ', a.toMQL());
-            if ( a === FALSE ) return FALSE;
-            newArgs[i] = a;
-            newArgs.splice(j, 1);
-          }
-        }
-      }
-
-      if ( newArgs.length == 0 ) return TRUE;
-      if ( newArgs.length == 1 ) return newArgs[0];
-
-      return updated ? AndExpr.create({args: newArgs}) : this;
-    },
-
-    f: function(obj) {
-      return this.args.every(function(arg) {
-        return arg.f(obj);
-      });
-    }
   }
 });
 
@@ -667,7 +697,7 @@ function AND() {
 CLASS({
   name: 'NeqExpr',
 
-  extendsModel: 'BINARY',
+  extends: 'BINARY',
   abstract: true,
 
   methods: {
@@ -720,7 +750,7 @@ function NEQ(arg1, arg2) {
 CLASS({
   name: 'UpperExpr',
 
-  extendsModel: 'UNARY',
+  extends: 'UNARY',
 
   properties: [
     { name: 'label_', defaultValue: 'UPPER' }
@@ -738,12 +768,15 @@ CLASS({
 
       return this;
     },
-    function f(obj) {
-      var a = this.arg1.f(obj);
-      if ( Array.isArray(a) )
-        return a.map(function(s) { return s.toUpperCase ? s.toUpperCase() : s; });
+    {
+      name: 'f',
+      code: function(obj) {
+        var a = this.arg1.f(obj);
+        if ( Array.isArray(a) )
+          return a.map(function(s) { return s.toUpperCase ? s.toUpperCase() : s; });
 
-      return a && a.toUpperCase ? a.toUpperCase() : a ;
+        return a && a.toUpperCase ? a.toUpperCase() : a ;
+      },
     },
     function toMQL() {
       if ( ConstantExpr.isInstance(this.arg1) && typeof this.arg1.arg1 == 'string' )

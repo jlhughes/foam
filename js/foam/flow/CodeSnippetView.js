@@ -10,9 +10,9 @@
  */
 
 CLASS({
-  name: 'CodeSnippetView',
   package: 'foam.flow',
-  extendsModel: 'foam.flow.Element',
+  name: 'CodeSnippetView',
+  extends: 'foam.flow.Element',
 
   requires: [
     'foam.ui.ActionButton',
@@ -24,33 +24,33 @@ CLASS({
     'codeViewName',
     'codeViewLoadState$'
   ],
-  exports: [ 'codeViewLoadState$' ],
+  exports: [ 'codeViewLoadState' ],
 
   constants: { ELEMENT_NAME: 'code-snippet' },
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'extraClassName',
       defaultValue: 'loading'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'mode',
       defaultValue: 'read-write'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showActions',
       defaultValue: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'scroll',
       defaultValue: true
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'codeViewLoadState',
       defaultValue: 'unloaded',
       postSet: function(old, nu) {
@@ -59,12 +59,12 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'codeViewName',
       defaultValue: 'foam.flow.CodeView'
     },
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name: 'actionButtonName',
       defaultValue: 'foam.ui.ActionButton'
     }
@@ -79,7 +79,7 @@ CLASS({
         // TODO(markdittmer): Should be able to use foam.ui.ModeProperty here
         // but it doesn't seem to be working. It should eliminate the need for
         // a postSet.
-        Events.dynamic(function() {
+        Events.dynamicFn(function() {
           this.srcView; this.mode; this.scroll;
           if ( ! this.srcView ) return;
           this.srcView.mode = this.mode;

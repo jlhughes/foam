@@ -18,7 +18,7 @@
 CLASS({
   name: 'MigrationDAO',
   package: 'foam.core.dao',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   requires: [
     'foam.core.dao.MigrationRule',
@@ -35,7 +35,7 @@ CLASS({
       name: 'delegate'
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'foam.core.dao.MigrationRule',
       name: 'rules'
     },

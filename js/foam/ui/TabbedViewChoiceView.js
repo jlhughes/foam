@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'TabbedViewChoiceView',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
   requires: [
     'foam.ui.md.HaloView',
   ],
@@ -47,7 +47,7 @@ CLASS({
       this.SUPER();
       this.setCurrentLinePosition();
       var self = this;
-      var destructor = Events.dynamic(
+      var destructor = Events.dynamicFn(
           function() { self.data.choice; },
           this.setCurrentLinePosition.bind(this));
       this.addDestructor(destructor.destroy.bind(destructor));

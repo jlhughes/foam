@@ -12,49 +12,50 @@
 CLASS({
   package: 'com.google.sweeper',
   name: 'Cell',
+  extends: 'foam.u2.Element',
 
-  extendsModel: 'foam.ui.View',
-
-  imports: [ 'board' ],
+  imports: [ 'board', 'dynamic' ],
 
   constants: {
-    COUNT_COLOURS: [ '', 'green', 'blue', 'orange', 'red', 'red', 'red', 'red' ],
+    COLOURS: [ '', 'green', 'blue', 'orange', 'red', 'red', 'red', 'red' ],
   },
 
   properties: [
+    'x',
+    'y',
     {
-      name: 'x'
+      type: 'Int',
+      name: 'mineCount',
+      lazyFactory: function() { return this.board.getMineCount(this); }
     },
     {
-      name: 'y'
-    },
-    {
-      name: 'mineCount'
-    },
-    {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'covered',
       defaultValue: true
     },
     {
-      model_: 'BooleanProperty',
-      name: 'marked',
-      defaultValue: false
+      type: 'Boolean',
+      name: 'marked'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'mined',
       factory: function() { return Math.random() < 0.18; }
-    },
-    {
-      name: 'className',
-      defaultValue: 'sweeper-cell'
+    }
+  ],
+
+  methods: [
+    function stateClass() {
+      return this.dynamic(
+        function(covered, marked) { return marked ? 'marked' : covered ? 'covered' : ''; },
+        this.covered$, this.marked$);
     }
   ],
 
   templates: [
     function CSS() {/*
-      .sweeper-cell {
+      body { -webkit-user-select: none; }
+      ^ {
         border: 1px solid gray;
         display: table-cell;
         font-size: 18px;
@@ -64,63 +65,30 @@ CLASS({
         vertical-align: middle;
         width: 26px;
       }
-      .sweeper-cell.covered {
+      ^.covered {
         background: #ccc;
-        box-shadow: -2px -2px 10px rgba(0,0,0,.25) inset, 2px 2px 10px white inset;        
+        box-shadow: -2px -2px 10px rgba(0,0,0,.25) inset, 2px 2px 10px white inset;
       }
-      .sweeper-cell.covered font {
-        display: none;
+      ^.marked ^flag {
+        display: block;
+        color: #BD1616;
       }
-      .sweeper-cell.marked font {
-        display: none;
-      }
-      .sweeper-cell.marked {
-        background-color: #ccc;
-        background-image: url('js/com/google/sweeper/flag.png');
-        background-repeat: no-repeat;
-      }
+      ^.covered font { visibility: hidden; }
+      ^.marked font { display: none; }
+      ^flag { display: none; }
+      ^.marked { background-color: #ccc; }
+    */},
+    function initE() {/*#U2
+      <span class="^" class={{this.stateClass()}} onclick="sweep" oncontextmenu="mark">
+        <span class="^flag">&#x2691;</span>
+        <font if={{this.mined}}>&#x2699;</font>
+        <font if={{!this.mined && this.mineCount}} color={{this.COLOURS[this.mineCount]}}>{{this.mineCount}}</font>
+      </span>
     */}
   ],
 
-  methods: {
-    toInnerHTML: function() {
-      this.mineCount = this.board.getMineCount(this);
-      return this.mined ? '<font color="black"><img src="js/com/google/sweeper/mine.jpg"></font>' :
-        this.mineCount ? '<font color="' + this.COUNT_COLOURS[this.mineCount] + '">' + this.mineCount + '</font>' : '';
-    },
-    initHTML: function() {
-      this.setClass(
-        'covered',
-        function () {
-          var covered = this.covered;
-          var marked  = this.marked;
-          return covered && ! marked; },
-        this.id);
-      this.setClass('marked', function () { return this.marked; }, this.id);
-      this.$.addEventListener('click', this.sweep);
-      this.$.addEventListener('contextmenu', this.mark, true);
-      this.SUPER();
-    }
-  },
-
   listeners: [
-    {
-      name: 'mark',
-      code: function(e) {
-        this.marked = ! this.marked;
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    },
-    {
-      name: 'sweep',
-      code: function(e) {
-        this.covered = false;
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    }
+    function mark(e) { this.marked = ! this.marked; e.preventDefault(); },
+    function sweep(e) { this.covered = false; }
   ]
 });

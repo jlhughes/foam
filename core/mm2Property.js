@@ -20,6 +20,7 @@ GLOBAL.Property = {
   instance_: {},
 
   name:  'Property',
+  implements: ['ExprProtocol'],
   plural:'Properties',
   help:  'Describes a properties of a modelled entity.',
 
@@ -45,7 +46,7 @@ GLOBAL.Property = {
   properties: [
     {
       name: 'name',
-      type: 'String',
+      swiftType: 'String',
       required: true,
       displayWidth: 30,
       displayHeight: 1,
@@ -65,7 +66,7 @@ GLOBAL.Property = {
     },
     {
       name: 'label',
-      type: 'String',
+      swiftType: 'String',
       required: false,
       displayWidth: 70,
       displayHeight: 1,
@@ -74,6 +75,12 @@ GLOBAL.Property = {
       documentation: function() { /* A human readable label for the $$DOC{ref:'.'}. May
         contain spaces or other odd characters.
          */}
+    },
+    {
+      name: 'translationHint',
+      type: 'String',
+      required: false,
+      documentation: 'Used to describe the property for translators.',
     },
     {
       name: 'speechLabel',
@@ -101,7 +108,6 @@ GLOBAL.Property = {
       name: 'type',
       type: 'String',
       required: true,
-      // todo: curry arguments
       view: {
         factory_: 'foam.ui.ChoiceView',
         choices: [
@@ -149,16 +155,11 @@ GLOBAL.Property = {
     },
     {
       name: 'swiftDefaultValue',
-      labels: ['swift'],
-      defaultValueFn: function() {
-        if (this.defaultValue == undefined) return 'nil';
-        switch(typeof this.defaultValue) {
-        case "string":
-          return '"' + this.defaultValue + '"';
-        default:
-          return this.defaultValue;
-        }
-      }
+      labels: ['swift', 'compiletime'],
+    },
+    {
+      name: 'javaDefaultValue',
+      labels: ['java', 'compiletime'],
     },
     {
       name: 'protobufType',
@@ -171,6 +172,7 @@ GLOBAL.Property = {
     {
       name: 'javaType',
       type: 'String',
+      labels: ['compiletime', 'java'],
       required: false,
       defaultValueFn: function() { return this.type; },
       help: 'The java type that represents the type of this property.',
@@ -180,6 +182,7 @@ GLOBAL.Property = {
     {
       name: 'javascriptType',
       type: 'String',
+      labels: ['compiletime', 'javascript'],
       required: false,
       defaultValueFn: function() { return this.type; },
       help: 'The javascript type that represents the type of this property.',
@@ -190,16 +193,8 @@ GLOBAL.Property = {
       name: 'swiftType',
       type: 'String',
       required: false,
-      labels: ['swift'],
-      defaultValueFn: function() {
-        var type = this.type;
-        if (this.type == 'Boolean') {
-          type = 'Bool';
-        } else if (this.type == 'int') {
-          type = 'Int';
-        }
-        return type + (!this.required ? '?' : '');
-      },
+      labels: ['compiletime', 'swift'],
+      defaultValue: 'AnyObject?',
       help: 'The Swift type that represents this type of property.',
     },
     {
@@ -220,7 +215,7 @@ GLOBAL.Property = {
     },
     {
       name: 'aliases',
-      type: 'Array[String]',
+      // type: 'Array[String]',
       labels: ['javascript'],
       view: 'foam.ui.StringArrayView',
       factory: function() { return []; },
@@ -253,7 +248,7 @@ GLOBAL.Property = {
     },
     {
       name: 'subKey',
-      type: 'EXPR',
+      // type: 'EXPR',
       labels: ['javascript'],
       displayWidth: 20,
       defaultValue: 'ID',
@@ -289,10 +284,17 @@ GLOBAL.Property = {
       */}
     },
     {
+      // For U2, replaces hidden
+      name: 'visibility',
+      choices: [ 'rw', 'final', 'ro', 'hidden' ],
+      postSet: function(_, v) { if ( 'hidden' === v ) this.hidden = true; }
+    },
+    {
       name: 'hidden',
       type: 'Boolean',
       view: 'foam.ui.BooleanView',
       defaultValue: false,
+      postSet: function(old, hidden) { if ( (! old) && hidden ) this.visibility = 'hidden'; },
       help: 'Indicates if the property is hidden.',
       documentation: function() { /*
         Indicates whether the $$DOC{ref:'Property'} is for internal use and should be hidden from
@@ -320,7 +322,7 @@ GLOBAL.Property = {
     },
     {
       name: 'displayWidth',
-      type: 'int',
+      type: 'Int',
       displayWidth: 8,
       displayHeight: 1,
       defaultValue: 30,
@@ -331,7 +333,7 @@ GLOBAL.Property = {
     },
     {
       name: 'displayHeight',
-      type: 'int',
+      type: 'Int',
       displayWidth: 8,
       displayHeight: 1,
       defaultValue: 1,
@@ -341,9 +343,9 @@ GLOBAL.Property = {
       */}
     },
     {
-//      model_: 'ViewFactoryProperty',
+//      type: 'ViewFactory',
       name: 'view',
-      type: 'view',
+      // type: 'view',
       labels: ['javascript'],
       defaultValue: 'foam.ui.TextFieldView',
       help: 'View component for the property.',
@@ -353,9 +355,32 @@ GLOBAL.Property = {
       */}
     },
     {
-//      model_: 'ViewFactoryProperty',
+//      type: 'ViewFactory',
+      name: 'toPropertyE',
+      labels: ['javascript'],
+      defaultValue: function toPropertyE(X) {
+        var e = this.displayHeight > 1 ?
+          X.lookup('foam.u2.MultiLineTextField').create(null, X) :
+          X.lookup('foam.u2.TextField').create(null, X)    ;
+
+        e.attrs({size: this.displayWidth});
+
+        return e;
+      },
+      adapt: function(_, nu) {
+        if ( typeof nu === 'string' ) {
+          var f = function(X) { return X.lookup(nu).create(null, X); };
+          f.toString = function() { return "'"+nu+"'"; };
+          return f;
+        } else {
+          return nu;
+        }
+      },
+    },
+    {
+//      type: 'ViewFactory',
       name: 'detailView',
-      type: 'view',
+      // type: 'view',
       labels: ['javascript'],
       defaultValueFn: function() { return this.view; },
       help: 'View component for the property when rendering within a DetailView.',
@@ -366,9 +391,9 @@ GLOBAL.Property = {
       */}
     },
     {
-//      model_: 'ViewFactoryProperty',
+//      type: 'ViewFactory',
       name: 'citationView',
-      type: 'view',
+      // type: 'view',
       labels: ['javascript'],
       defaultValueFn: function() { return this.view; },
       help: 'View component for the property when rendering within a CitationView.',
@@ -381,12 +406,12 @@ GLOBAL.Property = {
     {
       name: 'swiftView',
       type: 'String',
-      labels: ['swift'],
+      labels: ['compiletime', 'swift'],
       defaultValueFn: function() { return this.view.substring(this.view.lastIndexOf('.')+1); },
       help: 'The default view name for this property in swift.'
     },
     {
-//      model_: 'FunctionProperty',
+//      type: 'Function',
       name: 'detailViewPreRow',
       labels: ['javascript'],
       defaultValue: function() { return ""; },
@@ -397,7 +422,7 @@ GLOBAL.Property = {
       */}
     },
     {
-//      model_: 'FunctionProperty',
+//      type: 'Function',
       name: 'detailViewPostRow',
       labels: ['javascript'],
       defaultValue: function() { return ""; },
@@ -411,6 +436,7 @@ GLOBAL.Property = {
       name: 'defaultValue',
       type: 'String',
       required: false,
+      labels: ['javascript'],
       displayWidth: 70,
       displayHeight: 1,
       defaultValue: '',
@@ -492,6 +518,10 @@ GLOBAL.Property = {
       */}
     },
     {
+      name: 'regex',
+      labels: ['javascript'],
+    },
+    {
       name: 'validate',
       type: 'Function',
       labels: ['javascript'],
@@ -499,26 +529,137 @@ GLOBAL.Property = {
       view: 'foam.ui.FunctionView',
       help: 'Function for validating property value.',
       preSet: function(_, f) {
+        if ( ! f.dependencies ) {
+          var str = f.toString();
+          var deps = str.match(/^function[ _$\w]*\(([ ,\w]*)/)[1];
+          if ( deps )
+            deps = deps.split(',').map(function(name) { return name.trim(); });
+          else
+            deps = [];
+
+          var f2 = function() {
+            var args = [];
+            for ( var i = 0 ; i < deps.length ; i++ )
+              args.push(this[deps[i]]);
+            return f.apply(this, args);
+          };
+
+          f2.dependencies = deps;
+          f2.toString = function() { return f.toString(); };
+
+          return f2;
+        }
+        return f;
+      },
+      compareProperty: function(o1, o2) {
+        return o1.toString() !== o2.toString();
+      },
+      documentation: function() { /*
+        Arguments to the validate function should be named after the properties
+        of this object. They will be passed in when the validate() function is
+        run. Return an error string if validation fails.
+      */}
+    },
+    {
+      name: 'swiftValidate',
+      swiftType: 'FoamFunction?',
+      labels: ['swift'],
+      preSet: function(_, f) {
+        if (typeof f !== "function") return f;
         var str = f.toString();
         var deps = str.
           match(/^function[ _$\w]*\(([ ,\w]*)/)[1].
           split(',').
           map(function(name) { return name.trim(); });
-
-        var f2 = function() {
-          var args = [];
-          for ( var i = 0 ; i < deps.length ; i++ )
-            args.push(this[deps[i]]);
-          return f.apply(this, args);
+        return {
+          code: multiline(f),
+          deps: deps,
         };
-
-        f2.dependencies = deps;
-        f2.toString = function() { return f.toString(); };
-
-        return f2;
       },
-      documentation: function() { /*
-      */}
+    },
+    {
+      name: 'javaAdapt',
+      type: 'String',
+      labels: ['compiletime', 'java'],
+      adapt: function(_, n) {
+        if ( typeof n == "function" ) return multiline(n);
+        return n;
+      }
+    },
+    {
+      name: 'javaPreSet',
+      type: 'String',
+      labels: ['compiletime', 'java'],
+      adapt: function(_, n) {
+        if ( typeof n == "function" ) return multiline(n);
+        return n;
+      }
+    },
+    {
+      name: 'javaPostSet',
+      type: 'String',
+      labels: ['compiletime', 'java'],
+      adapt: function(_, n) {
+        if ( typeof n == "function" ) return multiline(n);
+        return n;
+      }
+    },
+    {
+      name: 'javaFactory',
+      type: 'String',
+      labels: ['compiletime', 'java'],
+      adapt: function(_, n) {
+        if ( typeof n == "function" ) return multiline(n);
+        return n;
+      }
+    },
+    {
+      name: 'javaLazyFactory',
+      type: 'String',
+      labels: ['compiletime', 'java'],
+      adapt: function(_, n) {
+        if ( typeof n == "function" ) return multiline(n);
+        return n;
+      }
+    },
+    {
+      name: 'swiftAdapt',
+      type: 'String',
+      labels: ['compiletime', 'swift'],
+      defaultValue: function() {/*
+        <% if (this.swiftType == 'AnyObject?') { %>
+          return newValue
+        <% } else { %>
+          return newValue as! <%= this.swiftType %>
+        <% } %>
+      */},
+    },
+    {
+      name: 'swiftPreSet',
+      type: 'String',
+      labels: ['compiletime', 'swift'],
+      defaultValue: 'return newValue',
+    },
+    {
+      name: 'swiftPostSet',
+      type: 'String',
+      labels: ['compiletime', 'swift'],
+      defaultValue: '//swiftPostSet goes here.',
+    },
+    {
+      name: 'swiftGetter',
+      type: 'String',
+      labels: ['compiletime', 'swift'],
+    },
+    {
+      name: 'swiftFactory',
+      type: 'String',
+      labels: ['compiletime', 'swift'],
+    },
+    {
+      name: 'swiftLazyFactory',
+      type: 'String',
+      labels: ['compiletime', 'swift'],
     },
     {
       name: 'getter',
@@ -649,6 +790,11 @@ GLOBAL.Property = {
           through field labels or tooltips.
         */}
     },
+    {
+      name: 'helpTranslationHint',
+      type: 'String',
+      help: 'The translation hint for the help property.',
+    },
     DocumentationBootstrap,
     {
       name: 'prototag',
@@ -694,7 +840,7 @@ GLOBAL.Property = {
     {
       name: 'fromString',
       labels: ['javascript'],
-      defaultValue: function(s, p) { this[p.name] = s; },
+      defaultValue: function(s) { return s; },
       help: 'Function to extract value from a String.'
     },
     {
@@ -702,17 +848,17 @@ GLOBAL.Property = {
       labels: ['javascript'],
       defaultValue: function propertyFromElement(e, p) {
         if ( ! p.type || ! this.X.lookup || p.type === 'String' ) {
-          p.fromString.call(this, e.innerHTML, p);
+          this[p.name] = p.fromString(e.innerHTML);
           return;
         }
         var model = this.X.lookup(p.type);
         if ( ! model ) {
-          p.fromString.call(this, e.innerHTML, p);
+          this[p.name] = p.fromString(e.innerHTML);
           return;
         }
         var o = model.create();
         if ( ! o.fromElement ){
-          p.fromString.call(this, e.innerHTML, p);
+          this[p.name] = p.fromString(e.innerHTML);
           return;
         }
         this[p.name] = o.fromElement(e);
@@ -771,6 +917,12 @@ GLOBAL.Property = {
       help: 'True if this value should be included in a memento for this object.',
       defaultValue: false
     },
+    {
+      name: 'attribute',
+      type: 'Boolean',
+      help: 'True if this property is settable as an element attribute.',
+      defaultValue: false
+    }
   ],
 
   methods: [
@@ -778,32 +930,49 @@ GLOBAL.Property = {
     {
       name: 'f',
       code: function(obj) { return obj[this.name] },
-      swiftSource: function() {/*
-    func f(obj: AnyObject?) -> AnyObject? {
-      if obj == nil { return nil }
-      if let fobj = obj as? FObject {
-        return fobj.get(self.name)
-      }
-      return nil
-    }*/},
+      args: [
+        {
+          name: 'obj',
+          swiftType: 'AnyObject?',
+        },
+      ],
+      swiftReturnType: 'AnyObject?',
+      swiftCode: function() {/*
+        if obj == nil { return nil }
+        if let fobj = obj as? FObject {
+          return fobj.get(self.name)
+        }
+        return nil
+      */},
     },
     {
       name: 'compare',
       code: function(o1, o2) {
         return this.compareProperty(this.f(o1), this.f(o2));
       },
-      swiftSource: function() {/*
-    func compare(var o1: AnyObject?, var o2: AnyObject?) -> Int {
-      o1 = self.f(o1)
-      o2 = self.f(o2)
-      if o1 === o2 { return 0 }
-      if o1 == nil && o2 == nil { return 0 }
-      if o1 == nil { return -1 }
-      if o2 == nil { return 1 }
-      if o1!.isEqual(o2) { return 0 }
-      return o1?.hashValue > o2?.hashValue ? 1 : -1
-    }
-*/}
+      args: [
+        {
+          name: 'o1',
+          swiftIsMutable: true,
+          swiftType: 'AnyObject?',
+        },
+        {
+          name: 'o2',
+          swiftIsMutable: true,
+          swiftType: 'AnyObject?',
+        },
+      ],
+      swiftReturnType: 'Int',
+      swiftCode: function() {/*
+        o1 = self.f(o1)
+        o2 = self.f(o2)
+        if o1 === o2 { return 0 }
+        if o1 == nil && o2 == nil { return 0 }
+        if o1 == nil { return -1 }
+        if o2 == nil { return 1 }
+        if o1!.isEqual(o2) { return 0 }
+        return o1?.hashValue > o2?.hashValue ? 1 : -1
+      */}
     },
     function readResolve() {
       return this.modelId ?
@@ -812,14 +981,28 @@ GLOBAL.Property = {
     function toSQL() { return this.name; },
     function toMQL() { return this.name; },
     function toBQL() { return this.name; },
-    function cloneProperty(/* this=prop, */ value) {
-      return ( value && value.clone ) ? value.clone() : value;
+    function cloneProperty(value, cloneArgs) {
+      cloneArgs[this.name] = ( value && value.clone ) ? value.clone() : value;
     },
-    function deepCloneProperty(/* this=prop, */ value) {
-      return ( value && value.deepClone ) ? value.deepClone() : value;
+    function deepCloneProperty(value, cloneArgs) {
+      cloneArgs[this.name] = ( value && value.deepClone ) ? value.deepClone() : value;
     },
     function exprClone() {
       return this;
+    },
+    function dot(nextProp) {
+      var PropertySequence = this.X.lookup('foam.mlang.PropertySequence');
+      if ( ! PropertySequence ) {
+        console.warn('Missing foam.mlang.PropertySequence for Property.dot()');
+        return this;
+      }
+      if ( PropertySequence.isInstance(this) ) {
+        if ( this.next_ ) this.next_ = this.next_.dot(nextProp);
+        else              this.next_ = nextProp;
+        return this;
+      } else {
+        return PropertySequence.xbind({ next_: nextProp }).create(this, this.Y);
+      }
     },
     function initPropertyAgents(proto, fastInit) {
       var prop   = this;
@@ -840,14 +1023,14 @@ GLOBAL.Property = {
         var dynamicValue = prop.dynamicValue;
         if ( Array.isArray(dynamicValue) ) {
           proto.addInitAgent(10, name + ': dynamicValue', function(o, X) {
-            Events.dynamic(
+            Events.dynamicFn(
                 dynamicValue[0].bind(o),
                 function() { o[name] = dynamicValue[1].call(o); },
                 X || this.X);
           });
         } else {
           proto.addInitAgent(10, name + ': dynamicValue', function(o, X) {
-            Events.dynamic(
+            Events.dynamicFn(
                 dynamicValue.bind(o),
                 function(value) { o[name] = value; },
                 X || this.X);
@@ -860,6 +1043,10 @@ GLOBAL.Property = {
           if ( ! o.hasOwnProperty(name) ) o[name];
         });
       }
+    },
+    function toE(opt_X) {
+      var X = opt_X || this.X;
+      return X.lookup('foam.u2.PropertyView').create({prop: this, view: this.toPropertyE(X)}, X);
     }
   ],
 
@@ -879,31 +1066,9 @@ GLOBAL.Property = {
   toString: function() { return "Property"; }
 };
 
+Model.methods = {};
+"createMethod_ getProperty getAction hashCode buildPrototype addTraitToModel_ buildProtoImports_ buildProtoProperties_ buildProtoMethods_ getPrototype isSubModel isInstance getAllRequires arequire getMyFeature getRawFeature getAllMyRawFeatures getFeature getAllRawFeatures atest getRuntimeProperties getRuntimeActions create".split(' ').forEach(function(k) { Model.methods[k] = BootstrapModel[k]; });
 
-Model.methods = {
-  getProperty:              BootstrapModel.getProperty,
-  getAction:                BootstrapModel.getAction,
-  hashCode:                 BootstrapModel.hashCode,
-  buildPrototype:           BootstrapModel.buildPrototype,
-  addTraitToModel_:         BootstrapModel.addTraitToModel_,
-  buildProtoImports_:       BootstrapModel.buildProtoImports_,
-  buildProtoProperties_:    BootstrapModel.buildProtoProperties_,
-  buildProtoMethods_:       BootstrapModel.buildProtoMethods_,
-  getPrototype:             BootstrapModel.getPrototype,
-  isSubModel:               BootstrapModel.isSubModel,
-  isInstance:               BootstrapModel.isInstance,
-  getAllRequires:           BootstrapModel.getAllRequires,
-  arequire:                 BootstrapModel.arequire,
-  getMyFeature:             BootstrapModel.getMyFeature,
-  getRawFeature:            BootstrapModel.getRawFeature,
-  getAllMyRawFeatures:      BootstrapModel.getAllMyRawFeatures,
-  getFeature:               BootstrapModel.getFeature,
-  getAllRawFeatures:        BootstrapModel.getAllRawFeatures,
-  atest:                    BootstrapModel.atest,
-  getRuntimeProperties:     BootstrapModel.getRuntimeProperties,
-  getRuntimeActions:        BootstrapModel.getRuntimeActions,
-  create:                   BootstrapModel.create
-};
 
 // This is the coolest line of code that I've ever written
 // or ever will write. Oct. 4, 2011 -- KGR

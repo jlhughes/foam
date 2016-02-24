@@ -14,39 +14,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 CLASS({
   package: 'foam.tutorials.todo.model',
   name: 'Todo',
+  // TODO(braden): Remove once non-Views get their CSS installed.
+  traits: ['foam.ui.CSSLoaderTrait'],
+
   properties: [
     {
       name: 'id',
-      javaType: 'int',
       hidden: true
     },
     {
       name: 'title',
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isCompleted',
       label: 'Completed',
-      view: 'foam.ui.md.CheckboxView'
-    }
+    },
   ],
 
-  actions: [
-    {
-      name: 'delete',
-      isAvailable: function() { return this.id; },
-      iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg' +
-          'AAABgAAAAYCAQAAABKfvVzAAAAOklEQVQ4y2NgGPzgv8L/B/' +
-          '9h4MF/BXxK8QDqaCDH/aSaP6phVAMuDa+wqn+BW4P//5eYy' +
-          'v/7DvI8DwBDJ5LB6mdU8gAAAABJRU5ErkJggg==',
-      code: function(X) {
-        X.dao.remove(this.id);
-        X.stack.popView();
+  templates: [
+    function CSS() {/*
+      ^ {
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        min-height: 48px;
       }
-    }
+    */},
+    function toRowE() {/*#U2
+      <div class="^">
+        <:isCompleted showLabel="false"/>
+        {{this.title$}}
+      </div>
+    */},
   ]
 });

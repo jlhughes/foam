@@ -22,12 +22,12 @@ CLASS({
   properties: [
     {
       name: 'parent',
-      type: 'foam.patterns.ChildTreeTrait',
+      // type: 'foam.patterns.ChildTreeTrait',
       hidden: true
     },
     {
       name: 'children',
-      type: 'Array[foam.patterns.ChildTreeTrait]',
+      // type: 'Array[foam.patterns.ChildTreeTrait]',
       factory: function() { return []; },
       documentation: function() {/*
         $$DOC{ref:'ChildTreeTrait',usePlural:true} children are arranged in a tree.
@@ -108,6 +108,7 @@ CLASS({
         Array.prototype.forEach.call(this.children, function(child) {
           child.destroy && child.destroy(true);
         });
+        this.children = [];
       } else {
 //        console.log(this.name_, " SLOW removing ", this.children.length," children--------------------------------------");
         this.removeAllChildren();

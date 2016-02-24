@@ -16,9 +16,9 @@
  */
 
 CLASS({
-  name: 'IssueRestDAO',
   package: 'foam.apps.quickbug.dao',
-  extendsModel: 'foam.core.dao.RestDAO',
+  name: 'IssueRestDAO',
+  extends: 'foam.core.dao.RestDAO',
 
   requires: [
     'foam.apps.quickbug.model.DefaultQuery'

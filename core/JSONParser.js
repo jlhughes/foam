@@ -91,12 +91,15 @@ var JSONParser = SkipGrammar.create({
 
   array: seq1(1, '[', repeat(sym('value'), ','), ']'),
 
-  'function literal': seq(
+  'function prototype': seq(
     'function',
     optional(sym('symbol')),
     '(',
     repeat(sym('symbol'), ','),
-    ')',
+    ')'),
+
+  'function literal': seq(
+    sym('function prototype'),
     '{',
     repeat(notChar('}')), // TODO(kgr): this is a very cheap/limited hack, replace with real JS grammar.
 //    repeat(sym('value'), ';'), // TODO(kgr): replace with 'statement'.
@@ -109,7 +112,18 @@ var JSONParser = SkipGrammar.create({
     return m;
   },
   "null": function() { return null; },
-  "undefined": function() { return undefined; }
+  "undefined": function() { return undefined; },
+  "number": function(v) {
+    var str = ""
+    if ( v[0] ) {
+      str += v[0];
+    }
+    str += v[1].join("");
+    if ( v[2] ){
+      str += v[2][0] + v[2][1].join("");
+    }
+    return v[2] ? parseFloat(str) : parseInt(str);
+  }
 }), repeat0(alt(' ', '\t', '\n', '\r')));
 
 /*

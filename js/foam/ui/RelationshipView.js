@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'RelationshipView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
@@ -36,7 +36,7 @@ CLASS({
       name: 'args'
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'viewModel',
       defaultValue: 'foam.ui.DAOController'
     },

@@ -19,7 +19,7 @@ CLASS({
   name: 'Browser',
   package: 'foam.apps.quickbug.ui',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.ui.AlternateView',
@@ -143,7 +143,7 @@ CLASS({
         Y.registerModel(Model.create({
           name: 'ChoiceListView',
           package: 'foam.ui',
-          extendsModel: 'foam.ui.ChoiceListView',
+          extends: 'foam.ui.ChoiceListView',
           methods: {
             choiceToHTML: function(id, choice) {
               var id2 = this.nextID();
@@ -292,7 +292,7 @@ CLASS({
   listeners: [
     {
       name: 'onSearch',
-      code: function(_,_,_,q) {
+      code: function(_, __, ___,q) {
         if ( ! this.maybeSetLegacyUrl(q) ) this.location.q = q;
       }
     },
@@ -538,7 +538,7 @@ CLASS({
 
       Events.follow(this.project.issueCount$, this.issueCount$);
 
-      this.X.dynamic(
+      this.X.dynamicFn(
         function() { this.issueCount; this.selectedIssueCount; }.bind(this),
         function() {
           this.countField.data =
@@ -633,7 +633,7 @@ CLASS({
               // TODO: this is a bit complex because it was written before Contexts. Fix.
               var g = Model.create({
                 name: 'QIssueGridView',
-                extendsModel: 'foam.ui.GridView',
+                extends: 'foam.ui.GridView',
                 methods: {
                   filteredDAO: function() {
                     return ( this.acc.choice && this.acc.choice[1] === 'Tiles' ) ?

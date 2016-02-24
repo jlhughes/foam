@@ -18,7 +18,7 @@
 CLASS({
   name: 'PopupView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.input.touch.GestureTarget'
@@ -209,7 +209,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'delegate',
       documentation: function() {/* The inner view to pop up.
         This should be created in the context of this popup,
@@ -290,7 +290,7 @@ CLASS({
       help: 'If set, specifies the CSS height of the content container.'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'dragHandleHeight',
       help: function() {/* If set, specifies the CSS height of the handle at
           the top of the popup that can be used for dragging the popup. */},
@@ -310,7 +310,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'gestureTargetsInstalled_',
       help: 'Track whether gesture targets are installed to avoid duplication.',
       defaultValue: false
@@ -504,9 +504,13 @@ CLASS({
       }
       .popup-view-container.bottom {
         align-items: flex-end;
+        margin-bottom: 5%;
+        max-height: 90%;
       }
       .popup-view-container.top {
         align-items: flex-start;
+        margin-top: 5%;
+        max-height: 90%;
       }
     */}
   ]

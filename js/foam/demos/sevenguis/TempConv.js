@@ -20,15 +20,15 @@ MODEL({
   name: 'TempConv',
   label: 'Temperature Converter',
   properties: [
-    { name: 'c', model_: 'FloatProperty', view: { factory_: 'foam.ui.FloatFieldView', onKeyMode: true, precision: 4 } },
-    { name: 'f', model_: 'FloatProperty', view: { factory_: 'foam.ui.FloatFieldView', onKeyMode: true, precision: 4 } }
+    { name: 'c', type: 'Float', view: { factory_: 'foam.ui.FloatFieldView', onKeyMode: true, precision: 4 } },
+    { name: 'f', type: 'Float', view: { factory_: 'foam.ui.FloatFieldView', onKeyMode: true, precision: 4 } }
   ],
   templates: [
     function toDetailHTML() {/* $$c Celsius = $$f Fahrenheit */}
   ],
-  methods: {
-    init: function() { Events.relate(this.c$, this.f$, this.c2f, this.f2c); },
-    c2f: function(f) { return 9/5 * f + 32; },
-    f2c: function(c) { return 5/9 * ( c - 32 ); }
-  }
+  methods: [
+    function init() { Events.relate(this.c$, this.f$, this.c2f, this.f2c); },
+    function c2f(f) { return 9/5 * f + 32; },
+    function f2c(c) { return 5/9 * ( c - 32 ); }
+  ]
 });

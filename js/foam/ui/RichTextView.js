@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'RichTextView',
 
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.util.Base64Decoder',
@@ -28,12 +28,12 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name:  'height',
       defaultValue: '400'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name:  'width',
       defaultValue: '100%'
     },

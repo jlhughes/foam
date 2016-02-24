@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'AutocompleteListView',
 
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   properties: [
     {
@@ -48,11 +48,11 @@ CLASS({
       }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'objs'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'selection',
       defaultValue: 0,
       postSet: function(oldValue, newValue) {
@@ -65,16 +65,16 @@ CLASS({
       }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'count',
       defaultValue: 20
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'left'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'top'
     },
   ],
