@@ -23,7 +23,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'StackView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.ui.layout.ViewSlider',
@@ -35,7 +35,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'stack',
       lazyFactory: function() { return []; }
     },
@@ -55,7 +55,7 @@ CLASS({
         v.subscribe(['click'], this.overlayBack);
       }
     },
-    { model_: 'BooleanProperty', name: 'sliderOpen', defaultValue: false },
+    { type: 'Boolean', name: 'sliderOpen', defaultValue: false },
     'slideLatch'
   ],
 
@@ -67,7 +67,7 @@ CLASS({
     init: function() {
       this.SUPER();
       var self = this;
-      this.X.dynamic(function() { self.width; self.height; self.sliderOpen }, this.layout);
+      this.X.dynamicFn(function() { self.width; self.height; self.sliderOpen }, this.layout);
     },
     setPreview: function(){ console.warn('Preview removed from stack view, do it yourself.'); },
     pushView: function(view, opt_label, opt_back, opt_transition) {

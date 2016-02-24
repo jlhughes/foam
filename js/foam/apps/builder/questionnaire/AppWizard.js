@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.questionnaire',
   name: 'AppWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   imports: [
     'selection$',
@@ -52,7 +52,6 @@ CLASS({
 
     function onNext() {
       this.SUPER(); // puts the app into the main dao
-      this.selection = this.data; // imported selection from browser's main list
     },
 
     function onCancel() {

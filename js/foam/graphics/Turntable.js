@@ -19,11 +19,11 @@ CLASS({
   package: 'foam.graphics',
   name:  'Turntable',
 
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'r',
       label: 'Radius',
       defaultValue: 150
@@ -45,7 +45,7 @@ CLASS({
       defaultValue: 10
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name:  'rpm',
       label: 'RPM',
       help:  'Rotations Per Minute. Standard values: 33, 45, and 78.',
@@ -72,18 +72,18 @@ CLASS({
     }
   ],
 
-  listeners: {
-    mouseDown: function(evt) {
+  listeners: [
+    function mouseDown(evt) {
       this.active = true;
       this.internalTime = this.time;
       this.touchX = evt.offsetX - this.r - this.x;
       this.touchY = evt.offsetY - this.r - this.y;
       this.theta = this.angle(this.touchX, this.touchY);
     },
-    mouseUp: function(evt) {
+    function mouseUp(evt) {
       this.active = false;
     },
-    mouseMove: function(evt) {
+    function mouseMove(evt) {
       if ( ! this.active ) return;
 
       this.touchX = evt.offsetX - this.r - this.x;
@@ -99,7 +99,7 @@ CLASS({
       var dTime = d/(Math.PI*2)*36000/this.rpm;
       this.time = this.internalTime = this.internalTime + dTime;
     }
-  },
+  ],
 
   methods: {
     initCView: function() {
@@ -116,8 +116,7 @@ CLASS({
       return Math.atan2(y-this.y, x-this.x);
     },
 
-    paintSelf: function() {
-      var c = this.canvas;
+    paintSelf: function(c) {
       c.save();
       c.translate(this.r, this.r);
       c.font = "48pt Arial";

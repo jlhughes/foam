@@ -21,6 +21,7 @@ CLASS({
   name: 'Window',
 
   exports: [
+    'performance',
     '$$',
     '$',
     'addStyle',
@@ -32,6 +33,7 @@ CLASS({
     'document',
     'framed',
     'dynamic',
+    'dynamicFn',
     'dynamic2',
     'dynamic3',
     'error',
@@ -53,7 +55,7 @@ CLASS({
       factory: function() { return {}; }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'name',
       defaultValue: 'window'
     },
@@ -66,6 +68,7 @@ CLASS({
 
         w.X = this.Y;
         this.document = w.document;
+        this.performance = w.performance;
       }
     },
     {
@@ -73,12 +76,19 @@ CLASS({
       // postSet to reset installedModels?
     },
     {
+      name: 'performance'
+    },
+    {
       name: 'installedModels',
       documentation: "Each new Window context introduces a new document and resets installedModels so models will install again in the new document.",
       factory: function() { return {}; }
     },
     {
-      model_: 'BooleanProperty',
+      name: 'installedStyles',
+      factory: function() { return {}; }
+    },
+    {
+      type: 'Boolean',
       name: 'isBackground',
       defaultValue: false
     },
@@ -89,9 +99,12 @@ CLASS({
   ],
 
   methods: {
-    addStyle: function(css, opt_source) {
-      if ( opt_source )
-        css += '\n\n/*# sourceURL=' + opt_source + ' */\n'
+    addStyle: function(obj) {
+      var id = obj.model_.id;
+      if ( this.installedStyles[id] ) return;
+      this.installedStyles[id] = true;
+
+      var css = obj.CSS() + '\n\n/*# sourceURL=' + id.replace(/\./g, '/') + '.CSS */\n';
 
       if ( ! this.document || ! this.document.createElement ) return;
       var s = this.document.createElement('style');
@@ -115,10 +128,21 @@ CLASS({
     framed: function(listener) {
       return EventService.framed(listener, this);
     },
-    dynamic: function(fn, opt_fn) {
-      return Events.dynamic(fn, opt_fn, this.Y);
+    dynamic: function(fn /*, Values[] */) {
+      return arguments.length == 1 ?
+        FunctionValue.create({
+          valueFactory: fn
+        }, this) :
+        OrValue.create({
+          valueFactory: fn,
+          values: Array.prototype.splice.call(arguments, 1)
+        }, this) ;
+    },
+    dynamicFn: function(fn, opt_fn) {
+      return Events.dynamicFn(fn, opt_fn, this.Y);
     },
     // TODO(kgr): experimental, remove if never used
+    // avoids capturing nested accessess
     dynamic2: function(fn) {
       var listener = this.framed(fn);
       var propertyValues = [];
@@ -144,6 +168,7 @@ CLASS({
     },
     // TODO(kgr): experimental, remove if never used,
     // TODO(kgr): Move to a 'global' context above Window
+    // checks fn for its named dependencies
     dynamic3: function(obj, fn, opt_ret) {
       var values = fn.dependencies.map(function(name) { return obj.propertyValue(name); });
 

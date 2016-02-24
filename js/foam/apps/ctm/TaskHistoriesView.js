@@ -12,18 +12,18 @@
 CLASS({
   package: 'foam.apps.ctm',
   name: 'TaskHistoriesView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [ 'foam.apps.ctm.History' ],
 
   properties: [
     {
-      type: 'foam.apps.ctm.TaskController',
+      // type: 'foam.apps.ctm.TaskController',
       name: 'data',
       postSet: function(old, nu) { this.updateHTML(); }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name:  'properties'
     }
   ],

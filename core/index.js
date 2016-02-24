@@ -34,7 +34,7 @@
 /** Plan indicating that there are no matching records. **/
 var NOT_FOUND = {
   cost: 0,
-  execute: function(_, sink, _) { return anop; },
+  execute: function(_, sink, __) { return anop; },
   toString: function() { return "no-match(cost=0)"; }
 };
 
@@ -591,7 +591,7 @@ var TreeIndex = {
          undefined;
          */
         if ( sortRequired ) {
-          var a = [];
+          var a = [].sink;
           index.selectCount++;
           index.select(s, a, {query: options.query});
           index.selectCount--;
@@ -1126,7 +1126,7 @@ var AutoIndex = {
   addIndex: function(prop) {
     if ( GLOBAL.DescExpr && DescExpr.isInstance(prop) ) prop = prop.arg1;
 
-    console.log('Adding AutoIndex : ', prop.name);
+    console.log('Adding AutoIndex : ', prop.id);
     this.properties[prop.name] = true;
     this.mdao.addIndex(prop);
   },
@@ -1148,7 +1148,7 @@ var AutoIndex = {
 
 
 var MDAO = Model.create({
-  extendsModel: 'AbstractDAO',
+  extends: 'AbstractDAO',
 
   name: 'MDAO',
   label: 'Indexed DAO',
@@ -1160,7 +1160,7 @@ var MDAO = Model.create({
       required: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'autoIndex',
       defaultValue: false
     }
@@ -1241,7 +1241,6 @@ var MDAO = Model.create({
       var oldValue = this.map[obj.id];
       if ( oldValue ) {
         this.root = this.index.put(this.index.remove(this.root, oldValue), obj);
-        this.notify_('remove', [oldValue]);
       } else {
         this.root = this.index.put(this.root, obj);
       }

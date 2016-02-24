@@ -18,7 +18,7 @@
  CLASS({
    package: 'foam.ui',
    name: 'AsyncLoadingView',
-   extendsModel: 'foam.ui.BaseView',
+   extends: 'foam.ui.BaseView',
 
    documentation: function() {/* Loads a view with arequire, giving the
      host view a placeholder immediately and filling in the actual view
@@ -55,7 +55,7 @@
      },
      {
        name: 'view',
-       type: 'foam.ui.View',
+       // type: 'foam.ui.View',
        documentation: function() {/*
          The new sub-$$DOC{ref:'foam.ui.View'} generated for the given $$DOC{ref:'Property'}.
        */}

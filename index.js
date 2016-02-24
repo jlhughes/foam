@@ -44,11 +44,20 @@
 
   var models = [];
 
+  models.push(X.arequire('foam.u2.Element'));
+  models.push(X.arequire('foam.u2.ElementParser'));
+  models.push(X.arequire('foam.u2.DetailView'));
+  models.push(X.arequire('foam.u2.ActionButton'));
+  models.push(X.arequire('foam.ui.View'));
+
   var model = params.model_ || params.model || 'foam.navigator.Controller';
 
   models.push(X.arequire(model));
-  if (params.model_) delete params.model_;
-  else delete params.model;
+
+  if ( params.model_ )
+    delete params.model_;
+  else
+    delete params.model;
 
   var viewName = params.view;
   if ( viewName ) {
@@ -65,7 +74,6 @@
     }
   });
 
-  models.push(X.arequire('foam.ui.View'));
   Object_forEach(params, function(value, key) {
     var match = /^[a-z]+[.]([a-z]+[.])*[A-Z][a-zA-Z]*$/.exec(value);
     if ( match  ) models.push(X.arequire(value));
@@ -89,23 +97,44 @@
     }
   }
 
-  apar.apply(null, models).aseq(
+  aseq.apply(null, models).aseq(
     function() {
       var m = X.lookup(model);
       if ( ! m ) {
         document.body.innerHTML = 'Unable to load model: ' + model;
         return;
       }
-      var obj = m.create(params);
+
+      for ( var key in params ) {
+        var p = m.getProperty(key);
+        if ( p ) params[key] = p.fromString(params[key]);
+        console.log(key, params[key]);
+      }
+
+      var obj = m.create(params, X);
       var view;
+
+      GLOBAL.indexObj = obj; // for debugging
+
       if ( viewName ) {
         viewParams.data = obj;
         view = X.lookup(viewName).create(viewParams, obj.Y);
         // 'CView' refers to old CView
         // TODO(kgr): remove this check when CView's converted to foam.graphics.CView
-      } else if (  ( X.lookup('foam.ui.View').isInstance(obj) )
+      } else if (  ( X.lookup('foam.ui.BaseView').isInstance(obj) )
                    || ( 'CView' in GLOBAL && CView.isInstance(obj) ) ) {
         view = obj;
+      } else if ( X.lookup('foam.u2.Element').isInstance(obj) ) {
+        console.time('load');
+        document.body.insertAdjacentHTML('beforeend', obj.outerHTML);
+        obj.load();
+        console.timeEnd('load');
+        return;
+      } else if ( obj.toE ) {
+        var e = obj.toE(X);
+        document.body.insertAdjacentHTML('beforeend', e.outerHTML);
+        e.load();
+        return;
       } else if ( obj.toView_ ) {
         view = obj.toView_();
       } else {
@@ -119,7 +148,9 @@
         });
         return;
       }
+      console.time('load');
       document.body.insertAdjacentHTML('beforeend', view.toHTML());
       view.initHTML();
+      console.timeEnd('load');
     })();
 })();

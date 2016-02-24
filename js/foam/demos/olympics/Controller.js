@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.demos.olympics',
   name: 'Controller',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.dao.EasyDAO',
@@ -41,8 +41,8 @@ CLASS({
   ],
 
   properties: [
-    { model_: 'IntProperty', name: 'count' },
-    { model_: 'IntProperty', name: 'totalCount' },
+    { type: 'Int', name: 'count' },
+    { type: 'Int', name: 'totalCount' },
     {
       model_: 'foam.core.types.DAOProperty',
       name: 'dao',
@@ -93,7 +93,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'sql',
       displayWidth: 35,
       displayHeight: 8
@@ -150,7 +150,7 @@ CLASS({
     {
       name: 'onPredicateChange',
       isFramed: true,
-      code: function(_, _, _, predicate) {
+      code: function(_, __, ___, predicate) {
         this.sql = 'SELECT * FROM Medal' +
           (predicate !== TRUE ? ' WHERE (' + predicate.toSQL() + ')' : '');
 
@@ -175,7 +175,11 @@ CLASS({
       .tableView, .mdTableView {
         outline: none;
       }
-      .medalController { display: flex; }
+      body > .medalController {
+        width: 100%;
+        height: 100%;
+      }
+      .medalController { display: flex; overflow: hidden; }
       .searchPanel { color: #666; }
       .foamSearchView select { width: 300px; }
       .tableView { width: auto !important; }
@@ -192,7 +196,6 @@ CLASS({
       .searchResults {
         margin-left: 40px;
         position: relative;
-        height: 100%;
         flex-grow: 1;
         display: flex;
         flex-direction: column;

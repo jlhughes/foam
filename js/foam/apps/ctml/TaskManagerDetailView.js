@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.ctml',
   name: 'TaskManagerDetailView',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.apps.ctml.Task',
@@ -26,7 +26,7 @@ CLASS({
       defaultValue: null
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showActions',
       defaultValue: false,
       preSet: function() { return false; }
@@ -48,14 +48,17 @@ CLASS({
     */},
     function CSS() {/*
       body, task-manager {
-        width: 100%;
-        height: 100%;
         color: rgba(0, 0, 0, 0.87);
         font-family: 'Roboto', sans-serif;
         font-size: 13px;
         font-weight: 400;
       }
+      body > task-manager {
+        width: 100%;
+        height: 100%;
+      }
       task-manager {
+        overflow: hidden;
         background: rgb(238,238,238);
         flex-direction: column;
       }

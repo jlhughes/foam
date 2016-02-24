@@ -19,7 +19,7 @@ CLASS({
   package: 'com.google.watlobby',
   name: 'TopicBubble',
 
-  extendsModel: 'com.google.watlobby.Bubble',
+  extends: 'com.google.watlobby.Bubble',
 
   requires: [
     'foam.graphics.Circle',
@@ -32,9 +32,14 @@ CLASS({
 
   properties: [
     { name: 'topic' },
-    { name: 'image' },
+    {
+      name: 'image',
+      postSet: function(_, i) {
+        this.img.src = i;
+      }
+    },
     { name: 'roundImage' },
-    { name: 'zoom', defaultValue: 0 },
+    [ 'zoom', 0 ],
     {
       name: 'textArea',
       factory: function() {
@@ -42,17 +47,22 @@ CLASS({
           className: 'topic-bubble-text',
           mode: 'read-only',
           escapeHTML: false
-//          data: 'foobar\nblah\nblah\nblah'
         })});
       }
-    }
+    },
+    {
+      name: 'img',
+      factory: function() {
+        return this.ImageCView.create({ src: 'js/com/google/watlobby/' + this.image });
+      }
+    },
   ],
 
   methods: [
     function initCView() {
       this.SUPER();
 
-      this.addChild(this.img = this.ImageCView.create({src: this.image}));
+      this.addChild(this.img);
       this.addChild(this.textArea);
       this.textArea.innerView.data = '<font style="color:' + this.topic.color + ';"><b>' + ( this.topic.text || 'INSERT TEXT HERE' ) + '</b></font>';
       this.textArea.alpha = 0;
@@ -64,20 +74,23 @@ CLASS({
 
         this.mass = this.INFINITE_MASS;
         this.vx = this.vy = 0;
-        this.cancel_ = Movement.animate(1000, function() {
-          var w = self.lobby.width;
-          var h = self.lobby.height;
-          self.x = w/2;
-          self.y = h/2;
-          self.zoom = 1;
-          self.textArea.alpha = 1;
-        }, Movement.easey)();
+        this.cancel_ = Movement.compile([
+          [ 400, function() {
+            var w = self.lobby.width;
+            var h = self.lobby.height;
+            self.x = w/2;
+            self.y = h/2;
+            self.zoom = 1;
+            self.img.alpha = 0.15;
+          }, Movement.easey ],
+          [ 400, function() { self.textArea.alpha = 1; }]
+        ])();
       } else {
         this.mass = this.oldMass_;
         Movement.compile([
           [
-            [ 200,  function() { self.textArea.alpha = 0; } ],
-            [ 1000, function() { self.zoom = 0; } ]
+            [ 10, function() { self.textArea.alpha = 0; } ],
+            [ 800, function() { self.img.alpha = 1; self.zoom = 0; } ]
           ],
           // This is needed for the rare case that the tab was hidden until
           // after the timeout and then CView aborts in paint() because width
@@ -90,42 +103,55 @@ CLASS({
     function layout() {
       if ( ! this.img ) return;
 
-      var c = this.canvas;
+      var z = this.zoom;
 
       this.r = this.topic.r;
 
-      if ( this.zoom ) {
+      if ( z ) {
         var w = this.lobby.width;
         var h = this.lobby.height;
-        var r = Math.min(w, h)/2.3;
+        var r = Math.min(w, h)/3;
 
-        this.r += (r - this.topic.r) * this.zoom;
+        this.r += (r - this.topic.r) * z;
 
-        this.textArea.width = this.textArea.height = this.zoom * this.r*0.9;
+        this.textArea.width = this.textArea.height = this.r*1.3;
         this.textArea.y = - this.textArea.height / 2;
-        this.textArea.x = 20;
+        this.textArea.x = - this.textArea.width / 2;
       } else {
         this.textArea.alpha = 0;
         this.textArea.width = this.textArea.height = 0;
       }
 
       var r2 = this.roundImage ?
-        (1-0.15*this.zoom)*this.r + 2 :
+        this.r + 2 :
         Math.SQRT1_2 * this.r ;
 
-      this.img.x      = this.roundImage ? -r2 - 0.15*this.zoom*this.r/1.5 : -r2 * (1+this.zoom/4);
-      this.img.y      = -r2 / (1+this.zoom);
-      this.img.width  = (2-this.zoom) * r2;
-      this.img.height = (2-this.zoom) * r2;
+      if ( this.img.image_ && this.img.image_.width ) {
+        var w = this.img.image_.width;
+        var h = this.img.image_.height;
+        var min = Math.min(w, h);
+        this.img.width  = w * (2 * r2)/min;
+        this.img.height = h * (2 * r2)/min;
+        this.img.x      = -this.img.width/2;
+        this.img.y      = -this.img.height/2;
+      }
     },
-    function paint() {
+    function paint(c) {
       this.layout();
-      this.SUPER();
+      this.SUPER(c);
     },
     function paintBorder() { },
-    function paintChildren() {
-      this.SUPER();
-      foam.graphics.Circle.getPrototype().paintBorder.call(this);
+    function paintChildren(c) {
+      var needsCrop = this.roundImage || this.img.width != this.img.height;
+      if ( needsCrop ) {
+        c.save();
+        c.beginPath();
+        c.arc(0, 0, this.r, 0, 2 * Math.PI, false);
+        c.clip();
+      }
+      this.SUPER(c);
+      if ( needsCrop ) c.restore();
+      foam.graphics.Circle.getPrototype().paintBorder.call(this, c);
     }
   ]
 });

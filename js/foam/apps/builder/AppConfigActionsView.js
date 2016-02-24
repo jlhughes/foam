@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'AppConfigActionsView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   traits: [ 'foam.ui.md.ToolbarViewTrait' ],
 
   requires: [
@@ -31,7 +31,7 @@ CLASS({
   properties: [
     'data',
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'delegate',
       defaultValue: 'foam.ui.md.DetailView',
     },
@@ -51,6 +51,7 @@ CLASS({
       var confirmPopup = this.PopupView.create({
         cardClass: 'md-card-shell',
         data: this.data,
+        layoutPosition: 'top',
         blockerMode: 'modal',
         delegate: this.ExportConfirmView.xbind({
           actionName: name,
@@ -139,7 +140,6 @@ CLASS({
       ligature: 'delete',
       code: function() {
         this.dao.remove(this.data);
-        this.stack.popView();
       },
     },
   ],

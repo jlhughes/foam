@@ -13,7 +13,7 @@
 CLASS({
   name: 'ModalOverlayView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
 
   exports: [ 'as overlay' ],
 
@@ -21,7 +21,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'cssPosition',
       defaultValue: 'fixed',
       postSet: function(old, nu) {
@@ -30,12 +30,12 @@ CLASS({
       }
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'openAlpha',
       defaultValue: 0.4
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'alpha',
       defaultValue: 0,
       postSet: function(old, nu) {

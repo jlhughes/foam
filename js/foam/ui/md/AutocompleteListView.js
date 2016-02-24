@@ -19,7 +19,7 @@
 CLASS({
   name: 'AutocompleteListView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.ui.md.AddRowView',
@@ -53,12 +53,12 @@ CLASS({
       defaultValueFn: function() { return this.prop ? this.prop.label : ''; }
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'acRowView',
       defaultValue: 'foam.ui.md.DefaultACRowView'
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'rowView',
       defaultValue: 'DefaultRowView'
     },

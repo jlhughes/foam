@@ -12,7 +12,7 @@
 CLASS({
   name: 'CodeSampleOutputView',
   package: 'foam.flow',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
 
   requires: [
     'foam.flow.CodeSampleOutput',
@@ -24,12 +24,12 @@ CLASS({
   properties: [
     {
       name: 'data',
-      type: 'foam.flow.CodeSampleOutput',
+      // type: 'foam.flow.CodeSampleOutput',
       required: true
     },
     {
       name: 'flare',
-      type: 'foam.ui.md.Flare',
+      // type: 'foam.ui.md.Flare',
       postSet: function(old, nu) {
         if ( old === nu ) return;
         if ( old ) old.flareState$.removeListener(this.onFlareStateChange);
@@ -67,7 +67,7 @@ CLASS({
         //
         // TODO(markdittmer): We should be using this.setClass() here, but
         // it's not working right now.
-        Events.dynamic(function() {
+        Events.dynamicFn(function() {
           this.flare && this.flare.flareState;
           this.virtualConsoleView;
           var vc = this.virtualConsoleView;
@@ -80,7 +80,7 @@ CLASS({
         }.bind(this));
 
         this.viewOutputContainer = this.X.$(this.id + '-voc');
-        Events.dynamic(function() {
+        Events.dynamicFn(function() {
           this.viewOutputContainer;
           this.viewOutputView && this.viewOutputView.height;
           this.viewOutputContainer.className = this.viewOutputView.height > 0 ?

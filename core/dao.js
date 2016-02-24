@@ -15,97 +15,6 @@
  * limitations under the License.
  */
 
-// TODO: model and move out of core
-var LoggingDAO = {
-
-  create: function(/*[logger], delegate*/) {
-    var logger, delegate;
-    if ( arguments.length == 2 ) {
-      logger = arguments[0];
-      delegate = arguments[1];
-    } else {
-      logger = console.log.bind(console);
-      delegate = arguments[0];
-    }
-
-    return {
-      __proto__: delegate,
-
-      put: function(obj, sink) {
-        logger('put', obj);
-        delegate.put(obj, sink);
-      },
-      remove: function(query, sink) {
-        logger('remove', query);
-        delegate.remove(query, sink);
-      },
-      select: function(sink, options) {
-        logger('select', options || "");
-        return delegate.select(sink, options);
-      },
-      removeAll: function(sink, options) {
-        logger('removeAll', options);
-        return delegate.removeAll(sink, options);
-      }
-    };
-  }
-};
-
-
-// TODO: model and move out of core
-var TimingDAO = {
-
-  create: function(name, delegate) {
-    // Used to distinguish between concurrent operations
-    var id;
-    var activeOps = {put: 0, remove:0, find: 0, select: 0};
-    function start(op) {
-      var str = name + '-' + op;
-      var key = activeOps[op]++ ? str + '-' + (id++) : str;
-      console.time(id);
-      return [key, str, window.performance.now(), op];
-    }
-    function end(act) {
-      activeOps[act[3]]--;
-      id--;
-      console.timeEnd(act[0]);
-      console.log('Timing: ', act[1], ' ', (window.performance.now()-act[2]).toFixed(3), ' ms');
-    }
-    function endSink(act, sink) {
-      return {
-        put:    function() { end(act); sink && sink.put    && sink.put.apply(sink, arguments); },
-        remove: function() { end(act); sink && sink.remove && sink.remove.apply(sink, arguments); },
-        error:  function() { end(act); sink && sink.error  && sink.error.apply(sink, arguments); },
-        eof:    function() { end(act); sink && sink.eof    && sink.eof.apply(sink, arguments); }
-      };
-    }
-    return {
-      __proto__: delegate,
-
-      put: function(obj, sink) {
-        var act = start('put');
-        delegate.put(obj, endSink(act, sink));
-      },
-      remove: function(query, sink) {
-        var act = start('remove');
-        delegate.remove(query, endSink(act, sink));
-      },
-      find: function(key, sink) {
-        var act = start('find');
-        delegate.find(key, endSink(act, sink));
-      },
-      select: function(sink, options) {
-        var act = start('select');
-        var fut = afuture();
-        delegate.select(sink, options)(function(s) {
-          end(act);
-          fut.set(s);
-        });
-        return fut.get;
-      }
-    };
-  }
-};
 
 
 var ObjectToJSON = {
@@ -145,17 +54,6 @@ var ObjectToJSON = {
 var JSONToObject = {
   __proto__: ObjectToJSON.create(),
 
-  visitString: function(o) {
-    try {
-      return o.substr(0, 9) === 'function(' ?
-        eval('(' + o + ')') :
-        o ;
-    } catch (x) {
-      console.log(x, o);
-      return o;
-    }
-  },
-
   visitObject: function(o) {
     var model   = X.lookup(o.model_);
     if ( ! model ) throw new Error('Unknown Model: ' + o.model_);
@@ -178,34 +76,44 @@ var JSONToObject = {
 
 CLASS({
   name: 'FilteredDAO_',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   documentation: '<p>Internal use only.</p>',
 
   properties: [
     {
       name: 'query',
+      swiftType: 'ExprProtocol!',
+      swiftDefaultValue: 'nil',
       required: true
     }
   ],
-  methods: {
-    select: function(sink, options) {
-      return this.delegate.select(sink, options ? {
-        __proto__: options,
-        query: options.query ?
-          AND(this.query, options.query) :
-          this.query
-      } : {query: this.query});
+  methods: [
+    {
+      name: 'select',
+      code: function(sink, options, opt_X) {
+        return this.delegate.select(sink, options ? {
+          __proto__: options,
+          query: options.query ?
+            AND(this.query, options.query) :
+            this.query
+        } : {query: this.query}, opt_X);
+      },
+      swiftCode: function() {/*
+        if options.query != nil { options.query = AND(query, options.query) }
+        else { options.query = query }
+        return delegate.select(sink, options: options)
+      */},
     },
-    removeAll: function(sink, options) {
+    function removeAll(sink, options, opt_X) {
       return this.delegate.removeAll(sink, options ? {
         __proto__: options,
         query: options.query ?
           AND(this.query, options.query) :
           this.query
-      } : {query: this.query});
+      } : {query: this.query}, opt_X);
     },
-    listen: function(sink, options) {
+    function listen(sink, options) {
       return this.SUPER(sink, options ? {
         __proto__: options,
         query: options.query ?
@@ -213,16 +121,16 @@ CLASS({
           this.query
       } : {query: this.query});
     },
-    toString: function() {
+    function toString() {
       return this.delegate + '.where(' + this.query + ')';
     }
-  }
+  ]
 });
 
 
 CLASS({
   name: 'OrderedDAO_',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   documentation: function() {/*
         <p>Internal use only.</p>
@@ -235,7 +143,7 @@ CLASS({
     }
   ],
   methods: {
-    select: function(sink, options) {
+    select: function(sink, options, opt_X) {
       if ( options ) {
         if ( ! options.order )
           options = { __proto__: options, order: this.comparator };
@@ -243,7 +151,7 @@ CLASS({
         options = {order: this.comparator};
       }
 
-      return this.delegate.select(sink, options);
+      return this.delegate.select(sink, options, opt_X);
     },
     toString: function() {
       return this.delegate + '.orderBy(' + this.comparator + ')';
@@ -255,7 +163,7 @@ CLASS({
 
 CLASS({
   name: 'LimitedDAO_',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   documentation: function() {/*
         <p>Internal use only.</p>
@@ -268,7 +176,7 @@ CLASS({
     }
   ],
   methods: {
-    select: function(sink, options) {
+    select: function(sink, options, opt_X) {
       if ( options ) {
         if ( 'limit' in options ) {
           options = {
@@ -283,7 +191,7 @@ CLASS({
         options = { limit: this.count };
       }
 
-      return this.delegate.select(sink, options);
+      return this.delegate.select(sink, options, opt_X);
     },
     toString: function() {
       return this.delegate + '.limit(' + this.count + ')';
@@ -294,7 +202,7 @@ CLASS({
 
 CLASS({
   name: 'SkipDAO_',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   documentation: function() {/*
         <p>Internal use only.</p>
@@ -311,10 +219,10 @@ CLASS({
     }
   ],
   methods: {
-    select: function(sink, options) {
+    select: function(sink, options, opt_X) {
       options = options ? { __proto__: options, skip: this.skip } : { skip: this.skip };
 
-      return this.delegate.select(sink, options);
+      return this.delegate.select(sink, options, opt_X);
     },
     toString: function() {
       return this.delegate + '.skip(' + this.skip + ')';
@@ -325,7 +233,7 @@ CLASS({
 
 CLASS({
   name: 'RelationshipDAO',
-  extendsModel: 'FilteredDAO_',
+  extends: 'FilteredDAO_',
   documentation: 'Adapts a DAO based on a Relationship.',
 
   properties: [
@@ -386,24 +294,86 @@ CLASS({
       transient: true,
       hidden: true,
       factory: function() { return []; },
+      swiftType: 'NSMutableArray',
+      swiftFactory: 'return NSMutableArray()',
       compareProperty: function() { return 0; },
     }
   ],
 
-  methods: {
-    update: function(expr) { /* Applies a change to the DAO contents. */
+  methods: [
+    function update(expr) { /* Applies a change to the DAO contents. */
       return this.select(UPDATE(expr, this));
     },
 
-    select: function(sink, options) {
-      /* Template method. Override to copy the contents of this DAO (filtered or ordered as
-      necessary) to sink. */
+    {
+      name: 'select',
+      code: function(sink, options) {
+        /* Template method. Override to copy the contents of this DAO (filtered or ordered as
+        necessary) to sink. */
+      },
+      args: [
+        {
+          name: 'sink',
+          swiftType: 'Sink = ArraySink()',
+        },
+        {
+          name: 'options',
+          swiftType: 'DAOQueryOptions = DAOQueryOptions()',
+        },
+      ],
+      swiftReturnType: 'Future',
+      swiftCode: 'return Future().set(sink)',
     },
-    remove: function(query, sink) {
-      /* Template method. Override to remove matching items and put them into sink if supplied. */
+    {
+      name: 'put',
+      args: [
+        {
+          name: 'obj',
+          swiftType: 'FObject',
+        },
+        {
+          name: 'sink',
+          swiftType: 'Sink = ArraySink()',
+        },
+      ],
+      swiftCode: '// Override',
+    },
+    {
+      name: 'remove',
+      code: function(query, sink) {
+        /* Template method. Override to remove matching items and put them into sink if supplied. */
+      },
+      args: [
+        {
+          name: 'obj',
+          swiftType: 'FObject',
+        },
+        {
+          name: 'sink',
+          swiftType: 'Sink = ArraySink()',
+        },
+      ],
+      swiftCode: '// Override',
+    },
+    {
+      name: 'find',
+      code: function(id, sink) {
+        /* Template method. Override to return an object from the dao with the given id. */
+      },
+      args: [
+        {
+          name: 'id',
+          swiftType: 'String',
+        },
+        {
+          name: 'sink',
+          swiftType: 'Sink',
+        },
+      ],
+      swiftCode: '// Override',
     },
 
-    pipe: function(sink, options) { /* A $$DOC{ref:'.select'} followed by $$DOC{ref:'.listen'}.
+    function pipe(sink, options) { /* A $$DOC{ref:'.select'} followed by $$DOC{ref:'.listen'}.
            Dump our contents to sink, then send future changes there as well. */
       sink = this.decorateSink_(sink, options, true);
 
@@ -430,119 +400,263 @@ CLASS({
       }, options, fc);
     },
 
-    decorateSink_: function(sink, options, isListener, disableLimit) {
-      if ( options ) {
-        if ( ! disableLimit ) {
-          if ( options.limit ) sink = limitedSink(options.limit, sink);
-          if ( options.skip )  sink = skipSink(options.skip, sink);
+    {
+      name: 'decorateSink_',
+      code: function (sink, options, isListener, disableLimit) {
+        if ( options ) {
+          if ( ! disableLimit ) {
+            if ( options.limit ) sink = limitedSink(options.limit, sink);
+            if ( options.skip )  sink = skipSink(options.skip, sink);
+          }
+
+          if ( options.order && ! isListener ) {
+            sink = orderedSink(options.order, sink);
+          }
+
+          if ( options.query ) {
+            sink = predicatedSink(
+              options.query.partialEval ?
+                options.query.partialEval() :
+                options.query,
+              sink) ;
+          }
         }
 
-        if ( options.order && ! isListener ) {
-          sink = orderedSink(options.order, sink);
+        return sink;
+      },
+      args: [
+        {
+          name: 'sink',
+          swiftIsMutable: true,
+          swiftType: 'Sink',
+        },
+        {
+          name: 'options',
+          swiftType: 'DAOQueryOptions',
+        },
+      ],
+      swiftReturnType: 'Sink',
+      swiftCode: function() {/*
+        if options.query != nil {
+          sink = PredicatedSink(args: [
+            "delegate": sink,
+            "expr": options.query!
+          ])
         }
-
-        if ( options.query ) {
-          sink = predicatedSink(
-            options.query.partialEval ?
-              options.query.partialEval() :
-              options.query,
-            sink) ;
-        }
-      }
-
-      return sink;
+        return sink
+      */},
     },
 
-    createFlowControl_: function() {
+    function createFlowControl_() {
       return {
         stop: function() { this.stopped = true; },
         error: function(e) { this.errorEvt = e; }
       };
     },
 
-    where: function(query) { /* Return a DAO that contains a filtered subset of this one. */
-      // only use X if we are an invalid instance without a this.Y
-      return (this.Y || X).lookup('FilteredDAO_').create({query: query, delegate: this});
+    {
+      name: 'where',
+      code: function(query) { /* Return a DAO that contains a filtered subset of this one. */
+        // only use X if we are an invalid instance without a this.Y
+        return (this.Y || X).lookup('FilteredDAO_').create({query: query, delegate: this});
+      },
+      args: [
+        {
+          name: 'query',
+          swiftType: 'ExprProtocol',
+        },
+      ],
+      swiftReturnType: 'AbstractDAO',
+      swiftCode: function() {/*
+        let filteredDAO = FilteredDAO_()
+        filteredDAO.delegate = self
+        filteredDAO.query = query
+        return filteredDAO
+      */}
     },
 
-    limit: function(count) { /* Return a DAO that contains a count limited subset of this one. */
+    function limit(count) { /* Return a DAO that contains a count limited subset of this one. */
       return (this.Y || X).lookup('LimitedDAO_').create({count:count, delegate:this});
     },
 
-    skip: function(skip) { /* Return a DAO that contains a subset of this one, skipping initial items. */
+    function skip(skip) { /* Return a DAO that contains a subset of this one, skipping initial items. */
       return (this.Y || X).lookup('SkipDAO_').create({skip:skip, delegate:this});
     },
 
-    orderBy: function() { /* Return a DAO that contains a subset of this one, ordered as specified. */
+    function orderBy() { /* Return a DAO that contains a subset of this one, ordered as specified. */
       return (this.Y || X).lookup('OrderedDAO_').create({ comparator: arguments.length == 1 ? arguments[0] : argsToArray(arguments), delegate: this });
     },
 
-    listen: function(sink, options) { /* Send future changes to sink. */
-      this.daoListeners_.push(this.decorateSink_(sink, options, true));
-    },
-
-    unlisten: function(sink) { /* Stop sending updates to the given sink. */
-      var ls = this.daoListeners_;
-//      if ( ! ls.length ) console.warn('Phantom DAO unlisten: ', this, sink);
-      for ( var i = 0; i < ls.length ; i++ ) {
-        if ( ls[i].$UID === sink.$UID ) {
-          ls.splice(i, 1);
-          return true;
+    {
+      name: 'listen',
+      code: function(sink, options) { /* Send future changes to sink. */
+        this.daoListeners_.push(this.decorateSink_(sink, options, true));
+      },
+      args: [
+        {
+          name: 'sink',
+          swiftType: 'Sink',
+        },
+        {
+          name: 'options',
+          swiftType: 'DAOQueryOptions = DAOQueryOptions()',
         }
-      }
-      console.assert(! DEBUG, 'Phantom DAO unlisten: ', this, sink);
+      ],
+      swiftCode: 'self.daoListeners_.addObject(self.decorateSink_(sink, options: options))'
     },
 
-    // Default removeAll: calls select() with the same options and
-    // calls remove() for all returned values.
-    removeAll: function(sink, options) { /* Default $$DOC{ref:'.removeAll'}: calls
-            $$DOC{ref:'.select'} with the same options and calls $$DOC{ref:'.remove'}
-             for all returned values. */
-      var self = this;
-      var future = afuture();
-      this.select({
-        put: function(obj) {
-          self.remove(obj, { remove: sink && sink.remove });
-        }
-      })(function() {
-        sink && sink.eof();
-        future.set();
-      });
-      return future.get;
-    },
-
-    /**
-     * Notify all listeners of update to DAO.
-     * @param fName the name of the method in the listeners to call.
-     *        possible values: 'put', 'remove'
-     **/
-    notify_: function(fName, args) {
-      // console.log(this.name_, ' ***** notify ', fName, ' args: ', args, ' listeners: ', this.daoListeners_);
-      for( var i = 0 ; i < this.daoListeners_.length ; i++ ) {
-        var l = this.daoListeners_[i];
-        var fn = l[fName];
-        if ( fn ) {
-          // Create flow-control object
-          args[2] = {
-            stop: (function(fn, l) {
-              return function() { fn(l); };
-            })(this.unlisten.bind(this), l),
-            error: function(e) { /* Don't care. */ }
-          };
-          try {
-            fn.apply(l, args);
-          } catch(err) {
-            if ( err !== this.UNSUBSCRIBE_EXCEPTION ) {
-              console.error('Error delivering event (removing listener): ', fName, err);
-              if ( DEBUG ) console.error(err.stack); // TODO: make a NO_DEBUGGER flag for mobile debugger mode?
-            }
-            this.unlisten(l);
+    {
+      name: 'unlisten',
+      code: function unlisten(sink) { /* Stop sending updates to the given sink. */
+        var ls = this.daoListeners_;
+  //      if ( ! ls.length ) console.warn('Phantom DAO unlisten: ', this, sink);
+        for ( var i = 0; i < ls.length ; i++ ) {
+          if ( ls[i].$UID === sink.$UID ) {
+            ls.splice(i, 1);
+            return true;
           }
         }
-      }
+        if ( DEBUG ) console.warn('Phantom DAO unlisten: ', this, sink);
+      },
+      args: [
+        {
+          name: 'sink',
+          swiftType: 'Sink',
+        },
+      ],
+      swiftReturnType: 'Bool',
+      swiftCode: function() {/*
+        let index = daoListeners_.indexOfObject(sink)
+        if index == NSNotFound {
+          return false
+        }
+        daoListeners_.removeObjectAtIndex(index)
+        return true
+      */},
     },
 
-  }
+    {
+      name: 'removeAll',
+      // Default removeAll: calls select() with the same options and
+      // calls remove() for all returned values.
+      code: function(sink, options) { /* Default $$DOC{ref:'.removeAll'}: calls
+              $$DOC{ref:'.select'} with the same options and calls $$DOC{ref:'.remove'}
+               for all returned values. */
+        var self = this;
+        var future = afuture();
+        this.select({
+          put: function(obj) {
+            self.remove(obj, { remove: sink && sink.remove });
+          }
+        })(function() {
+          sink && sink.eof();
+          future.set();
+        });
+        return future.get;
+      },
+      args: [
+        {
+          name: 'sink',
+          swiftType: 'Sink = ArraySink()',
+        },
+        {
+          name: 'options',
+          swiftType: 'DAOQueryOptions = DAOQueryOptions()',
+        },
+      ],
+      swiftReturnType: 'Future',
+      swiftCode: function() {/*
+        let future = Future()
+        let removeSink = ClosureSink(args: [
+          "putFn": FoamFunction(fn: { (args) -> AnyObject? in
+            let obj = args[0] as! FObject
+            self.remove(obj, sink: ClosureSink(args: [
+              "removeFn": FoamFunction(fn: { (args) -> AnyObject? in
+                let obj = args[0] as! FObject
+                sink.remove(obj)
+                return nil
+              }),
+            ]));
+            return nil
+          }),
+        ])
+        self.select(removeSink, options: options).get { _ in
+          sink.eof()
+          future.set(sink)
+        }
+        return future;
+      */},
+    },
+
+    {
+      /**
+       * Notify all listeners of update to DAO.
+       * @param fName the name of the method in the listeners to call.
+       *        possible values: 'put', 'remove'
+       **/
+      name: 'notify_',
+      code: function(fName, args) {
+        // console.log(this.name_, ' ***** notify ', fName, ' args: ', args, ' listeners: ', this.daoListeners_);
+        for( var i = 0 ; i < this.daoListeners_.length ; i++ ) {
+          var l = this.daoListeners_[i];
+          var fn = l[fName];
+          if ( fn ) {
+            // Create flow-control object
+            args[2] = {
+              stop: (function(fn, l) {
+                return function() { fn(l); };
+              })(this.unlisten.bind(this), l),
+              error: function(e) { /* Don't care. */ }
+            };
+            try {
+              fn.apply(l, args);
+            } catch(err) {
+              if ( err !== this.UNSUBSCRIBE_EXCEPTION ) {
+                console.error('Error delivering event (removing listener): ', fName, err);
+                if ( DEBUG ) console.error(err.stack); // TODO: make a NO_DEBUGGER flag for mobile debugger mode?
+              }
+              this.unlisten(l);
+            }
+          }
+        }
+      },
+      args: [
+        {
+          name: 'fName',
+          swiftType: 'String',
+        },
+        {
+          name: 'fObj',
+          swiftType: 'FObject? = nil',
+        },
+      ],
+      swiftCode: function() { /*
+        switch fName {
+          case "put":
+            for l in self.daoListeners_ {
+              let l = l as! Sink
+              l.put(fObj!)
+            }
+            break
+          case "remove":
+            for l in self.daoListeners_ {
+              let l = l as! Sink
+              l.remove(fObj!)
+            }
+            break
+          case "reset":
+            for l in self.daoListeners_ {
+              let l = l as! Sink
+              l.reset()
+            }
+            break
+          default:
+            fatalError("DAO notify with unexpected function \(fName)")
+        }
+      */},
+    },
+
+  ]
 });
 
 

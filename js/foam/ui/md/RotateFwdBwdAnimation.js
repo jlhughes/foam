@@ -25,7 +25,7 @@ CLASS({
       }
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'rotation',
       units: 'turns',
       defaultValue: 0,
@@ -39,15 +39,15 @@ CLASS({
     },
     {
       name: 'easing',
-      defaultValue: Movement.easeOut(0.9)
+      lazyFactory: function() { return Movement.easeOut(0.9); }
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'fwdDuration',
       defaultValue: 100
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'bwdDuration',
       defaultValue: 100
     },
@@ -78,13 +78,13 @@ CLASS({
       name: 'init',
       code: function() {
         this.SUPER.apply(this, arguments);
-        Events.dynamic(function() {
+        this.X.dynamicFn(function() {
           this.easing;
           this.fwdDuration;
           this.fwdDirection;
           this.fwdAnimation = this.getAnimation('fwd');
         }.bind(this));
-        Events.dynamic(function() {
+        this.X.dynamicFn(function() {
           this.easing;
           this.bwdDuration;
           this.bwdDirection;
@@ -93,20 +93,9 @@ CLASS({
       }
     },
     {
-      name: 'initHTML',
-      code: function() {
-        var initialTransform = this.element.style.transform ||
-            this.element.style.webkitTransform;
-
-        this.popup.alpha = 1;
-        this.popup.zoom = 1;
-        this.setInitialPosition(true);
-      }
-    },
-    {
       name: 'getAnimation',
       code: function(wd) {
-        return Movement.animate(
+        return this.X.animate(
             this[wd + 'Duration'],
             function() {
               this.rotation += this[wd + 'Direction'] === 'clockwise' ?
@@ -114,13 +103,14 @@ CLASS({
             }.bind(this),
             this.easing,
             function() {
-              this.rotation = this.rotation % 360;
+              this.rotation = Math.round(this.rotation * 2) / 2;
             }.bind(this));
       }
     },
     {
       name: 'setRotationStyle',
       code: function() {
+        if ( ! this.element ) return;
         var style = this.element.style,
             initialTransform = style.transform,
             strippedTransform = initialTransform.replace(

@@ -44,7 +44,7 @@ CLASS({
 CLASS({
   package: 'demo.bank',
   name: 'SavingsAccount',
-  extendsModel: 'demo.bank.Account',
+  extends: 'demo.bank.Account',
 
   methods: [
     {
@@ -117,7 +117,7 @@ a.test();
 CLASS({
   name: 'Child',
 
-  imports: [ 'log', 'x as x$' ],
+  imports: [ 'log', 'x$' ],
 
   properties: [
     {
@@ -133,7 +133,7 @@ CLASS({
   name: 'Parent',
 
   requires: [ 'Child' ],
-  exports: [ 'x$ as x' ],
+  exports: [ 'x' ],
   properties: [ 'x' ],
   methods: {
     test: function() {

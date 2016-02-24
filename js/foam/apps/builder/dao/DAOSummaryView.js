@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.dao',
   name: 'DAOSummaryView',
-  extendsModel: 'foam.apps.builder.SummaryView',
+  extends: 'foam.apps.builder.SummaryView',
 
   requires: [
     'foam.apps.builder.dao.DAOFactoryView',
@@ -35,7 +35,7 @@ CLASS({
       }
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'icon',
       defaultValue: {
         factory_: 'foam.ui.Icon',

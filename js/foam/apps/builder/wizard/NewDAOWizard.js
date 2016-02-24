@@ -12,13 +12,13 @@
 CLASS({
   package: 'foam.apps.builder.wizard',
   name: 'NewDAOWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   requires: [
     'foam.apps.builder.wizard.NewOrExistingModelWizard',
     'foam.apps.builder.wizard.DAOWizard',
-    'foam.meta.descriptor.DAOFactoryMetaDescriptor',
-    'foam.meta.descriptor.MetaDescriptorView',
+    'foam.apps.builder.datamodels.meta.descriptor.DAOFactoryMetaDescriptor',
+    'foam.apps.builder.datamodels.meta.descriptor.MetaDescriptorView',
   ],
 
   imports: [
@@ -47,13 +47,14 @@ CLASS({
     },
     {
       name: 'daoDescriptor',
-      view: 'foam.meta.descriptor.MetaDescriptorView',
+      view: 'foam.apps.builder.datamodels.meta.descriptor.MetaDescriptorView',
       help: 'The type of DAOFactory to create',
       lazyFactory: function() {
          var ret = this.DAOFactoryMetaDescriptor.create();
-         if ( this.data.dao ) {
-           ret.name = this.data.dao.name;
-           ret.modelType = this.data.dao.model_.id;
+         var dc = this.data.getDataConfig();
+         if ( dc ) {
+           ret.name = dc.dao.name;
+           ret.modelType = dc.dao.model_.id;
          }
          return ret;
        },
@@ -91,8 +92,8 @@ CLASS({
 
   methods: [
     function onNext() {
-      this.data.dao = this.daoFactory;
-      this.daoConfigDAO.put(this.data.dao);
+      this.data.getDataConfig().dao = this.daoFactory;
+      this.daoConfigDAO.put(this.data.getDataConfig().dao);
 
       this.SUPER();
     },

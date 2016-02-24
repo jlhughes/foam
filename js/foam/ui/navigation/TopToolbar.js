@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui.navigation',
   name: 'TopToolbar',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   requires: [
     'foam.ui.ViewFactoryView',
   ],
@@ -69,7 +69,7 @@ CLASS({
   listeners: [
     {
       name: 'onResize',
-      code: function(_, _, old, nu) {
+      code: function(_, __, old, nu) {
         this.preferredHeight += nu - old;
       }
     }

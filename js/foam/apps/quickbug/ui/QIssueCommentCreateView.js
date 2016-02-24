@@ -18,7 +18,7 @@
 CLASS({
   name: 'QIssueCommentCreateView',
   package: 'foam.apps.quickbug.ui',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   imports: [
     'browser'
@@ -35,7 +35,7 @@ CLASS({
 
   properties: [
     { name: 'model', factory: function() { return this.QIssueComment; } },
-    { model_: 'BooleanProperty', name: 'saving', defaultValue: false },
+    { type: 'Boolean', name: 'saving', defaultValue: false },
     { name: 'issue' },
     { name: 'errorView', factory: function() { return this.TextFieldView.create({ mode: 'read-only' }); } },
     { name: 'dao' }

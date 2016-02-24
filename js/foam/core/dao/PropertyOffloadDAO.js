@@ -18,7 +18,7 @@
 CLASS({
   name: 'PropertyOffloadDAO',
   package: 'foam.core.dao',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   properties: [
     {
@@ -28,7 +28,7 @@ CLASS({
       name: 'offloadDAO'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'loadOnSelect'
     }
   ],

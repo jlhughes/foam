@@ -18,7 +18,7 @@
 CLASS({
   name: 'OAuth2Redirect',
   package: 'foam.oauth2',
-  extendsModel: 'foam.oauth2.OAuth2',
+  extends: 'foam.oauth2.OAuth2',
   help: 'OAuth2 strategy that uses the redirect.',
   imports: [
     'window',
@@ -37,7 +37,7 @@ CLASS({
     {
       name: 'redirects',
       transient: true,
-      defaultValue: 0
+      defaultValue: 0,
     }
   ],
   constant: {
@@ -75,9 +75,9 @@ CLASS({
       return token;
     },
     refreshNow_: function(ret) {
-      if ( this.redirects == 0 && this.authToken ) {
+      if ( this.accessToken ) {
         this.redirects += 1;
-        ret(this.authToken);
+        ret(this.accessToken);
         return;
       }
       if ( this.redirects < 3 ) {

@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.ui.md',
   name: 'FlatButton',
-  extendsModel: 'foam.flow.Element',
+  extends: 'foam.flow.Element',
 
   requires: [
     'foam.ui.Color',
@@ -39,7 +39,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'raised',
       defaultValue: false
     },
@@ -52,7 +52,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'font',
       postSet: function(old, nu) {
         if ( old === nu || ! this.$ ) return;
@@ -60,7 +60,7 @@ CLASS({
       }
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'alpha',
       defaultValue: null,
       postSet: function(old, nu) {
@@ -69,7 +69,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'background',
       postSet: function(old, nu) {
         if ( old === nu || ! this.$ ) return;
@@ -116,11 +116,11 @@ CLASS({
       },
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'iconUrl',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'ligature',
     },
     {
@@ -169,7 +169,7 @@ CLASS({
       hidden: true
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isHidden',
       defaultValue: false
     }
@@ -212,7 +212,7 @@ CLASS({
 
       var self = this;
 
-      if ( this.action.labelFn ) this.X.dynamic(
+      if ( this.action.labelFn ) this.X.dynamicFn(
         function() {
           self.action.label = self.action.labelFn.call(self.data, self.action);
         },
@@ -221,7 +221,7 @@ CLASS({
         });
 
       // available enabled etc.
-      this.X.dynamic(
+      this.X.dynamicFn(
         function() { self.action.isEnabled.call(self.data, self.action); },
         function() {
           if ( self.action.isEnabled.call(self.data, self.action) ) {
@@ -232,7 +232,7 @@ CLASS({
         }
       );
 
-      this.X.dynamic(
+      this.X.dynamicFn(
         function() { self.action.isAvailable.call(self.data, self.action); },
         function() {
           self.isHidden = ! self.action.isAvailable.call(self.data, self.action);

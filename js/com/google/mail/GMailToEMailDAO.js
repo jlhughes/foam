@@ -16,10 +16,9 @@
  */
 
 CLASS({
-  "model_": "Model",
   "package": "com.google.mail",
   "name": "GMailToEMailDAO",
-  "extendsModel": "foam.core.dao.AbstractAdapterDAO",
+  "extends": "foam.core.dao.AbstractAdapterDAO",
   "requires": [
     "foam.lib.email.EMail",
     "com.google.mail.FOAMGMailMessage",
@@ -29,7 +28,7 @@ CLASS({
   ],
   "properties": [
     {
-      "model_": "ModelProperty",
+      type: 'Model',
       "name": "model",
       "defaultValueFn": function () { return this.EMail; },
       "type": "Model"
@@ -37,7 +36,7 @@ CLASS({
   ],
   "methods": [
     {
-      "model_": "Method",
+      model_: "Method",
       "name": "adaptSink_",
       "code": function(sink) {
         if ( MaxExpr.isInstance(sink) &&
@@ -48,7 +47,7 @@ CLASS({
       }
     },
     {
-      "model_": "Method",
+      model_: "Method",
       "name": "init",
       "code": function (args) {
         this.SUPER(args);
@@ -95,11 +94,12 @@ CLASS({
       }
     },
     {
-      "model_": "Method",
+      model_: "Method",
       "name": "aToB",
       "code": function (obj) {
         var msg = this.FOAMGMailMessage.create({
-          id: obj.id,
+          id: obj.gmailId,
+          emailId: obj.id,
           labelIds: obj.labels,
           isSent: obj.messageSent,
           clientVersion: obj.clientVersion,
@@ -124,7 +124,7 @@ CLASS({
       }
     },
     {
-      "model_": "Method",
+      model_: "Method",
       "name": "bToA",
       "code": function (obj) {
         var self= this;
@@ -153,22 +153,26 @@ CLASS({
         else if ( plainBody ) body = '<pre>' + decode(plainBody.body.data) + '</pre>';
 
         var args = {
-          id: obj.id,
+          gmailId: obj.id,
           convId: obj.threadId,
           labels: obj.labelIds,
           serverVersion: obj.historyId,
           // attachments: obj.attachments,
           body: body,
+          plainBody: decode(plainBody.body.data),
           snippet: obj.snippet,
           deleted: obj.deleted
         };
+        if ( obj.emailId ) {
+          args.id = obj.emailId;
+        }
         this.readHeaders(obj.payload.headers || [], args);
 
         return this.EMail.create(args);
       }
     },
     {
-      "model_": "Method",
+      model_: "Method",
       "name": "adaptOptions_",
       "code": function (options) {
         var newoptions = {};
@@ -185,7 +189,7 @@ CLASS({
             newoptions.query = EQ(this.FOAMGMailMessage.LABEL_IDS, query.arg2);
           } else if ( GtExpr.isInstance(query) &&
                       query.arg1 == this.EMail.SERVER_VERSION ) {
-            newoptions.query = GT(this.FOAMGMailMessage.HISTORY_ID, query.arg2);
+            newoptions.query = GT(this.FOAMGMailMessage.getPrototype().HISTORY_ID, query.arg2);
           } else if ( MQLExpr.isInstance(query) ) {
             newoptions.query = query;
           }

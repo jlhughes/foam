@@ -19,9 +19,9 @@ CLASS({
   package: 'foam.ui.md',
   name: 'Halo',
 
-  extendsModel: 'foam.graphics.Circle',
+  extends: 'foam.graphics.Circle',
 
-  constant: {
+  constants: {
     RING_INNER_COLOR: 'rgba(0, 0, 0, 0)'
   },
 
@@ -82,7 +82,7 @@ CLASS({
       defaultValue: true
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'isEnabled',
       defaultValue: function() { return true; }
     }

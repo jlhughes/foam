@@ -17,7 +17,7 @@
 
 CLASS({
   name: 'CSSStackView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   package: 'foam.ui.layout',
   traits: ['foam.ui.layout.PositionedDOMViewTrait'],
 
@@ -32,7 +32,7 @@ CLASS({
       factory: function() { return []; }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'currentView',
       defaultValue: 0,
       preSet: function(_, v) { return Math.min(Math.max(v, 0), this.stack.length - 1); }
@@ -42,7 +42,7 @@ CLASS({
       defaultValue: false
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'direction',
       defaultValue: -1
     },
@@ -55,7 +55,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'sliderOpen',
       defaultValue: false
     },
@@ -70,23 +70,23 @@ CLASS({
   ],
 
   imports: [
-    'dynamic'
+    'dynamicFn'
   ],
 
   methods: {
     init: function() {
       this.SUPER();
       var self = this;
-      this.dynamic(function() {
+      this.dynamicFn(function() {
         self.width;
         self.height;
         self.sliderOpen;
       }, this.onLayout);
-      this.dynamic(function() {
+      this.dynamicFn(function() {
         self.currentView;
         self.width;
       }, this.onTransform)
-      this.dynamic(function() {
+      this.dynamicFn(function() {
         self.width;
         self.height;
       }, this.resizeContainer);

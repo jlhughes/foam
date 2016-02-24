@@ -16,13 +16,13 @@
  */
 
 CLASS({
-  name: 'ProfileView',
   package: 'com.google.mail',
-  extendsModel: 'foam.ui.View',
+  name: 'ProfileView',
+  extends: 'foam.ui.View',
   requires: ['com.google.mail.GMailUserInfo', 'foam.ui.ImageView'],
   properties: [
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name: 'model',
       factory: function() { return this.GMailUserInfo; }
     },

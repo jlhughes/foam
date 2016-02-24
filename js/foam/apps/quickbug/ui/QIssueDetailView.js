@@ -18,7 +18,7 @@
 CLASS({
   name: 'QIssueDetailView',
   package: 'foam.apps.quickbug.ui',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.apps.quickbug.ui.CursorView',
@@ -36,7 +36,7 @@ CLASS({
       factory: function() { return this.X.QIssue; }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'saveEnabled',
       defaultValue: false
     },

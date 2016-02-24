@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.dao',
   name: 'ProxyDAO',
 
-  extendsModel: 'AbstractDAO',
+  extends: 'AbstractDAO',
 
   requires: [ 'foam.dao.NullDAO' ],
 
@@ -31,8 +31,25 @@ CLASS({
 
   properties: [
     {
+      name: 'relay',
+      factory: function() { /* Sets up relay for listening to delegate changes. */
+        var self = this;
+        return {
+          put:    function() { self.notify_('put', arguments);    },
+          remove: function() { self.notify_('remove', arguments); },
+          reset: function() { self.notify_('reset', arguments); },
+          toString: function() { return 'RELAY(' + this.$UID + ', ' + self.model_.name + ', ' + self.delegate + ')'; }
+        };
+      },
+      swiftType: 'Sink',
+      swiftFactory: function() {/*
+        return RelaySink(args: ["relay": self])
+      */}
+    },
+    {
       name: 'delegate',
-      type: 'DAO',
+      swiftType: 'AbstractDAO',
+      swiftFactory: 'return AbstractDAO()',
       mode: "read-only",
       hidden: true,
       required: true,
@@ -41,17 +58,28 @@ CLASS({
       factory: function() { return this.NullDAO.create(); }, // TODO: use singleton
       postSet: function(oldDAO, newDAO) {
         if ( this.daoListeners_.length ) {
-          if ( oldDAO ) oldDAO.unlisten(this.relay());
-          newDAO.listen(this.relay());
+          if ( oldDAO ) oldDAO.unlisten(this.relay);
+          newDAO.listen(this.relay);
           // FutureDAOs will put via the future. In that case, don't put here.
           this.notify_('reset', []);
         }
-      }
+      },
+      swiftPostSet: function() {/*
+        if self.daoListeners_.count > 0 {
+          if let oldValue = oldValue as? AbstractDAO {
+            oldValue.unlisten(self.relay);
+          }
+          newValue.listen(self.relay);
+          // FutureDAOs will put via the future. In that case, don't put here.
+          self.notify_("reset");
+        }
+      */}
     },
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name: 'model',
       type: 'Model',
+      required: false,
       defaultValueFn: function() { return this.delegate.model; },
       documentation: function() { /*
           <p>Determines the expected $$DOC{ref:'Model'} type for the items
@@ -62,62 +90,80 @@ CLASS({
     }
   ],
 
-  methods: {
-    relay: function() { /* Sets up relay for listening to delegate changes. */
-      if ( ! this.relay_ ) {
-        var self = this;
+  methods: [
 
-        this.relay_ = {
-          put:    function() { self.notify_('put', arguments);    },
-          remove: function() { self.notify_('remove', arguments); },
-          reset: function() { self.notify_('reset', arguments); },
-          toString: function() { return 'RELAY(' + this.$UID + ', ' + self.model_.name + ', ' + self.delegate + ')'; }
-        };
-      }
-
-      return this.relay_;
+    {
+      name: 'put',
+      code: function (value, sink) { /* Passthrough to delegate. */
+        this.delegate.put(value, sink);
+      },
+      swiftCode: 'delegate.put(obj, sink: sink)',
     },
 
-    put: function(value, sink) { /* Passthrough to delegate. */
-      this.delegate.put(value, sink);
+    {
+      name: 'remove',
+      code: function (query, sink) { /* Passthrough to delegate. */
+        this.delegate.remove(query, sink);
+      },
+      swiftCode: 'delegate.remove(obj, sink: sink)',
     },
 
-    remove: function(query, sink) { /* Passthrough to delegate. */
-      this.delegate.remove(query, sink);
+    {
+      name: 'removeAll',
+      code: function() {
+        return this.delegate.removeAll.apply(this.delegate, arguments);
+      },
+      swiftCode: 'return delegate.removeAll(sink, options: options)',
     },
 
-    removeAll: function() { /* Passthrough to delegate. */
-      return this.delegate.removeAll.apply(this.delegate, arguments);
+    {
+      name: 'find',
+      code: function(key, sink) { /* Passthrough to delegate. */
+        this.delegate.find(key, sink);
+      },
+      swiftCode: function() {/*
+        delegate.find(id, sink: sink)
+      */},
     },
 
-    find: function(key, sink) { /* Passthrough to delegate. */
-      this.delegate.find(key, sink);
+    {
+      name: 'select',
+      code: function(sink, options) { /* Passthrough to delegate. */
+        return this.delegate.select(sink, options);
+      },
+      swiftCode: 'return delegate.select(sink, options: options)'
     },
 
-    select: function(sink, options) { /* Passthrough to delegate. */
-      return this.delegate.select(sink, options);
+    {
+      name: 'listen',
+      code: function(sink, options) { /* Passthrough to delegate, using $$DOC{ref:'.relay'}. */
+        // Adding first listener, so listen to delegate
+        if ( ! this.daoListeners_.length && this.delegate ) {
+          this.delegate.listen(this.relay);
+        }
+
+        this.SUPER(sink, options);
+      },
+      swiftCode: function() {/*
+        // Adding first listener, so listen to delegate
+        if self.daoListeners_.count == 0 {
+          delegate.listen(relay)
+        }
+        super.listen(sink, options: options);
+      */},
     },
 
-    listen: function(sink, options) { /* Passthrough to delegate, using $$DOC{ref:'.relay'}. */
-      // Adding first listener, so listen to delegate
-      if ( ! this.daoListeners_.length && this.delegate ) {
-        this.delegate.listen(this.relay());
-      }
-
-      this.SUPER(sink, options);
-    },
-
-    unlisten: function(sink) { /* Passthrough to delegate, using $$DOC{ref:'.relay'}. */
+    function unlisten(sink) { /* Passthrough to delegate, using $$DOC{ref:'.relay'}. */
       this.SUPER(sink);
 
       // Remove last listener, so unlisten to delegate
       if ( this.daoListeners_.length === 0 && this.delegate ) {
-        this.delegate.unlisten(this.relay());
+        this.delegate.unlisten(this.relay);
       }
     },
 
-    toString: function() { /* String representation. */
+    function toString() { /* String representation. */
       return this.name_ + '(' + this.delegate + ')';
     }
-  }
+  ]
 });

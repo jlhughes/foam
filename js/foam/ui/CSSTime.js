@@ -19,7 +19,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'time',
     },
     {
@@ -39,7 +39,7 @@ CLASS({
       if ( ! match ) return null;
       var num = parseFloat(match[1]);
       var units = match[3];
-      if ( ( ! Number.isNaN(num) ) || ! units ) return null;
+      if ( Number.isNaN(num) || ! units ) return null;
       this.time = num;
       this.units = units.toLowerCase();
       return this;

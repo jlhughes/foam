@@ -18,11 +18,11 @@
 CLASS({
   package: 'foam.demos.graphics',
   name: 'LogoBackground',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [ 'foam.graphics.Circle', 'foam.util.Timer' ],
 
-  imports: [ 'colors$', 'width$', 'height$' ],
+  imports: [ 'colorList$', 'width$', 'height$' ],
 
   properties: [
     {
@@ -50,7 +50,6 @@ CLASS({
     },
     addBubble: function() {
       if ( ! this.view.$ ) this.destroy();
-      var c = this.canvas;
       var Y = this.height+15;
       var X = 10+Math.random()*(this.width-20);
 
@@ -58,10 +57,10 @@ CLASS({
         x: X,
         y: Y,
         r: 15,
-        alpha: 0.4,
+        alpha: 1,
         color: null,
         borderWidth: 2,
-        border: this.colors[Math.floor(Math.random() * this.colors.length)]}) || '#000000';
+        border: this.colorList[Math.floor(Math.random() * this.colorList.length)]}) || '#000000';
 
       this.addChild(circle);
       circle.stop = Movement.animate(
@@ -85,7 +84,7 @@ CLASS({
 CLASS({
   package: 'foam.demos.graphics',
   name:  'LogoForeground',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   imports: [ 'text$', 'font$', 'width$', 'height$' ],
 
@@ -94,23 +93,21 @@ CLASS({
   ],
 
   methods: {
-    paintSelf: function() {
-      var c = this.canvas;
-
+    paintSelf: function(c) {
       c.fillStyle = 'white';
       c.fillRect(0, 0, this.width, this.height);
 
       c.font = this.font;
-      c.fillStyle = 'rgba(0,0,0,1)';
+      c.fillStyle = 'rgba(255,255,255,1)';
       c.strokeStyle = 'white';
 
       c.lineWidth = 3;
       c.strokeStyle = '#888';
       c.globalCompositeOperation = '';
-      c.strokeText(this.text, 0, this.height-5);
+      c.strokeText(this.text, 0, this.height-30);
       c.globalCompositeOperation = 'destination-out';
 
-      c.fillText(this.text, 0, this.height-5);
+      c.fillText(this.text, 0, this.height-30);
     }
   }
 });
@@ -119,7 +116,8 @@ CLASS({
 CLASS({
   package: 'foam.demos.graphics',
   name:  'Logo',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
+
   traits: [ 'foam.ui.Colors' ],
 
   requires: [
@@ -128,20 +126,20 @@ CLASS({
     'foam.ui.TextFieldView'
   ],
 
-  exports: [ 'text$', 'font$', 'colors$', 'width$', 'height$' ],
+  exports: [ 'text', 'font', 'colorList', 'width', 'height' ],
 
   properties: [
     [ 'duration', 0 ],
     {
-      model_: 'StringArrayProperty',
-      name: 'colors',
+      type: 'StringArray',
+      name: 'colorList',
       singular: 'color',
       factory: function() { return this.COLORS; }
     },
     [ 'text', 'FOAM' ],
     [ 'font', '120px Georgia' ],
     [ 'width', 400 ],
-    [ 'height', 103 ],
+    [ 'height', 128 ],
     {
       name: 'foreground',
       factory: function() {

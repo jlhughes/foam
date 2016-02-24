@@ -64,9 +64,7 @@ CLASS({
           var t = this.model_.templates[i];
           if ( t.name === 'CSS' ) {
             t.futureTemplate(function() {
-              X.addStyle(
-                this.CSS(),
-                this.model_.id.split('.').join('/') + '.CSS');
+              X.addStyle(this);
             }.bind(this));
             return;
           }
@@ -75,7 +73,7 @@ CLASS({
     },
     {
       name:   'shortcuts',
-      type:   'Array[Shortcut]',
+      // type:   'Array[Shortcut]',
       factory: function() { return []; },
       documentation: function() {/*
         Keyboard shortcuts for the view. TODO ???
@@ -124,7 +122,7 @@ CLASS({
     },
     {
       name: 'propertyViewProperty',
-      type: 'Property',
+      // type: 'Property',
       defaultValueFn: function() { return this.X.Property.VIEW; }
     },
     {
@@ -146,7 +144,7 @@ CLASS({
       */}
     },
    {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showActions',
       defaultValue: false,
       postSet: function(oldValue, showActions) {
@@ -167,7 +165,7 @@ CLASS({
       documentation: 'Allows specifying the minimum width of a view. ' +
           'This is optional, and only used by views attempting responsive ' +
           'layouts, such as $$DOC{ref:"foam.browser.ui.StackView"}.',
-      defaultValue: 0
+      defaultValue: 300
     },
     {
       name: 'minHeight',
@@ -218,6 +216,7 @@ CLASS({
       code: function(e) {
         console.assert(! this.tooltip_, 'Tooltip already defined');
         this.X.arequire('foam.ui.Tooltip')(function(Tooltip) {
+          if (!Tooltip) return;
           this.tooltip_ = Tooltip.create({
             text:   this.tooltip,
             target: this.$
@@ -389,7 +388,7 @@ CLASS({
       opt_id = opt_id || this.nextID();
       valueFn = valueFn.bind(this);
       this.addInitializer(function() {
-        self.X.dynamic(valueFn, function() {
+        self.X.dynamicFn(valueFn, function() {
           var e = self.X.$(opt_id);
           if ( ! e ) throw EventService.UNSUBSCRIBE_EXCEPTION;
           var newValue = valueFn(e.getAttribute(attributeName));
@@ -407,7 +406,7 @@ CLASS({
       opt_id = opt_id || this.nextID();
       valueFn = valueFn.bind(this);
       this.addInitializer(function() {
-        self.X.dynamic(valueFn, function(value) {
+        self.X.dynamicFn(valueFn, function(value) {
           var e = self.X.$(opt_id);
           if ( ! e ) throw EventService.UNSUBSCRIBE_EXCEPTION;
           e.style[styleName] = value;
@@ -425,7 +424,7 @@ CLASS({
 
       this.addInitializer(function() {
         self.addDestructor(
-          self.X.dynamic(
+          self.X.dynamicFn(
             predicate,
             function() {
               var e = self.X.$(opt_id);
@@ -513,7 +512,7 @@ CLASS({
         $$DOC{ref:'.initHTML'}. */
       this.initInnerHTML();
       this.initKeyboardShortcuts();
-      // this.maybeInitTooltip();
+      this.maybeInitTooltip();
     },
 
     maybeInitTooltip: function() {
@@ -789,7 +788,7 @@ CLASS({
       var id  = this.nextID();
       var self = this;
       this.addInitializer(function() {
-        self.X.dynamic(function() {
+        self.X.dynamicFn(function() {
           var html = f();
           var e = self.X.$(id);
           if ( e ) e.innerHTML = html;

@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.kiosk',
   name: 'ImportWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   imports: [
     'importExportManager$',
@@ -31,12 +31,11 @@ CLASS({
       defaultValue: 'Import existing app',
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'appBuilderVersion',
       defaultValue: 1,
     },
     {
-      type: 'foam.apps.builder.ImportExportFlow',
       name: 'importFlow',
       lazyFactory: function() {
         return this.ImportExportFlow.create({

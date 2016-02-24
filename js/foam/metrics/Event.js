@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.metrics',
   name: 'Event',
-  extendsModel: 'foam.metrics.Metric',
+  extends: 'foam.metrics.Metric',
 
   properties: [
     {
@@ -20,7 +20,7 @@ CLASS({
       defaultValue: 'event',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'label',
     },
   ],

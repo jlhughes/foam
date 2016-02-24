@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.graphics',
   name: 'PositionedCViewView',
-  extendsModel: 'foam.graphics.AbstractCViewView',
+  extends: 'foam.graphics.AbstractCViewView',
   traits: ['foam.ui.layout.PositionedDOMViewTrait'],
   properties: [
     {
@@ -29,7 +29,7 @@ CLASS({
   methods: {
     init: function() {
       this.SUPER();
-      this.X.dynamic(function() {
+      this.X.dynamicFn(function() {
         this.cview; this.width; this.height;
       }.bind(this), function() {
         if ( ! this.cview ) return;

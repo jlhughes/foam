@@ -18,7 +18,7 @@
 CLASS({
   "package": "foam.ui.layout",
   "name": "CSSOverlaySlider",
-  "extendsModel": "foam.ui.View",
+  extends: "foam.ui.View",
   requires: [
     'foam.ui.layout.FloatingView'
   ],
@@ -30,12 +30,12 @@ CLASS({
       name: 'view'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isOpen',
       defaultValue: false
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'animating',
       defaultValue: false
     },
@@ -52,7 +52,7 @@ CLASS({
     init: function(args) {
         this.SUPER(args);
         var self = this;
-        this.X.dynamic(function() { self.width; self.height; }, this.layout);
+        this.X.dynamicFn(function() { self.width; self.height; }, this.layout);
     },
     open: function(view) {
       if ( ! view.model_.Z ) view = this.FloatingView.create({ view: view });

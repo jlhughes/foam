@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 CLASS({
   package: 'foam.ui.search',
   name: 'GroupAutocompleteSearchView',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.ui.autocomplete.GroupCompleter',
@@ -46,7 +47,6 @@ CLASS({
     {
       name: 'dao',
       label: 'DAO',
-      type: 'DAO',
       required: true,
       factory: function() {
         return [];
@@ -56,8 +56,7 @@ CLASS({
       },
     },
     {
-      name: 'property',
-      type: 'Property',
+      name: 'property'
     },
     {
       name: 'name',
@@ -145,7 +144,7 @@ CLASS({
     },
     {
       name: 'updatePredicate',
-      code: function(_, _, _, value) {
+      code: function(_, __, ___, value) {
         this.predicate = value ? this.op(this.property, value) : TRUE;
         this.memento = value;
       }

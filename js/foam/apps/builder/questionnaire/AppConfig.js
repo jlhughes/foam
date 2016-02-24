@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.questionnaire',
   name: 'AppConfig',
-  extendsModel: 'foam.apps.builder.AppConfig',
+  extends: 'foam.apps.builder.AppConfig',
 
   requires: [
     'foam.apps.builder.questionnaire.Questionnaire',
@@ -55,7 +55,6 @@ CLASS({
       }
     },
     {
-      type: 'foam.apps.builder.AppWindow',
       name: 'appWindow',
       lazyFactory: function() {
         return this.AppWindow.create({

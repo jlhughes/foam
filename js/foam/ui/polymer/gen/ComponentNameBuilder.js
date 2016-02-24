@@ -18,7 +18,7 @@
 CLASS({
   name: 'ComponentNameBuilder',
   package: 'foam.ui.polymer.gen',
-  extendsModel: 'foam.ui.polymer.gen.ComponentBuilderBase',
+  extends: 'foam.ui.polymer.gen.ComponentBuilderBase',
 
   imports: [
     'componentDAO as dao',
@@ -29,14 +29,14 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'provides',
       factory: function() {
         return ['tagName', 'name', 'extends'];
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'listensTo',
       factory: function() {
         return ['source'];

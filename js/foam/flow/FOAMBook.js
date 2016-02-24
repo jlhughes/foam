@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.flow',
   name: 'FOAMBook',
-  extendsModel: 'foam.flow.Section',
+  extends: 'foam.flow.Section',
 
   requires: [
     'foam.dao.EasyDAO',
@@ -51,7 +51,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'codeViewName',
       factory: function() {
         this.X.registerElement('code-view', 'foam.flow.AceCodeView');

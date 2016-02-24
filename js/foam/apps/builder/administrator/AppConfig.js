@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.administrator',
   name: 'AppConfig',
-  extendsModel: 'foam.apps.builder.AppConfig',
+  extends: 'foam.apps.builder.AppConfig',
 
   constants: {
     EXISTING_SOURCES: [
@@ -35,7 +35,6 @@ CLASS({
       name: 'targetAppConfig',
     },
     {
-      type: 'foam.apps.builder.AppWindow',
       name: 'appWindow',
       lazyFactory: function() {
         return this.AppWindow.create({
@@ -68,7 +67,7 @@ CLASS({
         }
         if ( this.targetAppConfig.appId !== cfg.appId ) this.targetAppConfig = cfg;
         this.targetDAOInstance = cfg.createDAO();
-        this.targetModel = cfg.model;
+        this.targetModel = cfg.getDataConfig().model;
 
         this.browserConfig = this.BrowserConfig.create({
           title$: this.appName$,

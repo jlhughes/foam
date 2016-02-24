@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.demos',
   name: 'InterpolatedEyes',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [
     'foam.demos.graphics.EyesCView as Eyes',
@@ -37,7 +37,7 @@ CLASS({
       lazyFactory: function() {
         var m = this.Mouse.create();
         m.connect(this.$);
-        Events.dynamic(function() { m.x; m.y; }, function() { this.view.paint(); }.bind(this));
+        Events.dynamicFn(function() { m.x; m.y; }, function() { this.view.paint(); }.bind(this));
         return m;
       }
     }
@@ -97,6 +97,8 @@ CLASS({
           color: '#444',
           x: 10,
           y: 25+i*50,
+          width: 30,
+          height: 10,
           text: is[i][2]}));
         this.addChild(graphs[i]);
         (function (i) {

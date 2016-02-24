@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'DetailView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'Property',
@@ -88,7 +88,7 @@ CLASS({
       */}
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'mode',
       defaultValue: 'read-write',
       documentation: function() {/*
@@ -96,7 +96,7 @@ CLASS({
       */}
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showRelationships',
       defaultValue: false,
       documentation: function() {/*

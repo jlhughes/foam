@@ -19,9 +19,16 @@ CLASS({
   package: 'com.google.watlobby',
   name: 'Topic',
 
-  traits: [ 'com.google.misc.Colors' ],
+  traits: [
+    'foam.core.dao.SyncTrait',
+    'com.google.misc.Colors'
+  ],
 
   properties: [
+    {
+      name: 'id',
+      hidden: true
+    },
     {
       name: 'topic',
       postSet: function(_, t) {
@@ -31,9 +38,13 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'enabled',
       defaultValue: true
+    },
+    {
+      name: 'parentTopic',
+      label: 'Parent'
     },
     {
       name: 'priority',
@@ -41,6 +52,7 @@ CLASS({
       view: {
         factory_: 'foam.ui.md.ChoiceRadioView',
         choices: [
+          [ 0, 'Hidden' ],
           [ 1, 'Low' ],
 //          [ 2, '' ],
           [ 3, 'Medium' ],
@@ -49,30 +61,39 @@ CLASS({
         ]
       },
       postSet: function(_, p) {
-        this.r = ([110, 130, 150, 180, 200])[p-1];
+        this.r = ([90, 110, 130, 150, 180, 200])[p-1];
       }
     },
     {
-      model_: 'BooleanProperty',
+      name: 'dir',
+      hidden: true
+    },
+    {
       name: 'selected',
       hidden: true
     },
     {
-      model_: 'ImageProperty',
-      name: 'image'
+      type: 'Image',
+      name: 'image',
+      preSet: function(_, i) {
+        return i.startsWith('data:') ? i :
+          i.startsWith('http') ? i :
+          i.startsWith('js/com/google/watlobby') ? i :
+          ('js/com/google/watlobby/' + i);
+      }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'roundImage'
     },
     {
-      model_: 'ColorProperty',
+      type: 'Color',
       name: 'background',
       defaultValue: '#FFFFFF',
       view: { factory_: 'foam.ui.md.ColorFieldView', choices: [ '#FFFFFF', '#EA4335', '#34A853', '#4285F4', '#FBBC05' ] }
     },
     {
-      model_: 'ColorProperty',
+      type: 'Color',
       name: 'color',
       // Convert capitalized colour names to standard Google colours
       preSet: function(_, c) { return this[c] || c; },
@@ -80,12 +101,13 @@ CLASS({
     },
     {
       name: 'r',
+      defaultValue: 180,
       hidden: true
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'timeout',
-      defaultValue: 60,
+      defaultValue: 30,
       help: 'Time before automatically closing this topic, in seconds.',
       units: 'seconds'
     },
@@ -95,7 +117,7 @@ CLASS({
       view: {
 ///        factory_: 'foam.ui.md.ChoiceMenuView',
         factory_: 'foam.ui.md.ChoiceRadioView',
-        choices: [ 'Album', 'Topic', 'Video' ]
+        choices: [ 'Background', 'Photo', 'Redirect', 'Topic', 'Video' ]
       }
     },
     {
@@ -104,9 +126,14 @@ CLASS({
       preSet: function(_, v) { return v.substring(v.lastIndexOf('=')+1); }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'text',
       displayHeight: 12
     },
+    {
+      type: 'String',
+      name: 'redirect',
+      label: 'Redirect Topic'
+    }
   ]
 });

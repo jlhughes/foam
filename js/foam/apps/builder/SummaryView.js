@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'SummaryView',
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
 
   requires: [
     'foam.apps.builder.wizard.WizardStackView',
@@ -44,7 +44,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'wizardStartPageName',
     },
     {
@@ -52,11 +52,11 @@ CLASS({
       defaultValue: 'md-summary-view',
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'citationViewFactory',
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'icon',
       defaultValue: {
         factory_: 'foam.ui.Icon',

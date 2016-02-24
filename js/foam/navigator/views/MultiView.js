@@ -18,7 +18,7 @@
 CLASS({
   name: 'MultiView',
   package: 'foam.navigator.views',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.ui.DetailView'
@@ -35,7 +35,7 @@ CLASS({
     },
     {
       name: 'viewFactory',
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       defaultValueFn: function() { return this.DetailView; }
     },
     {

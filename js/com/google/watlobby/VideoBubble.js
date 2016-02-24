@@ -19,19 +19,22 @@ CLASS({
   package: 'com.google.watlobby',
   name: 'VideoBubble',
 
-  extendsModel: 'com.google.watlobby.TopicBubble',
+  extends: 'com.google.watlobby.TopicBubble',
 
   requires: [
     'foam.graphics.ImageCView',
     'foam.graphics.SimpleRectangle',
-    'foam.graphics.ViewCView'
+    'foam.graphics.ViewCView',
+    'com.google.watlobby.VideoView'
   ],
 
   properties: [
     {
       name: 'playIcon',
-      factory: function() { return this.ImageCView.create({src: 'img/play.png', x:-40, y:-40, width: 80, height: 80, alpha: 0.25}); }
-    }
+      factory: function() { return this.ImageCView.create({src: 'js/com/google/watlobby/img/play.png', alpha: 0.35}); }
+    },
+    [ 'selected', false ],
+    [ 'animating', false ]
   ],
 
   methods: [
@@ -39,8 +42,20 @@ CLASS({
       this.SUPER();
       this.addChild(this.playIcon);
     },
+    function layout() {
+      this.SUPER();
+      if ( ! this.img ) return;
+      this.playIcon.width = this.r / 0.8
+      this.playIcon.height = this.r / 0.8;
+      this.playIcon.x = -this.playIcon.width/2.2;
+      this.playIcon.y = -this.playIcon.height/2;
+    },
     function setSelected(selected) {
+      this.selected = selected;
+      if ( this.animating ) return;
+
       var lobby = this.lobby;
+
       if ( selected ) {
         this.children_ = [];
         var w = lobby.width;
@@ -48,7 +63,6 @@ CLASS({
 
         var r = this.SimpleRectangle.create({background: 'black', alpha: 0, x: 0, y: 0, width: w, height: h});
         lobby.addChild(r);
-//        Movement.animate(1500, function() { r.alpha = 0.7; })();
 
         this.children_.push(r);
 
@@ -56,13 +70,23 @@ CLASS({
         var vw = Math.floor(Math.min(w, h * 1.77) * 0.7);
         var vh = Math.floor(vw / 1.77);
 
-        var v = this.ViewCView.create({innerView: {
+/*        var v = this.ViewCView.create({innerView: {
           toHTML: function() { return '<iframe width="' + vw + '" height="' + vh + '" src="https://www.youtube.com/embed/' + video + '?autoplay=1" frameborder="0" allowfullscreen></iframe>'; },
           initHTML: function() {}
         }, x: this.x, y: this.y, width: 0, height: 0});
+*/
+        var v = this.ViewCView.create({
+          innerView: this.VideoView.create({
+            width: vw,
+            height: vh,
+            src: video
+          }),
+          x: this.x, y: this.y, width: 0, height: 0
+        });
 
         lobby.collider.stop();
         Movement.compile([
+          function() { this.animating = true; }.bind(this),
           [500, function() { this.alpha = 0; }.bind(this) ],
           [1000, function(i, j) {
             r.alpha = 0.7;
@@ -70,16 +94,16 @@ CLASS({
             v.height = vh;
             v.x = (w-vw)/2;
             v.y = (h-vh)/2;
-          }]
+          }],
+          function() { v.innerView.start(); this.animating = false; if ( ! this.selected ) this.setSelected(false); }.bind(this)
         ])();
         lobby.addChild(v);
         this.children_.push(v);
       } else {
-        // TODO: remove children from lobby when done
         var r = this.children_[0];
         var v = this.children_[1];
-//        lobby.collider.stop();
         Movement.compile([
+          function() { this.animating = true; }.bind(this),
           [ 500, function() { v.x = this.x; v.y = this.y; v.width = v.height = r.alpha = 0; }.bind(this) ],
           [ 500, function() { this.alpha = 1.0; }.bind(this) ],
           function() {
@@ -87,7 +111,8 @@ CLASS({
             lobby.collider.start();
             lobby.removeChild(v);
             lobby.removeChild(r);
-          }
+          },
+          function() { this.animating = false; if ( this.selected ) this.setSelected(true); }.bind(this)
         ])();
         this.children_ = [];
       }

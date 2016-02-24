@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.dao',
   name: 'FutureDAO',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   documentation: function() {/*
     A DAO proxy that delays operations until the delegate is set in the future.
@@ -31,8 +31,10 @@ CLASS({
     },
     {
       name: 'future',
+      swiftType: 'Future',
+      swiftFactory: 'return Future()',
       required: true,
-      documentation: "The future on which to operate before the delegate becomes available."
+      documentation: "The future on which to operate before the delegate becomes available.",
     },
     {
       name: 'model',
@@ -43,27 +45,51 @@ CLASS({
     }
   ],
 
-  methods: {
-    init: function() { /* Sets up the future to provide us with the delegate when it becomes available. */
-      this.SUPER();
+  methods: [
+    {
+      name: 'init',
+      code: function() { /* Sets up the future to provide us with the delegate when it becomes available. */
+        this.SUPER();
 
-      this.future(function(delegate) {
-        var listeners = this.daoListeners_;
-        this.daoListeners_ = [];
-        this.delegate = delegate;
-        this.daoListeners_ = listeners;
-      }.bind(this));
+        this.future(function(delegate) {
+          var listeners = this.daoListeners_;
+          this.daoListeners_ = [];
+          this.delegate = delegate;
+          this.daoListeners_ = listeners;
+          this.delegate.listen(this.relay);
+        }.bind(this));
+      },
+      swiftCode: function() {/*
+        super._foamInit_()
+
+        future.get({ delegate in
+          let delegate = delegate as! AbstractDAO
+          let listeners = self.daoListeners_
+          self.daoListeners_ = []
+          self.delegate = delegate
+          self.daoListeners_ = listeners
+          self.delegate.listen(self.relay);
+        });
+      */},
+    },
+    {
+      name: 'put',
+      code: function(value, sink) { /* Passthrough to delegate or the future, if delegate not set yet. */
+        if ( this.delegate ) {
+          this.delegate.put(value, sink);
+        } else {
+          this.future(this.put.bind(this, value, sink));
+        }
+      },
+      swiftCode: function() {/*
+        future.get { delegate in
+          let delegate = delegate as! AbstractDAO
+          delegate.put(obj, sink: sink)
+        }
+      */},
     },
 
-    put: function(value, sink) { /* Passthrough to delegate or the future, if delegate not set yet. */
-      if ( this.delegate ) {
-        this.delegate.put(value, sink);
-      } else {
-        this.future(this.put.bind(this, value, sink));
-      }
-    },
-
-    remove: function(query, sink) { /* Passthrough to delegate or the future, if delegate not set yet. */
+    function remove(query, sink) { /* Passthrough to delegate or the future, if delegate not set yet. */
       if ( this.delegate ) {
         this.delegate.remove(query, sink);
       } else {
@@ -71,7 +97,7 @@ CLASS({
       }
     },
 
-    removeAll: function() { /* Passthrough to delegate or the future, if delegate not set yet. */
+    function removeAll() { /* Passthrough to delegate or the future, if delegate not set yet. */
       if ( this.delegate ) {
         return this.delegate.removeAll.apply(this.delegate, arguments);
       }
@@ -85,26 +111,48 @@ CLASS({
       return f.get;
     },
 
-    find: function(key, sink) {/* Passthrough to delegate or the future, if delegate not set yet. */
-      if ( this.delegate ) {
-        this.delegate.find(key, sink);
-      } else {
-        this.future(this.find.bind(this, key, sink));
-      }
+    {
+      name: 'find',
+      code: function(key, sink) {/* Passthrough to delegate or the future, if delegate not set yet. */
+        if ( this.delegate ) {
+          this.delegate.find(key, sink);
+        } else {
+          this.future(this.find.bind(this, key, sink));
+        }
+      },
+      swiftCode: function() {/*
+        future.get { delegate in
+          let delegate = delegate as! AbstractDAO
+          delegate.find(id, sink: sink)
+        }
+      */},
     },
 
-    select: function(sink, options) {/* Passthrough to delegate or the future, if delegate not set yet. */
-      if ( this.delegate ) {
-        return this.delegate.select(sink, options);
-      }
+    {
+      name: 'select',
+      code: function(sink, options) {/* Passthrough to delegate or the future, if delegate not set yet. */
+        if ( this.delegate ) {
+          return this.delegate.select(sink, options);
+        }
 
-      var a = arguments;
-      var f = afuture();
-      this.future(function() {
-        this.select.apply(this, a)(f.set);
-      }.bind(this));
+        var a = arguments;
+        var f = afuture();
+        this.future(function() {
+          this.select.apply(this, a)(f.set);
+        }.bind(this));
 
-      return f.get;
+        return f.get;
+      },
+      swiftCode: function() {/*
+        let selectFuture = Future()
+        future.get { delegate in
+          let delegate = delegate as! AbstractDAO
+          delegate.select(sink, options: options).get { data in
+            selectFuture.set(data)
+          }
+        }
+        return selectFuture
+      */},
     },
-  }
+  ]
 });

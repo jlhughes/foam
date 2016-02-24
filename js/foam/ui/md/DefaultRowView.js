@@ -18,13 +18,13 @@
 CLASS({
   name: 'DefaultRowView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   imports: [ 'removeRowFromList' ],
 
   properties: [
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'innerView',
       defaultValue: 'foam.ui.DetailView'
     },

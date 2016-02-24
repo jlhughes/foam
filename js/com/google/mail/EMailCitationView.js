@@ -18,7 +18,7 @@
 CLASS({
   name: 'EMailCitationView',
   package: 'com.google.mail',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
   requires: [
     'foam.ui.md.MonogramStringView',
     'foam.ui.RelativeDateTimeFieldView',
@@ -42,6 +42,7 @@ CLASS({
         display: -webkit-flex;
         border-bottom: solid #B5B5B5 1px;
         padding: 10px 14px 10px 6px;
+        height: 82px;
       }
 
       .email-citation.unread {

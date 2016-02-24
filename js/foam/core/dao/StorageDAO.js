@@ -19,7 +19,7 @@ CLASS({
   name: 'StorageDAO',
   package: 'foam.core.dao',
 
-  extendsModel: 'MDAO',
+  extends: 'MDAO',
 
   properties: [
     {
@@ -27,7 +27,8 @@ CLASS({
       label: 'Store Name',
       type:  'String',
       defaultValueFn: function() {
-        return this.model.plural;
+        debugger;
+        return this.model.id;
       }
     }
   ],

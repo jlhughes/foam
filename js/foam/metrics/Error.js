@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.metrics',
   name: 'Error',
-  extendsModel: 'foam.metrics.Metric',
+  extends: 'foam.metrics.Metric',
 
   properties: [
     {
@@ -20,7 +20,7 @@ CLASS({
       defaultValue: 'error',
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isFatal',
       defaultValue: false,
     },

@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.ctm',
   name: 'TaskManagerDetailView',
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   requires: [
     'foam.apps.ctm.Task',
@@ -42,12 +42,12 @@ CLASS({
       }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'numHistoryItems',
       defaultValue: 64
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showActions',
       defaultValue: false,
       preSet: function() { return false; }
@@ -152,14 +152,17 @@ CLASS({
     */},
     function CSS() {/*
       body, task-manager {
-        width: 100%;
-        height: 100%;
         color: rgba(0, 0, 0, 0.87);
         font-family: 'Roboto', sans-serif;
         font-size: 13px;
         font-weight: 400;
       }
+      body > task-manager {
+        width: 100%;
+        height: 100%;
+      }
       task-manager {
+        overflow: hidden;
         background: rgb(238,238,238);
         flex-direction: column;
       }
@@ -208,10 +211,12 @@ CLASS({
         left: 4px;
       }
       task-manager tm-header search-box i,
-      task-manager tm-header search-box i.material-icons {
+      task-manager tm-header search-box i.material-icons,
+      task-manager tm-header search-box i.material-icons-extended {
         color: rgba(0, 0, 0, 0.27);
       }
-      task-manager tm-header search-box i.material-icons {
+      task-manager tm-header search-box i.material-icons,
+      task-manager tm-header search-box i.material-icons-extended {
         font-size: 20px;
       }
       task-manager tm-body {

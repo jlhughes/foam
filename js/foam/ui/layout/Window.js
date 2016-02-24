@@ -18,14 +18,14 @@
 CLASS({
   name: 'Window',
   package: 'foam.ui.layout',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   imports: [
-    'dynamic',
+    'dynamicFn',
     'window'
   ],
   properties: [
-    { model_: 'IntProperty', name: 'width' },
-    { model_: 'IntProperty', name: 'height' },
+    { type: 'Int', name: 'width' },
+    { type: 'Int', name: 'height' },
     {
       name: 'window',
       postSet: function(o, w) {
@@ -46,7 +46,7 @@ CLASS({
         v.x = 0;
         v.y = 0;
 
-        this.dynamic(
+        this.dynamicFn(
           function() { self.width; self.height; },
           function() {
             v.width  = self.width;
@@ -56,7 +56,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'rendered',
       defaultValue: false
     }
@@ -65,7 +65,7 @@ CLASS({
     init: function(args) {
       this.SUPER(args);
       var self = this;
-      this.dynamic(function() { self.height; },
+      this.dynamicFn(function() { self.height; },
                    function() {
                      self.window.document.body.style.height = self.height + 'px';
                    });

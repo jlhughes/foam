@@ -28,11 +28,11 @@ var FObject = {
     return Object.prototype.hasOwnProperty.call(this, 'Y_') ?
         this.Y_ :
         ( this.Y_ = DEBUG ?
-        this.X.sub({}, (this.X.NAME ? this.X.NAME : '') + 'Y') : this.X.sub() );
+        this.X.sub({}, (this.X.NAME ? this.X.NAME : '') + '_' + this.name_ ) : this.X.sub() );
   },
 
-  replaceModel_: function(model, otherModel, X) {
-    while ( otherModel ) {
+  replaceModel_: function(feature, dataModel, X) {
+    while ( dataModel ) {
       // this name mangling has to use the primary model's package, otherwise
       // it's ambiguous which model a replacement is intended for:
       //     ReplacementThing -> package.Thing or foo.Thing or bar.Thing...
@@ -40,15 +40,15 @@ var FObject = {
       // This means you must put your model-for-models in the same package
       // as the primary model-to-be-replaced.
       var replacementName =                                 // want: package.otherPrimaryModel
-        ( model.package   ? model.package + '.' : '' ) +          // package.
-        ( otherModel.name ? otherModel.name     : otherModel ) +  // other
-        model.name ;                                              // PrimaryModel
+        ( dataModel.package   ? dataModel.package + '.' : '' ) +          // package.
+        ( dataModel.name ? dataModel.name     : dataModel ) +  // other
+        feature.name ;                                              // PrimaryModel
 
       var replacementModel = X.lookup(replacementName);
 
       if ( replacementModel ) return replacementModel;
 
-      otherModel = X.lookup(otherModel.extendsModel);
+      dataModel = X.lookup(dataModel.extends);
     }
 
     return undefined;
@@ -59,8 +59,13 @@ var FObject = {
   create: function(args, opt_X) {
     // console.log('**** create ', this.model_.name, this.model_.count__ = (this.model_.count__ || 0)+1);
     // check for a model-for-model replacement, only if args.model is a Model instance
-    if ( args && args.model && (opt_X || X).Model.isInstance(args.model) ) {
-      var ret = this.replaceModel_(this.model_, args.model, opt_X || X);
+    var dataModel = args ?
+        args.model ? args.model :
+        args.data ? args.data.model_ :
+        undefined : undefined;
+
+    if ( dataModel && (opt_X || X).Model.isInstance(dataModel) ) {
+      var ret = this.replaceModel_(this.model_, dataModel, opt_X || X);
       if ( ret ) return ret.create(args, opt_X);
     }
 
@@ -192,6 +197,9 @@ var FObject = {
 
         if ( key ) {
           var asValue = key !== '$' && key != '$$' && key.charAt(key.length-1) == '$';
+          if ( asValue ) {
+            console.warn('Deprecated use of value$ export. Just remove the $. ', self.model_.id, this.name, key, alias);
+          }
           if ( asValue ) key = key.slice(0, key.length-1);
 
           var prop = self.model_.getProperty(key);
@@ -199,7 +207,7 @@ var FObject = {
             if ( asValue ) {
               self.addInitAgent(1, 'export property value ' + key, function(o, X) { o.Y.set(alias, o[prop.name$_]); });
             } else {
-              self.addInitAgent(1, 'export property ' + key, function(o, X) { o.Y.setValue(alias, o[prop.name$_]); });
+              self.addInitAgent(1, 'export property '       + key, function(o, X) { o.Y.setValue(alias, o[prop.name$_]); });
             }
           } else {
             self.addInitAgent(0, 'export other ' + key, function(o, X) {
@@ -327,7 +335,7 @@ var FObject = {
 
     for ( var i = 0 ; i < e.attributes.length ; i++ ) {
       var attr = e.attributes[i];
-      var p    = elements[attr.name];
+      var p    = elements[attr.name] || elements[attr.name.toUpperCase()];
       var val  = attr.value;
       if ( p ) {
         if ( val.startsWith('#') ) {
@@ -336,12 +344,12 @@ var FObject = {
           if ( $val ) {
             this[attr.name] = this.X.$(val);
           } else {
-            p.fromString.call(this, val, p);
+            this[p.name] = p.fromString(val);
           }
         } else {
           // Call fromString() for attribute values because they're
           // String values, not Elements.
-          p.fromString.call(this, val, p);
+          this[p.name] = p.fromString(val);
         }
       } else {
         if ( ! RESERVED_ATTRS[attr.name] )
@@ -472,6 +480,7 @@ var FObject = {
   defineProperty: function(prop) {
     var name = prop.name;
     prop.name$_ = name + '$';
+    this[constantize(prop.name)] = prop;
 
     // Add a 'name$' psedo-property if not already defined
     // Faster to define on __ROOT__, but not as good for auto-completion
@@ -582,6 +591,13 @@ var FObject = {
         }; })(setter, prop.adapt);
       }
 
+      if ( prop.regex ) {
+        setter = (function(setter, name, regex) { return function regexValidator(oldValue, newValue) {
+          if ( ! ( newValue && ( typeof newValue === 'string' ) && newValue.match(regex) ) ) throw 'Invalid Property value for "' + name + '", "' + newValue + '" violates regex: ' + regex; 
+          setter.call(this, oldValue, newValue);
+        }; })(setter, prop.name, prop.regex);
+      }
+
       setter = (function(setter, defaultValue) { return function setInstanceVar(newValue) {
         setter.call(this, typeof this.instance_[name] === 'undefined' ? defaultValue : this.instance_[name], newValue);
       }; })(setter, prop.defaultValue);
@@ -639,34 +655,33 @@ var FObject = {
 
   /** Create a shallow copy of this object. **/
   clone: function() {
-    var c = Object.create(this.__proto__);
-    c.instance_ = {};
-    c.X = this.X;
+    var m = {};
     for ( var key in this.instance_ ) {
       var value = this[key];
       if ( value !== undefined ) {
         var prop = this.model_.getProperty(key);
         if ( prop && prop.cloneProperty )
-          c.instance_[key] = prop.cloneProperty.call(prop, value);
+          prop.cloneProperty.call(prop, value, m);
+        else if ( ! prop.model_ ) // happens during bootstrap
+          m[key] = value;
       }
     }
-    return c;
+    return this.model_.create(m, this.X);
   },
 
   /** Create a deep copy of this object. **/
   deepClone: function() {
-    var c = Object.create(this.__proto__);
-    c.instance_ = {};
-    c.X = this.X;
+    var m = {};
     for ( var key in this.instance_ ) {
       var value = this[key];
       if ( value !== undefined ) {
         var prop = this.model_.getProperty(key);
-        if ( prop && prop.deepCloneProperty )
-          c.instance_[key] = prop.deepCloneProperty.call(prop, value);
+        if ( prop && prop.deepCloneProperty ) {
+          prop.deepCloneProperty.call(prop, value, m);
+        }
       }
     }
-    return c;
+    return this.model_.create(m, this.X);
   },
 
   /** @return this **/

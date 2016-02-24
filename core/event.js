@@ -29,7 +29,7 @@ var __ROOT__ = {};
 MODEL({
   name: 'EventService',
 
-  extendsModel: '__ROOT__',
+  extends: '__ROOT__',
 
   constants: {
     /** If listener thows this exception, it will be removed. **/
@@ -152,7 +152,7 @@ MODEL({
       }();
     },
 
-    /** Decroate a listener so that the event is delivered asynchronously. **/
+    /** Decorate a listener so that the event is delivered asynchronously. **/
     async: function(listener, opt_X) {
       return this.delay(0, listener, opt_X);
     },
@@ -222,6 +222,7 @@ MODEL({
     },
 
     /** Subscribe to notifications for the specified topic. **/
+    // TODO: Return subscription
     subscribe: function (topic, listener) {
       if ( ! this.subs_ ) this.subs_ = {};
       //console.log("Sub: ",this, listener);
@@ -294,7 +295,7 @@ MODEL({
 
         var i = map[null].indexOf(listener);
         if ( i == -1 ) {
-          console.warn('phantom unsubscribe, size: ', map[null].length);
+          // console.warn('phantom unsubscribe, size: ', map[null].length);
         } else {
           map[null] = map[null].spliceF(i, 1);
         }
@@ -366,7 +367,7 @@ MODEL({
 MODEL({
   name: 'PropertyChangeSupport',
 
-  extendsModel: 'EventService',
+  extends: 'EventService',
 
   constants: {
     /** Root for property topics. **/
@@ -452,7 +453,8 @@ var FunctionStack = {
 
 var Value = {
   __isValue__: true,
-  isValue: function(o) { return o.__isValue__; }
+  isInstance: function(o) { return o && o.__isValue__; },
+  follow: function(srcValue) { Events.follow(srcValue, this); }
 };
 
 var PropertyValue = {
@@ -615,7 +617,7 @@ var Events = {
    * @returns a cleanup object. call ret.destroy(); to
    *        destroy the dynamic function and listeners.
    */
-  dynamic: function(fn, opt_fn, opt_X) {
+  dynamicFn: function(fn, opt_fn, opt_X) {
     var fn2 = opt_fn ? function() { opt_fn(fn()); } : fn;
     var listener = EventService.framed(fn2, opt_X);
     var propertyValues = [];
@@ -623,8 +625,11 @@ var Events = {
     Events.onGet.push(function(obj, name, value) {
       // Uncomment next line to debug.
       // obj.propertyValue(name).addListener(function() { console.log('name: ', name, ' listener: ', listener); });
-      obj.propertyValue(name).addListener(listener);
-      propertyValues.push(obj.propertyValue(name));
+      var l = obj.propertyValue(name);
+      if ( propertyValues.indexOf(l) == -1 ) {
+        obj.propertyValue(name).addListener(listener);
+        propertyValues.push(l);
+      }
     });
     var ret = fn();
     Events.onGet.pop();
@@ -853,7 +858,7 @@ MODEL({
       Events.onSet.push(function(obj, name, value2) {
       var value1 = obj[name];
 
-      Events.dynamic(function() {
+      Events.dynamicFn(function() {
       var now = timer.time;
 
       obj[name] = value1 + (value2-value1) * (now-startTime)/duration;
@@ -880,10 +885,11 @@ MODEL({
 
       function compilePause(op, rest) {
         return function() {
-          document.onclick = function() {
-            document.onclick = null;
+          var l = function() {
+            document.removeEventListener('click', l);
             rest();
           };
+          document.addEventListener('click', l);
         };
       }
 
@@ -906,11 +912,12 @@ MODEL({
         })(op.length);
 
         return function() {
-          for ( var i = 0 ; i < op.length ; i++ )
+          for ( var i = 0 ; i < op.length ; i++ ) {
             if ( isSimple(op[i]) )
               Movement.animate(op[i][0], op[i][1], op[i][2], Movement.seq(op[i][3], join))();
-          else
-            Movement.compile(op[i], join)();
+            else
+              Movement.compile(op[i], join)();
+          }
         };
       }
 
@@ -924,11 +931,10 @@ MODEL({
         var rest = compile_(a, i+1);
         var op = a[i];
 
-        if ( isPause(op)    ) return compilePause(op, rest);
-        if ( isSimple(op)   ) return compileSimple(op, rest);
-        if ( isParallel(op) ) return compileParallel(op, rest);
-
-        return compileFn(op, rest);
+        return isPause(op)    ? compilePause(op, rest)    :
+               isSimple(op)   ? compileSimple(op, rest)   :
+               isParallel(op) ? compileParallel(op, rest) :
+                                compileFn(op, rest)       ;
       }
 
       return compile_(a, 0);
@@ -936,7 +942,7 @@ MODEL({
 
     onIntersect: function (o1, o2, fn) {
       if ( o1.model_.R ) {
-        Events.dynamic(function() { o1.x; o1.y; o2.x; o2.y; }, function() {
+        Events.dynamicFn(function() { o1.x; o1.y; o2.x; o2.y; }, function() {
           var dx = o1.x - o2.x;
           var dy = o1.y - o2.y;
           var d = dx*dx + dy*dy;
@@ -945,7 +951,7 @@ MODEL({
             fn.call(null, o1, o2);
         });
       } else {
-        Events.dynamic(function() { o1.x; o1.y; o2.x; o2.y; }, function() {
+        Events.dynamicFn(function() { o1.x; o1.y; o2.x; o2.y; }, function() {
           if ( ( o1.x <= o2.x && o1.x + o1.width > o2.x    &&
                  o1.y <= o2.y && o1.y + o1.height > o2.y ) ||
                ( o2.x <= o1.x && o2.x + o2.width > o1.x    &&
@@ -1021,7 +1027,7 @@ MODEL({
     },
 
     strut: function(mouse, c, dx, dy) {
-      Events.dynamic(function() { mouse.x; mouse.y; }, function() {
+      Events.dynamicFn(function() { mouse.x; mouse.y; }, function() {
         c.x = mouse.x + dx;
         c.y = mouse.y + dy;
       });
@@ -1031,14 +1037,14 @@ MODEL({
       // TODO(kgr): implement opt_theta, the ability to control the direction
       var a = opt_a || 1;
       var theta = opt_theta || Math.PI * 1.5;
-      Events.dynamic(function() { c.vx; c.vy; }, function() {
+      Events.dynamicFn(function() { c.vx; c.vy; }, function() {
         c.vy += a;
       });
     },
 
     friction: function(c, opt_coef) {
       var coef = opt_coef || 0.9;
-      Events.dynamic(function() { c.vx; c.vy; }, function() {
+      Events.dynamicFn(function() { c.vx; c.vy; }, function() {
         c.vx = Math.abs(c.vx) < 0.001 ? 0 : c.vx * coef;
         c.vy = Math.abs(c.vy) < 0.001 ? 0 : c.vy * coef;
       });
@@ -1047,7 +1053,7 @@ MODEL({
     inertia: function(c) {
       var last = Date.now();
 
-      Events.dynamic(function() { c.vx; c.vy; c.x; c.y; }, function() {
+      Events.dynamicFn(function() { c.vx; c.vy; c.x; c.y; }, function() {
         // Take into account duration since last run
         // Don't skip more than 4 frames because it can cause
         // collisions to be missed.
@@ -1069,7 +1075,7 @@ MODEL({
     spring: function(mouse, c, dx, dy, opt_strength) {
       var strength = opt_strength || 6;
       var d        = Movement.distance(dx, dy);
-      Events.dynamic(function() { mouse.x; mouse.y; c.x; c.y; c.vx; c.vy; }, function() {
+      Events.dynamicFn(function() { mouse.x; mouse.y; c.x; c.y; c.vx; c.vy; }, function() {
         if ( dx === 0 && dy === 0 ) {
           c.x = mouse.x;
           c.y = mouse.y;
@@ -1089,7 +1095,7 @@ MODEL({
     spring2: function(c1, c2, length, opt_strength) {
       var strength = opt_strength || 4;
 
-      Events.dynamic(function() { c1.x; c1.y; c2.x; c2.y; }, function() {
+      Events.dynamicFn(function() { c1.x; c1.y; c2.x; c2.y; }, function() {
         var d = c1.distanceTo(c2);
         var a = Math.atan2(c2.y-c1.y, c2.x-c1.x);
         if ( d > length ) {

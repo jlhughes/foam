@@ -14,7 +14,7 @@
 CLASS({
   name: 'CustomModelProperty',
   package: 'foam.apps.builder.datamodels',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'Describes a Model property that is editable by the user.',
   label: 'Data Model definition',
@@ -46,10 +46,4 @@ CLASS({
     },
   ],
 
-  methods: [
-    function deepCloneProperty(model) {
-      // TODO(jacksonic): this.X will be from when the CustomModelProperty instance was created...
-      return Model.create(model, this.X);
-    }
-  ]
 });

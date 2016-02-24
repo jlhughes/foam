@@ -20,17 +20,20 @@ CLASS({
   name: 'ModelWizardEditView',
   package: 'foam.apps.builder.datamodels',
 
-  extendsModel: 'foam.meta.types.ModelEditView',
+  extends: 'foam.apps.builder.datamodels.meta.types.ModelEditView',
 
   requires: [
-    'foam.apps.builder.datamodels.PropertyWizard',
-    'foam.apps.builder.datamodels.PropertyEditWizard',
-    'foam.meta.types.EditView',
-    'foam.meta.types.PropertyCitationView',
+    'StringProperty',
+    'foam.apps.builder.model.ui.InlineEditView',
+    'foam.apps.builder.model.regex.EasyRegex',
   ],
 
+  imports: [
+    'newPropText',
+  ],
   exports: [
-    'properties$',
+    'properties as dao',
+    'selectionGuard as selection',
   ],
 
   properties: [
@@ -46,6 +49,15 @@ CLASS({
           this.data.properties = nu;
         }
       },
+    },
+    {
+      name: 'selectionGuard',
+      defaultValue: '',
+    },
+    {
+      type: 'String',
+      name: 'newPropText',
+      defaultValue: 'Enter Text'
     }
   ],
 
@@ -55,22 +67,15 @@ CLASS({
       iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAH0lEQVQ4y2NgGAUw8B8IRjXgUoQLUEfDaDyQqmF4AwADqmeZrHJtnQAAAABJRU5ErkJggg==',
       isAvailable: function() { return this.mode == 'read-write'; },
       code: function() {
-        var edit = this.PropertyWizard.create({
-          data: this.PropertyMetaDescriptor.create(),
-        }, this.Y.sub({
-          dao: { put: this.put.bind(this) } // hide remove(), since it's a new property we don't have already
+        this.data.properties.put(this.StringProperty.create({
+          name: "property_"+this.nextID(),
+          label: this.newPropText,
+          pattern: this.EasyRegex.create()
         }));
-        this.stack.pushView(edit);
       }
     },
   ],
 
-  methods: [
-    function init() {
-      this.Y.set('ModelWizardEditView_foam_meta_types_EditView', this.EditView);
-      this.Y.registerModel(this.PropertyEditWizard, 'foam.meta.types.EditView');
-    }
-  ],
 
   templates: [
     function toHTML() {/*
@@ -80,7 +85,7 @@ CLASS({
               $$properties{
                 model_: 'foam.ui.md.DAOListView',
                 mode: 'read-only',
-                rowView: 'foam.meta.types.PropertyCitationView',
+                rowView: 'foam.apps.builder.model.ui.InlineEditView',
                }
           </div>
           <div class="floating-action">

@@ -86,6 +86,26 @@ var JSONUtil = {
     return eval('(' + str + ')');
   },
 
+  aparse: function(ret, X, str) {
+    var seq = [];
+    var res = this.parse(X, str, seq);
+    if ( seq.length ) {
+      apar.apply(null, seq)(function() { ret(res); });
+      return;
+    }
+    ret(res);
+  },
+
+  amapToObj: function(ret, X, obj, opt_defaultModel) {
+    var seq = [];
+    var res = this.mapToObj(X, obj, opt_defaultModel, seq);
+    if ( seq.length ) {
+      aseq.apply(null, seq)(function() { ret(res); });
+      return;
+    }
+    return res;
+  },
+
   parse: function(X, str, seq) {
     return this.mapToObj(X, this.parseToMap(str), undefined, seq);
   },
@@ -111,13 +131,29 @@ var JSONUtil = {
     if ( obj instanceof Date ) return obj;
 
     if ( obj instanceof Object ) {
-      var j = 0;
-      for ( var key in obj ) {
-        if ( key != 'model_' && key != 'prototype_' ) obj[key] = this.mapToObj(X, obj[key], null, seq);
-        j++;
+
+      // For Models, convert type: Value to model_: ValueProperty
+      if ( obj.model_ === 'Model' || opt_defaultModel === 'Model' ) {
+        if ( obj.properties ) {
+          for ( var i = 0 ; i < obj.properties.length ; i++ ) {
+            var p = obj.properties[i];
+            if ( p.type && ! p.model_ && p.type !== 'Property' ) {
+              p.model_ = p.type + 'Property';
+              X.arequire(p.model_)((function(obj, p) { return function(m) {
+                if ( Property && ! Property.isSubModel(m) ) {
+                  console.log('ERROR: Use of non Property Sub-Model as Property type: ', obj.package + '.' + obj.name, p.type);
+                }
+              }; })(obj,p));
+            }
+          }
+        }
       }
 
-      if ( opt_defaultModel && ! obj.model_ ) return opt_defaultModel.create(obj);
+      for ( var key in obj )
+        if ( key != 'model_' && key != 'prototype_' )
+          obj[key] = this.mapToObj(X, obj[key], null, seq);
+
+      if ( opt_defaultModel && ! obj.model_ ) return opt_defaultModel.create(obj, X);
 
       if ( obj.model_ ) {
         var newObj = X.lookup(obj.model_);
@@ -132,15 +168,24 @@ var JSONUtil = {
               future.set(obj);
               return;
             }
-            var tmp = model.create(obj);
-            obj.become(tmp);
-            future.set(obj);
+
+            // Some Properties have a preSet which calls JSONUtil.
+            // If they do this before a model is loaded then that
+            // property can have JSONUtil called twice.
+            // This check avoids building the object twice.
+            // Should be removed when JSONUtil made fully async
+            // and presets removed.
+            if ( ! obj.instance_ ) {
+              var tmp = model.create(obj, X);
+              obj.become(tmp);
+              future.set(obj);
+            }
           });
 
           return obj;
         }
-	var ret = newObj ? newObj.create(obj, X) : obj;
-	return ret.readResolve ? ret.readResolve() : ret;
+        var ret = newObj ? newObj.create(obj, X) : obj;
+        return ret.readResolve ? ret.readResolve() : ret;
       }
       return obj
     }
@@ -170,7 +215,7 @@ var JSONUtil = {
         out(obj.toString());
       }
       else if ( obj instanceof Object ) {
-        if ( obj.model_ )
+        if ( obj.model_ && obj.model_.id )
           this.outputObject_(out, obj, opt_defaultModel);
         else
           this.outputMap_(out, obj);
@@ -320,16 +365,23 @@ var JSONUtil = {
         if ( ! this.p(prop, obj) ) continue;
 
         if ( prop.name === 'parent' ) continue;
+
         if ( prop.name in obj.instance_ ) {
           var val = obj[prop.name];
+
           if ( Array.isArray(val) && ! val.length ) continue;
+
+          if ( equals(val, prop.defaultValue) ) continue;
+
           if ( ! first ) out(',\n');
           out(nestedIndent, this.keyify(prop.name), ': ');
+
           if ( Array.isArray(val) && prop.subType ) {
             this.outputArray_(out, val, prop.subType, nestedIndent);
           } else {
             this.output(out, val, null, nestedIndent);
           }
+
           first = false;
         }
       }

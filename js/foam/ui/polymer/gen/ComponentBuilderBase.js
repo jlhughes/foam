@@ -25,14 +25,14 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'provides',
       factory: function() {
         return [];
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'listensTo',
       factory: function() {
         return [];
@@ -46,7 +46,7 @@ CLASS({
       code: function() {
         var ret = this.SUPER();
         this.listensTo.forEach(function(propName) {
-          Events.dynamic(function() {
+          Events.dynamicFn(function() {
             var prop = this.comp[propName];
             this.onChange();
           }.bind(this));

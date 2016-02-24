@@ -18,19 +18,19 @@
 CLASS({
   package: 'foam.graphics',
   name:  'BorderTrait',
+
   documentation: function() {/* Add $$DOC{ref:'.'} to a CView to paint
                               a rectangular border around your item. */},
 
   properties: [
     {
+      type:  'String',
       name:  'border',
       label: 'Border Color',
-      type:  'String',
       defaultValue: undefined
     },
     {
       name:  'borderWidth',
-      type:  'int',
       defaultValue: 1,
       documentation: function() {/*
         The width to draw the border, straddling the item's edge. A width of 1
@@ -49,17 +49,16 @@ CLASS({
     },
     {
       name: 'dropShadow',
-      documentation: function() {/* Drop shadow thickness in pixels. */},      
+      documentation: function() {/* Drop shadow thickness in pixels. */},
       defaultValue: 0
     }
   ],
 
   methods: {
-    paintSelf: function() { /* make sure to call <code>this.SUPER();</code> in
+    paintSelf: function(c) { /* make sure to call <code>this.SUPER();</code> in
                                 your BorderTrait model's $$DOC{ref:'.paintSelf'}. */
-      this.SUPER();
+      this.SUPER(c);
 
-      var c = this.canvas;
       c.save();
 
       c.globalAlpha = this.alpha;
@@ -76,7 +75,7 @@ CLASS({
         c.lineTo(0, this.height);
         c.lineTo(this.width,this.height);
         c.closePath();
-        c.rect(-100,-100,this.width+200,this.height+200);      
+        c.rect(-100,-100,this.width+200,this.height+200);
         c.clip();
         c.shadowBlur = this.dropShadow/2;
         c.shadowColor = "grey";
@@ -87,7 +86,7 @@ CLASS({
         c.restore();
       }
 
-      
+
       if ( this.background ) {
         c.fillStyle = this.background;
 
@@ -111,4 +110,3 @@ CLASS({
     }
   }
 });
-

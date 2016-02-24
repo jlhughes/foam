@@ -18,14 +18,14 @@
 CLASS({
   package: 'foam.demos.supersnake',
   name: 'Scale',
-  extendsModel: 'foam.graphics.Circle',
+  extends: 'foam.graphics.Circle',
 });
 
 
 CLASS({
   package: 'foam.demos.supersnake',
   name: 'Snake',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
   requires: [
     'foam.demos.supersnake.Scale',
     'foam.demos.supersnake.Laser'
@@ -38,11 +38,11 @@ CLASS({
 
   properties: [
 //    { name: 'scales', factory: function() { return []; } },
-    [ 'sx', 240 },
-    [ 'sy', 240 },
-    [ 'vx', 1 },
-    [ 'vy', 0 },
-    [ 'length', 5 }
+    [ 'sx', 240 ],
+    [ 'sy', 240 ],
+    [ 'vx', 1 ],
+    [ 'vy', 0 ],
+    [ 'length', 5 ]
   ],
   methods: [
     function init() {
@@ -83,7 +83,7 @@ CLASS({
 CLASS({
   package: 'foam.demos.supersnake',
   name: 'Food',
-  extendsModel: 'foam.graphics.Circle',
+  extends: 'foam.graphics.Circle',
   properties: [
     [ 'color', 'darkblue' ]
   ],
@@ -102,7 +102,7 @@ CLASS({
 CLASS({
   package: 'foam.demos.supersnake',
   name: 'Mushroom',
-  extendsModel: 'foam.graphics.Circle',
+  extends: 'foam.graphics.Circle',
   requires: [ 'foam.graphics.Rectangle' ],
   imports: [ 'R as r' ],
   properties: [
@@ -138,11 +138,11 @@ CLASS({
 CLASS({
   package: 'foam.demos.supersnake',
   name: 'Laser',
-  extendsModel: 'foam.graphics.Circle',
+  extends: 'foam.graphics.Circle',
   imports: [ 'game' ],
   properties: [
-    [ 'color', 'yellow' },
-    [ 'r', 12 },
+    [ 'color', 'yellow' ],
+    [ 'r', 12 ],
     'vx',
     'vy'
   ],
@@ -163,7 +163,7 @@ CLASS({
 CLASS({
   package: 'foam.demos.supersnake',
   name: 'Game',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.util.Timer',
@@ -212,7 +212,7 @@ CLASS({
   listeners: [
     {
       name: 'tick',
-      code: function(_, _, _, t) {
+      code: function(_, __, ___, t) {
         if ( t % 100 == 0 ) this.addFood();
         if ( Math.random() < 0.02 ) this.addMushroom();
       }
@@ -238,7 +238,7 @@ CLASS({
     {
       name: 'right',
       keyboardShortcuts: [ 39 /* right arrow */, 'd' ],
-      cod: function() { this.snake.right(); }
+      code: function() { this.snake.right(); }
     },
     {
       name: 'fire',

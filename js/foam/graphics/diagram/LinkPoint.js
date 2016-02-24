@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-
 CLASS({
-  name: 'LinkPoint',
   package: 'foam.graphics.diagram',
-  //extendsModel: 'foam.graphics.Point', // screws up ids
+  name: 'LinkPoint',
+  //extends: 'foam.graphics.Point', // screws up ids
 
 //  requires: ['foam.graphics.diagram.ParentageListener as ParentageListener'],
 
@@ -55,7 +54,7 @@ CLASS({
       documentation: function() {/* The object the link point is attached to. */},
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'x',
       defaultValue: 0,
       documentation: function() {/* The global-coordinate x position of the link
@@ -63,7 +62,7 @@ CLASS({
       */},
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'y',
       defaultValue: 0,
       documentation: function() {/* The global-coordinate y position of the link
@@ -82,7 +81,7 @@ CLASS({
       if (!this.owner || !this.positioningFunctionX || !this.positioningFunctionY) 
         return;
       
-      this.dynamicListeners_ = Events.dynamic(
+      this.dynamicListeners_ = Events.dynamicFn(
         function() { 
           this.owner.width; this.owner.height; this.owner.globalX; this.owner.globalY;
           this.side;

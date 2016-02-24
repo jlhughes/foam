@@ -14,58 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 CLASS({
   package: 'foam.tutorials.todo',
   name: 'TodoApp',
-  extendsModel: 'foam.browser.ui.BrowserView',
+  extends: 'foam.browser.u2.BrowserController',
   requires: [
-    'foam.browser.BrowserConfig',
-    'foam.browser.ui.DAOController',
-    'foam.core.dao.ChromeStorageDAO',
     'foam.dao.EasyDAO',
-    'foam.mlang.CannedQuery',
     'foam.tutorials.todo.model.Todo',
-    'foam.tutorials.todo.ui.TodoCitationView',
-    'foam.ui.DAOListView',
-    'foam.ui.TextFieldView',
-    'foam.ui.Tooltip',
-    'foam.ui.md.CannedQueryCitationView',
-    'foam.ui.md.CheckboxView',
-    'foam.ui.md.PopupView'
   ],
+
   properties: [
     {
       name: 'data',
       factory: function() {
-        return this.BrowserConfig.create({
+        return this.EasyDAO.create({
           model: this.Todo,
-          dao: this.EasyDAO.create({
-            model: this.Todo,
-            daoType: 'LOCAL',
-            cache: true,
-            seqNo: true
-          }),
-          listView: {
-            factory_: 'foam.ui.DAOListView',
-            rowView: 'foam.tutorials.todo.ui.TodoCitationView'
-          },
-          cannedQueryDAO: [
-            this.CannedQuery.create({
-              label: 'Todo',
-              expression: EQ(this.Todo.IS_COMPLETED, false)
-            }),
-            this.CannedQuery.create({
-              label: 'Done',
-              expression: EQ(this.Todo.IS_COMPLETED, true)
-            }),
-            this.CannedQuery.create({
-              label: 'Everything',
-              expression: TRUE
-            }),
-          ]
+          daoType: 'LOCAL',
+          cache: true,
+          seqNo: true
         });
       }
-    }
+    },
   ]
 });

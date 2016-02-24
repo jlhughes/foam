@@ -18,7 +18,7 @@
 CLASS({
   name: 'PolymerPrototypeImporter',
   package: 'foam.ui.polymer.gen',
-  extendsModel: 'foam.ui.polymer.gen.ComponentBuilderBase',
+  extends: 'foam.ui.polymer.gen.ComponentBuilderBase',
 
   requires: [
     'foam.ui.polymer.gen.Component',
@@ -33,7 +33,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'imported',
       defaultValue: false
     }

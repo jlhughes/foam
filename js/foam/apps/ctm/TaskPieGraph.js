@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.ctm',
   name: 'TaskPieGraph',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.graphics.PieGraph'
@@ -40,7 +40,7 @@ CLASS({
       name: 'groups'
     },
     {
-      type: 'foam.graphics.PieGraph',
+      // type: 'foam.graphics.PieGraph',
       name: 'pie',
       lazyFactory: function() {
         return this.PieGraph.create({

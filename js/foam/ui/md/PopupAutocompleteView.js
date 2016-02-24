@@ -18,7 +18,7 @@
 CLASS({
   name: 'PopupAutocompleteView',
   package: 'foam.ui.md',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   traits: ['foam.input.touch.VerticalScrollNativeTrait'],
 
   imports: [
@@ -35,7 +35,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'rowView',
       defaultValue: 'foam.ui.md.TextFieldView'
     },

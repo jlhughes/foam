@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.datamodels',
   name: 'PropertyWizard',
-  extendsModel: 'foam.apps.builder.wizard.WizardPage',
+  extends: 'foam.apps.builder.wizard.WizardPage',
 
   requires: [
     'foam.ui.md.PopupChoiceView',
@@ -68,7 +68,7 @@ CLASS({
         </p>
     */},
     function contentHTML() {/*
-        $$data{ model_: 'foam.meta.descriptor.MetaDescriptorView', metaEditPropertyTitle: '' }
+        $$data{ model_: 'foam.apps.builder.datamodels.meta.descriptor.MetaDescriptorView', metaEditPropertyTitle: '' }
     */},
   ],
 

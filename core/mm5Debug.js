@@ -57,11 +57,11 @@ CLASS({
       help: 'Interfaces extended by this interface.',
       documentation: function() { /*
         The other $$DOC{ref:'Interface',usePlural:true} this $$DOC{ref:'Interface'} inherits
-        from. Like a $$DOC{ref:'Model'} instance can $$DOC{ref:'Model.extendsModel'} other
+        from. Like a $$DOC{ref:'Model'} instance can $$DOC{ref:'Model.extends'} other
         $$DOC{ref:'Model',usePlural:true},
         $$DOC{ref:'Interface',usePlural:true} should only extend other
         instances of $$DOC{ref:'Interface'}.</p>
-        <p>Do not specify <code>extendsModel: 'Interface'</code> unless you are
+        <p>Do not specify <code>extends: 'Interface'</code> unless you are
         creating a new interfacing system.
       */}
     },
@@ -88,12 +88,12 @@ CLASS({
         */}
     },
     {
-      model_: 'DocumentationProperty',
+      type: 'Documentation',
       name: 'documentation',
       labels: ['debug'],
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'methods',
       type: 'Array[Method]',
       subType: 'Method',
@@ -162,6 +162,12 @@ CLASS({
     'log',
     'jlog',
     'assert',
+    'assertDefined',
+    'assertUndefined',
+    'assertEquals',
+    'assertNotEquals',
+    'assertTruthy',
+    'assertFalsy',
     'fail',
     'ok',
     'append'
@@ -187,7 +193,7 @@ CLASS({
       documentation: 'The unit test\'s name.'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'modelId'
     },
     {
@@ -201,13 +207,13 @@ CLASS({
       documentation: 'A multi-line description of the unit test.'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'disabled',
       documentation: 'When true, this test is ignored. Test runners should exclude disabled tests from their DAOs.',
       defaultValue: false
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'passed',
       required: true,
       transient: true,
@@ -217,7 +223,7 @@ CLASS({
       documentation: 'Number of assertions which have passed.'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'failed',
       required: true,
       transient: true,
@@ -226,13 +232,13 @@ CLASS({
       documentation: 'Number of assertions which have failed.'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'async',
       defaultValue: false,
       documentation: 'Set to make this test asynchronoous. Async tests receive a <tt>ret</tt> parameter as their first argument, and $$DOC{ref: ".atest"} will not return until <tt>ret</tt> is called by the test code.'
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'code',
       label: 'Test Code',
       displayWidth: 80,
@@ -280,13 +286,13 @@ CLASS({
       documentation: 'Log output for this test. Written to by $$DOC{ref: ".log"}, as well as $$DOC{ref: ".assert"} and its friends $$DOC{ref: ".fail"} and $$DOC{ref: ".ok"}.'
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name:  'tags',
       label: 'Tags',
       documentation: 'A list of tags for this test. Gives the environment(s) in which a test can be run. Currently in use: node, web.'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'running',
       defaultValue: false
     }
@@ -338,10 +344,42 @@ CLASS({
     },
     assert: function(condition, comment) {
       if ( condition ) this.passed++; else this.failed++;
-      this.log(
-        (comment ? comment : '(no message)') +
-        ' ' +
-        (condition ? "<font color=green>OK</font>" : "<font color=red>ERROR</font>"));
+      this.log((condition ? 'PASS' : 'FAIL') + ': ' +
+          (comment ? comment : '(no message)'));
+    },
+    massageComment_: function(opt_comment) {
+      return opt_comment ? ': ' + opt_comment : '';
+    },
+    massageArgument_: function(value) {
+      return typeof value === 'string' ? '"' + value + '"' : value;
+    },
+    assertDefined: function(value, opt_comment) {
+      this.assert(typeof value !== 'undefined', 'Expected ' +
+          this.massageArgument_(value) + ' to be defined' +
+          this.massageComment_(opt_comment));
+    },
+    assertUndefined: function(value, opt_comment) {
+      this.assert(typeof value === 'undefined', 'Expected ' +
+          this.massageArgument_(value) + ' to be undefined' +
+          this.massageComment_(opt_comment));
+    },
+    assertEquals: function(v1, v2, opt_comment) {
+      this.assert(v1 === v2, 'Expected ' + this.massageArgument_(v1) +
+          ' to equal ' + this.massageArgument_(v2) +
+          this.massageComment_(opt_comment));
+    },
+    assertNotEquals: function(v1, v2, opt_comment) {
+      this.assert(v1 !== v2, 'Expected ' + this.massageArgument_(v1) +
+          ' not to equal ' + this.massageArgument_(v2) +
+          this.massageComment_(opt_comment));
+    },
+    assertTruthy: function(value, opt_comment) {
+      this.assert(!!value, 'Expected ' + this.massageArgument_(value) +
+          ' to be truthy' + this.massageComment_(opt_comment));
+    },
+    assertFalsy: function(value, opt_comment) {
+      this.assert(!value, 'Expected ' + this.massageArgument_(value) +
+          ' to be falsy' + this.massageComment_(opt_comment));
     },
     fail: function(comment) {
       this.assert(false, comment);
@@ -361,7 +399,7 @@ CLASS({
   label: 'Regression Test',
   documentation: 'A $$DOC{ref: "UnitTest"} with a "gold master", which is compared with the output of the live test.',
 
-  extendsModel: 'UnitTest',
+  extends: 'UnitTest',
 
   properties: [
     {
@@ -373,7 +411,7 @@ CLASS({
       view: 'foam.ui.RegressionTestResultView'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'regression',
       hidden: true,
       transient: true,
@@ -381,7 +419,7 @@ CLASS({
       documentation: 'Set after $$DOC{ref: ".atest"}: <tt>true</tt> if $$DOC{ref: ".master"} and $$DOC{ref: ".results"} match, <tt>false</tt> if they don\'t.'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'hasRun',
       defaultValue: false,
       transient: true
@@ -423,7 +461,7 @@ CLASS({
   name: 'UITest',
   label: 'UI Test',
 
-  extendsModel: 'UnitTest',
+  extends: 'UnitTest',
 
   properties: [
     {
@@ -451,7 +489,7 @@ CLASS({
   properties:
   [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'id',
       label: 'Issue ID',
       displayWidth: 12,

@@ -19,10 +19,11 @@ CLASS({
   package: 'foam.ui',
   name: 'View',
 
-  extendsModel: 'foam.ui.DestructiveDataView',
+  extends: 'foam.ui.DestructiveDataView',
 
   traits: [
     'foam.ui.HTMLViewTrait',
+    'foam.ui.U2ViewTrait',
   ],
 
   requires: [ 'Property' ],

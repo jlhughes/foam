@@ -29,12 +29,11 @@ CLASS({
     'glMeshLibrary'
   ],
 
-  extendsModel: 'foam.graphics.webgl.flat.Object',
+  extends: 'foam.graphics.webgl.flat.Object',
 
   properties: [
     {
       name: 'sourceView',
-      type: 'foam.graphics.CView',
       postSet: function() {
         this.$canvas = this.X.document.createElement('canvas');
         //this.X.document.body.appendChild(this.$canvas); // Debug
@@ -110,7 +109,7 @@ CLASS({
     },
     {
       name: 'painting',
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       defaultValue: false
     },
     {
@@ -182,7 +181,7 @@ CLASS({
           -this.sourceView.x + this.sourceView.width,
           -this.sourceView.y + this.sourceView.height);
       this.painting = true;
-      this.sourceView.paint();
+      this.sourceView.paint(this.canvas);
       this.painting = false;
       this.canvas.restore();
 

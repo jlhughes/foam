@@ -16,9 +16,9 @@
  */
 
 CLASS({
-  name: 'SplitDAO',
   package: 'com.google.mail',
-  extendsModel: 'foam.dao.ProxyDAO',
+  name: 'SplitDAO',
+  extends: 'foam.dao.ProxyDAO',
   requires: [
     'foam.core.dao.StripPropertiesDAO',
     'com.google.mail.GMailMessageDAO',
@@ -43,7 +43,7 @@ CLASS({
       }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'ttl',
       units: 's',
       defaultValue: 30

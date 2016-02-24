@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.events',
   name: 'AppConfig',
-  extendsModel: 'foam.apps.builder.AppConfig',
+  extends: 'foam.apps.builder.AppConfig',
 
   requires: [
     'foam.apps.builder.DataConfig',
@@ -63,7 +63,6 @@ CLASS({
       defaultValue: 'foam.apps.builder.events.EventsView',
     },
     {
-      type: 'foam.apps.builder.AppWindow',
       name: 'appWindow',
       lazyFactory: function() {
         return this.AppWindow.create({

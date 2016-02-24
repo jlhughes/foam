@@ -20,7 +20,7 @@ CLASS({
   package: 'foam.core.dao',
   label: 'Chrome Storage DAO',
 
-  extendsModel: 'AbstractDAO',
+  extends: 'AbstractDAO',
 
   properties: [
     {
@@ -33,7 +33,7 @@ CLASS({
       label: 'Store Name',
       type:  'String',
       defaultValueFn: function() {
-        return this.model.plural;
+        return this.model.id;
       }
     },
     {

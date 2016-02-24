@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.questionnaire',
   name: 'QuestionnaireView',
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
 
   requires: [
     'ViewFactoryProperty',
@@ -22,7 +22,7 @@ CLASS({
     'foam.apps.builder.Timeout',
     'foam.apps.builder.questionnaire.AppConfig',
     'foam.apps.builder.questionnaire.QuestionnaireController',
-    'foam.graphics.ActionButtonCView',
+    'foam.ui.md.FlatButton',
     'foam.ui.md.PopupView',
   ],
   exports: [
@@ -71,7 +71,6 @@ CLASS({
       },
     },
     {
-      type: 'foam.apps.builder.TOSData',
       name: 'tosData',
       lazyFactory: function() {
         return this.TOSData.create({}, this.Y);
@@ -99,7 +98,7 @@ CLASS({
       },
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'url',
     },
     {
@@ -124,10 +123,11 @@ CLASS({
 
   methods: [
     function init() {
-      this.Y.registerModel(this.ActionButtonCView.xbind({
+      this.Y.registerModel(this.FlatButton.xbind({
+        displayMode: 'ICON_ONLY',
         height: 24,
         width: 24,
-        haloColor: 'black'
+        color: 'black'
       }), 'foam.ui.ActionButton');
     },
     function initHTML() {

@@ -19,7 +19,7 @@ CLASS({
   name:  'HaloView',
   package: 'foam.ui.md',
 
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [
     'foam.ui.md.Halo',
@@ -33,7 +33,7 @@ CLASS({
     },
     {
       name: 'halo',
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       defaultValue: {
         factory_: 'foam.ui.md.Halo'
       }

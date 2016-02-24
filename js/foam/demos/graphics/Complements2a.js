@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.demos.graphics',
   name: 'Complements2a',
 
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   requires: [
     'foam.util.Timer',
@@ -29,13 +29,12 @@ CLASS({
   imports: [ 'timer' ],
 
   properties: [
-    { name: 'width', defaultValue: 1000 },
-    { name: 'height', defaultValue: 1000 },
+    [ 'width', 1000 ],
+    [ 'height', 1000 ],
     {
       name: 'timer',
       factory: function() { return this.Timer.create(); }
     },
-    { name: 'background', defaultValue: 'pink' },
     {
       name:  'r',
       defaultValue: 300,
@@ -59,7 +58,7 @@ CLASS({
           border: 'hsl(' + 180*a/Math.PI + ', 90%, 60%)'
         });
 
-        Events.dynamic((function (circle, a) {
+        Events.dynamicFn((function (circle, a) {
           return function() {
             var a2 = timer.time / 15000 * 2 * Math.PI;
             var r2 = R * Math.cos(2*(a + a2 + Math.PI/2));

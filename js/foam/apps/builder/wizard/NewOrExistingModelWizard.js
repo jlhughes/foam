@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.wizard',
   name: 'NewOrExistingModelWizard',
-  extendsModel: 'foam.apps.builder.wizard.NewOrExistingWizard',
+  extends: 'foam.apps.builder.wizard.NewOrExistingWizard',
 
   requires: [
     'foam.apps.builder.wizard.ModelWizard',
@@ -36,12 +36,12 @@ CLASS({
       }
     },
     {
-      model_: 'ModelProperty',
+      type: 'Model',
       name: 'baseModel',
       help: 'The list is filtered to only include models that extend baseModel.',
       postSet: function() {
         if ( this.modelDAO ) {
-          this.existingDAO = this.modelDAO.where(EQ(Model.EXTENDS_MODEL, this.baseModel.id));
+          this.existingDAO = this.modelDAO.where(EQ(Model.EXTENDS, this.baseModel.id));
         }
       }
     },
@@ -49,7 +49,7 @@ CLASS({
       name: 'modelDAO',
       postSet: function(old,nu) {
         if ( this.baseModel ) {
-          this.existingDAO = this.modelDAO.where(EQ(Model.EXTENDS_MODEL, this.baseModel.id));
+          this.existingDAO = this.modelDAO.where(EQ(Model.EXTENDS, this.baseModel.id));
         }
       },
     },

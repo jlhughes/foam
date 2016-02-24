@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.documentation.diagram',
   name: 'ModelDocDiagram',
-  extendsModel: 'foam.ui.DestructiveDataView',
+  extends: 'foam.ui.DestructiveDataView',
 
   traits: [
     'foam.documentation.DocModelFeatureDAOTrait'
@@ -49,7 +49,7 @@ CLASS({
     },
     {
       name: 'processBaseModels',
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       defaultValue: false
     },
     {
@@ -138,10 +138,10 @@ CLASS({
         prop: this.data.model_.PROPERTIES,
         copyFrom: {
           model_: 'foam.documentation.diagram.FeatureListDiagram',
-          model: this.X.Property,
+          model: this.Y.Property,
           featureType:'properties'
         }
-      }, this.X);
+      }, this.Y);
       this.addDataChild(v);
 
     },

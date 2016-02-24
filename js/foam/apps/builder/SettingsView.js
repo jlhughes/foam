@@ -12,33 +12,23 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'SettingsView',
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
 
   requires: [
     'foam.apps.builder.AppBuilderContext',
     'foam.ui.md.CheckboxView',
   ],
   imports: [
-    'persistentContext$ as ctx$',
+    'appBuilderAnalyticsEnabled$ as analyticsEnabled$',
     'popup',
   ],
 
   properties: [
     {
-      type: 'foam.apps.builder.AppBuilderContext',
-      name: 'ctx',
-      postSet: function(old, nu) {
-        if ( old ) Events.unlink(old.appBuilderAnalyticsEnabled$,
-                                 this.analyticsEnabled$);
-        if ( nu ) Events.link(nu.appBuilderAnalyticsEnabled$,
-                              this.analyticsEnabled$);
-      },
-    },
-    {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'analyticsEnabled',
-      label: 'Send anonymous usage data from my apps to the App Builder team ' +
-          'to help make App Builder better',
+      label: 'Send app usage data from my apps to the App Builder team ' +
+          'to help make App Builder better<br><a href="#">Learn more</a>',
       defaultValue: true,
     },
   ],
@@ -57,7 +47,10 @@ CLASS({
         <div class="md-card-heading"><p class="md-title">Settings</p></div>
         <div class="md-card-heading-content-spacer"></div>
         <div class="md-card-content">
-          $$analyticsEnabled{ model_: 'foam.ui.md.CheckboxView' }
+          $$analyticsEnabled{
+            model_: 'foam.ui.md.CheckboxView',
+            extraClassName: 'analyticsEnabled',
+          }
         </div>
         <div class="md-card-content-footer-spacer"></div>
         <div class="md-actions md-card-footer horizontal">
@@ -69,6 +62,9 @@ CLASS({
       settings-page {
         display: flex;
         flex-direction: column;
+      }
+      settings-page .analyticsEnabled .md-grey {
+        opacity: 1.0;
       }
     */},
   ]

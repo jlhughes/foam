@@ -39,24 +39,27 @@ CLASS({
       transient: true
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'scopes',
       required: true,
       transient: true
     },
     {
-      model_: 'URLProperty',
+      type: 'URL',
       name: 'endpoint',
       defaultValue: "https://accounts.google.com/o/oauth2/"
+    },
+    {
+      type: 'Function',
+      name: 'refresh_',
+      transient: true,
+      lazyFactory: function() {
+        return this.refresh_ = amerged(this.refreshNow_.bind(this));
+      }
     }
   ],
 
   methods: {
-    init: function() {
-      this.SUPER();
-      this.refresh_ = amerged(this.refreshNow_.bind(this));
-    },
-
     refreshNow_: function(){},
 
     refresh: function(ret, opt_forceInteractive) {

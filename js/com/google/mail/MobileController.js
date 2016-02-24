@@ -16,11 +16,11 @@
  */
 
 CLASS({
-  name: 'MobileController',
   package: 'com.google.mail',
+  name: 'MobileController',
   description: 'Mobile Gmail',
 
-  extendsModel: 'foam.browser.ui.BrowserView',
+  extends: 'foam.browser.ui.BrowserView',
 
   requires: [
     'MDAO',

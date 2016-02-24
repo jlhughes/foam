@@ -18,7 +18,7 @@
 CLASS({
   name: 'ComponentAttributesBuilder',
   package: 'foam.ui.polymer.gen',
-  extendsModel: 'foam.ui.polymer.gen.ComponentBuilderBase',
+  extends: 'foam.ui.polymer.gen.ComponentBuilderBase',
 
   requires: [
     'foam.ui.polymer.gen.ComponentProperty'
@@ -41,7 +41,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'listensTo',
       factory: function() {
         return ['source'];

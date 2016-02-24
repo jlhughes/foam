@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'FlexTableView',
-  extendsModel: 'foam.ui.AbstractDAOView',
+  extends: 'foam.ui.AbstractDAOView',
 
   requires: [
     'foam.ui.FlexTableRowView',
@@ -21,14 +21,15 @@ CLASS({
   imports: [
     'document',
     'hardSelection$',
-    'softSelection$'
+    'softSelection$',
+    'window'
   ],
 
   label: 'Flex Table View',
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'className',
       lazyFactory: function() {
         return this.model.name + 'Table';
@@ -60,7 +61,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'properties',
       lazyFactory: function() {
         return (this.model && this.model.tableProperties &&
@@ -75,8 +76,8 @@ CLASS({
       }
     },
     {
-      name:  'sortOrder',
-      type:  'Comparator',
+      name: 'sortOrder',
+      // type:  'Comparator',
       postSet: function(old, nu) {
         if ( old === nu ) return;
         this.updateHead();
@@ -85,11 +86,11 @@ CLASS({
       defaultValue: undefined
     },
     {
-      name:  'sortProp',
+      name: 'sortProp',
       defaultValue: undefined
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'minColWidth',
       defaultValue: 50,
       postSet: function(old, nu) {
@@ -122,7 +123,7 @@ CLASS({
       }
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'rowView',
       defaultValue: 'foam.ui.FlexTableRowView',
       documentation: 'Set this to override the row view. It should be a ' +
@@ -148,7 +149,7 @@ CLASS({
       }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'colWidths',
       lazyFactory: function() { return []; },
       postSet: function(old, nu) {
@@ -157,7 +158,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'isResizing',
       defaultValue: false
     }
@@ -167,9 +168,14 @@ CLASS({
     function initHTML() {
       this.SUPER();
       this.initColWidths();
+      this.window.addEventListener('resize', this.resetColWidths);
+    },
+    function destroy(shouldDestroy) {
+      this.SUPER(shouldDestroy);
+      this.window.addEventListener('resize', this.resetColWidths);
     },
     function initGlobalState() {
-      this.X.dynamic(
+      this.X.dynamicFn(
           function() { this.isResizing; }.bind(this),
           function() {
             DOM.setClass(this.document.body, 'flex-table-view-col-resize',
@@ -223,9 +229,15 @@ CLASS({
       if ( cells.length === this.colWidths.length ) return;
 
       var i;
+      var props = this.getProperties();
       for ( i = 0; i < cells.length; ++i ) {
-        cells[i].style.width = 'initial';
-        cells[i].style['flex-grow'] = '1';
+        if (props[i].tableWidth) {
+          cells[i].style.width = props[i].tableWidth + 'px';
+          cells[i].style['flex-grow'] = null;
+        } else {
+          cells[i].style.width = 'initial';
+          cells[i].style['flex-grow'] = '1';
+        }
       }
       this.measureColWidths(cells);
       for ( i = 0; i < cells.length; ++i ) {
@@ -351,6 +363,13 @@ CLASS({
         return this.rowView(map, Y);
       }
     },
+    {
+      name: 'resetColWidths',
+      code: function() {
+        this.colWidths = [];
+        this.initColWidths();
+      }
+    },
   ],
 
   templates: [
@@ -404,8 +423,8 @@ CLASS({
     */},
     function colCSS(out, i) {/*
       #%%id .col-{{i}} {
-        min-width: {{this.minColWidth}};
-        width: {{this.colWidths[i]}};
+        min-width: {{this.minColWidth}}px;
+        width: {{this.colWidths[i]}}px;
       }
     */},
     { name: 'CSS' }

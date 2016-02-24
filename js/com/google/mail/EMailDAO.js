@@ -18,7 +18,7 @@
 CLASS({
   package: 'com.google.mail',
   name: 'EMailDAO',
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
   requires: [
     'Binding',
     'foam.dao.CachingDAO',
@@ -47,12 +47,12 @@ CLASS({
   ],
   properties: [
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'withSync',
       defaultValue: true
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'syncInterval',
       defaultValue: 30000
     },

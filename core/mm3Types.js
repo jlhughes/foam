@@ -16,52 +16,221 @@
  */
 
 CLASS({
+  name: 'Message',
+  plural: 'messages',
+
+  tableProperties: [
+    'name',
+    'value',
+    'translationHint'
+  ],
+
+  documentation: function() {/*
+  */},
+
+  properties: [
+    {
+      name:  'name',
+      required: true,
+      displayWidth: 30,
+      displayHeight: 1,
+      defaultValue: '',
+      help: 'The coding identifier for the message.',
+      documentation: function() { /* The identifier used in code to represent this $$DOC{ref:'.'}.
+        $$DOC{ref:'.name'} should generally only contain identifier-safe characters.
+        $$DOC{ref:'.'} names should use camelCase staring with a lower case letter.
+        */}
+    },
+    {
+      name: 'value',
+      help: 'The message itself.'
+    },
+    {
+      name: 'meaning',
+      help: 'Linguistic clarification to resolve ambiguity.',
+      documentation: function() {/* A human readable discussion of the
+        $$DOC{ref:'.'} to resolve linguistic ambiguities.
+      */}
+    },
+    {
+      name: 'placeholders',
+      help: 'Placeholders to inject into the message.',
+      documentation: function() {/* Array of plain Javascript objects
+        describing in-message placeholders. The data can be expanded into
+        $$DOC{ref:'foam.i18n.Placeholder'}, for example.
+      */},
+      factory: function() { return []; }
+    },
+    {
+      name: 'replaceValues',
+      documentation: function() {/* Function that binds values to message
+        contents.
+      */},
+      defaultValue: function(unused_selectors, args) {
+        var phs = this.placeholders || [];
+        var value = this.value;
+        // Bind known placeholders to message string.
+        for ( var i = 0; i < phs.length; ++i ) {
+          var name = phs[i].name;
+          var replacement = args.hasOwnProperty(name) ? args[name] :
+              phs[i].example;
+          value = value.replace((new RegExp('[$]' + name + '[$]', 'g')),
+                                replacement);
+        }
+        return value;
+      }
+    },
+    {
+      name: 'translationHint',
+      displayWidth: 70,
+      displayHeight: 1,
+      defaultValue: '',
+      help: 'A brief description of this message and the context in which it used.',
+      documentation: function() {/* A human readable description of the
+        $$DOC{ref:'.'} and its context for the purpose of translation.
+      */}
+    }
+  ]
+});
+
+
+CLASS({
   name: 'StringProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'Describes a properties of type String.',
-  label: 'Text, including letters, numbers, or symbols',
+  label: 'Text',
+
+  messages: [
+    { name: 'errorPatternMismatch', value: 'The text does not match the pattern.' },
+    {
+      name: 'errorBelowMinLength',
+      value: 'The text is too short. Minimum: $min$',
+      placeholders: [ { name: 'min' } ]
+    },
+    {
+      name: 'errorAboveMaxLength',
+      value: 'The text is too long. Maximum: $max$',
+      placeholders: [ { name: 'max' } ]
+    }
+  ],
 
   properties: [
     {
       name: 'displayHeight',
-      type: 'int',
       displayWidth: 8,
       defaultValue: 1,
       help: 'The display height of the property.'
     },
+    /*
     {
       name: 'type',
-      type: 'String',
       displayWidth: 20,
       defaultValue: 'String',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'adapt',
+      labels: ['javascript'],
       defaultValue: function (_, v) {
         return v === undefined || v === null ? '' :
         typeof v === 'function'              ? multiline(v) : v.toString() ;
       }
     },
     {
+      name: 'swiftAdapt',
+      defaultValue: function() {/*
+        if newValue != nil { return String(newValue!) }
+        return ""
+      */},
+    },
+    {
       name: 'javaType',
-      type: 'String',
       displayWidth: 70,
       defaultValue: 'String',
       help: 'The Java type of this property.'
     },
-    [ 'view', 'foam.ui.TextFieldView' ],
+    {
+      name: 'swiftType',
+      defaultValue: 'String',
+    },
+    {
+      name: 'swiftDefaultValue',
+      defaultValue: '""',
+    },
+    {
+      name: 'view',
+      labels: ['javascript'],
+      defaultValue: 'foam.ui.TextFieldView',
+    },
     {
       name: 'pattern',
       help: 'Regex pattern for property.'
     },
     {
+      name: 'minChars',
+      label: 'Minimum characters',
+      help: 'The minimum number of characters required.',
+      adapt: function(old,nu) {
+        return nu === "" ? "" : parseInt(nu);
+      }
+    },
+    {
+      name: 'maxChars',
+      label: 'Maximum characters',
+      help: 'The maximum number of characters allowed.',
+      adapt: function(old,nu) {
+        return nu === "" ? "" : parseInt(nu);
+      }
+    },
+    {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
+    },
+    {
+      name: 'validate',
+      lazyFactory: function() {
+        var prop = this; // this == the property
+        var ret = constantFn('');
+
+        var min = prop.minChars;
+        if ( min !== "" ) {
+          ret = function(result) {
+            return result ||
+              ( this[prop.name].length < min ?
+                  prop.ERROR_BELOW_MIN_LENGTH.replaceValues(null, { min: min }) :
+                  ''
+              );
+          }.o(ret);
+          ret.dependencies = [prop.name];
+        }
+        var max = prop.maxChars;
+        if ( max !== "" ) {
+          ret = function(result) {
+            return result ||
+              ( this[prop.name].length > max ?
+                  prop.ERROR_ABOVE_MAX_LENGTH.replaceValues(null, { max: max }) :
+                  ''
+              );
+          }.o(ret);
+          ret.dependencies = [prop.name];
+        }
+        var pattern = prop.pattern;
+        if ( pattern ) {
+          var testable = pattern.test ? pattern : new RegExp(pattern.toString(), 'i');
+          var errMsg = pattern.errorMessage ?
+            pattern.errorMessage() : prop.errorPatternMismatch;
+          ret = function(result) {
+            return result ||
+              ( ! testable.test(this[prop.name]) ? errMsg : '' );
+          }.o(ret);
+          ret.dependencies = [prop.name];
+        }
+        return ret;
+      }
     }
   ]
 });
@@ -69,12 +238,13 @@ CLASS({
 
 CLASS({
   name: 'BooleanProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'Describes a properties of type Boolean.',
-  label: 'True/false, yes/no, or on/off',
+  label: 'True or false',
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -82,11 +252,16 @@ CLASS({
       defaultValue: 'Boolean',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'swiftType',
       type: 'String',
       displayWidth: 70,
       defaultValue: 'Bool'
+    },
+    {
+      name: 'swiftDefaultValue',
+      defaultValue: 'false',
     },
     {
       name: 'javaType',
@@ -95,22 +270,36 @@ CLASS({
       defaultValue: 'boolean',
       help: 'The Java type of this property.'
     },
-    [ 'view', 'foam.ui.BooleanView' ],
+    {
+      name: 'view',
+      labels: ['javascript'],
+      defaultValue: 'foam.ui.BooleanView',
+    },
+    {
+      name: 'toPropertyE',
+      labels: ['javascript'],
+      defaultValue: function(X) {
+        return X.lookup('foam.u2.tag.Checkbox').create(null, X);
+      }
+    },
     [ 'defaultValue', false ],
-    [ 'adapt', function (_, v) { return !!v; } ],
+    {
+      name: 'adapt',
+      defaultValue: function (_, v) { return !!v; },
+      labels: ['javascript'],
+    },
     {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
     },
     {
       name: 'fromString',
-      defaultValue: function(s, p) {
+      labels: ['javascript'],
+      defaultValue: function(s) {
         var txt = s.trim();
-        this[p.name] =
-          txt.equalsIC('y')    ||
+        return txt.equalsIC('y')    ||
           txt.equalsIC('yes')  ||
           txt.equalsIC('true') ||
           txt.equalsIC('t');
@@ -123,12 +312,13 @@ CLASS({
 
 CLASS({
   name:  'DateProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help:  'Describes a properties of type Date.',
-  label: 'Date, including year, month, and day',
+  label: 'Date',
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -136,25 +326,36 @@ CLASS({
       defaultValue: 'Date',
       help: 'The FOAM type of this property.'
     },
+    */
     [ 'displayWidth', 50 ],
     {
       name: 'javaType',
-      type: 'String',
       defaultValue: 'java.util.Date',
       help: 'The Java type of this property.'
     },
     [ 'view', 'foam.ui.DateFieldView' ],
     {
+      name: 'toPropertyE',
+      labels: ['javascript'],
+      defaultValue: function(X) {
+        return X.lookup('foam.u2.DateView').create(null, X);
+      }
+    },
+    {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
     },
     {
       name: 'adapt',
       defaultValue: function (_, d) {
-        return (typeof d === 'string' || typeof d === 'number') ? new Date(d) : d;
+        if (typeof d === 'number') return new Date(d);
+        if (typeof d === 'string') {
+          var ret = new Date(d);
+          return ret.toUTCString() === 'Invalid Date' ? new Date(+d) : ret;
+        }
+        return d;
       }
     },
     [ 'tableFormatter', function(d) { return d ? d.toRelativeDateString() : ''; } ],
@@ -172,40 +373,110 @@ CLASS({
 
 CLASS({
   name: 'DateTimeProperty',
-  extendsModel: 'DateProperty',
+  extends: 'DateProperty',
 
   help: 'Describes a properties of type DateTime.',
-  label: 'Date and time, including year, month, day, hour, minute and second',
+  label: 'Date and time',
+
+  properties: [
+    [ 'view', 'foam.ui.DateTimeFieldView' ],
+    {
+      name: 'toPropertyE',
+      labels: ['javascript'],
+      defaultValue: function(X) {
+        return X.lookup('foam.u2.DateTimeView').create(null, X);
+      }
+    },
+  ]
+});
+
+
+
+
+CLASS({
+  name:  'NumericProperty_',
+  extends: 'Property',
+
+  help:  'Base model for a property of any numeric type.',
+
+  messages: [
+    {
+      name: 'errorBelowMinimum',
+      value: 'The value must be at least $min$.',
+      placeholders: [ { name: 'min' } ]
+    },
+    {
+      name: 'errorAboveMaximum',
+      value: 'The value can be at most $max$.',
+      placeholders: [ { name: 'max' } ]
+    }
+  ],
 
   properties: [
     {
-      name: 'type',
-      type: 'String',
-      displayWidth: 25,
-      defaultValue: 'datetime',
-      help: 'The FOAM type of this property.'
-    },
-    {
-      name: 'adapt',
-      defaultValue: function(_, d) {
-        if ( typeof d === 'number' ) return new Date(d);
-        if ( typeof d === 'string' ) return new Date(d);
-        return d;
+      name: 'minValue',
+      label: 'Minimum Value',
+      required: false,
+      help: 'The minimum value this property accepts.',
+      defaultValue: '',
+      adapt: function(old,nu) {
+        return nu === "" ? "" : this.adapt(null, nu);
       }
     },
-    [ 'view', 'foam.ui.DateTimeFieldView' ]
+    {
+      name: 'maxValue',
+      label: 'Maximum Value',
+      required: false,
+      help: 'The maximum value this property accepts.',
+      defaultValue: '',
+      adapt: function(old,nu) {
+        return nu === "" ? "" : this.adapt(null, nu);
+      }
+    },
+    {
+      name: 'compareProperty',
+      labels: ['javascript'],
+      defaultValue: function(o1, o2) { return o1 === o2 ? 0 : o1 > o2 ? 1 : -1; },
+    },
+    {
+      name: 'validate',
+      lazyFactory: function() {
+        var prop = this; // this == the property
+        var ret = constantFn('');
+
+        var min = prop.minValue;
+        if ( min !== "" ) {
+          ret = function(result) {
+            return result ||
+              ( this[prop.name] < min ? prop.ERROR_BELOW_MINIMUM.replaceValues(null, { min: min }) : '');
+          }.o(ret);
+          ret.dependencies = [prop.name];
+        }
+
+        var max = prop.maxValue;
+        if ( max !== "" ) {
+          ret = function(result) {
+            return result ||
+              ( this[prop.name] > max ? prop.ERROR_ABOVE_MAXIMUM.replaceValues(null, { max: max }) : '');
+          }.o(ret);
+          ret.dependencies = [prop.name];
+        }
+        return ret;
+      }
+    }
   ]
 });
 
 
 CLASS({
   name:  'IntProperty',
-  extendsModel: 'Property',
+  extends: 'NumericProperty_',
 
   help:  'Describes a properties of type Int.',
-  label: 'Round numbers such as 1, 0, or -245',
+  label: 'Round numbers',
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -213,78 +484,112 @@ CLASS({
       defaultValue: 'Int',
       help: 'The FOAM type of this property.'
     },
+    */
     [ 'displayWidth', 10 ],
     {
       name: 'javaType',
-      type: 'String',
       displayWidth: 10,
       defaultValue: 'int',
       help: 'The Java type of this property.'
     },
-    [ 'view', 'foam.ui.IntFieldView' ],
-    [ 'adapt', function (_, v) {
+    {
+      name: 'swiftType',
+      defaultValue: 'Int',
+    },
+    {
+      name: 'swiftAdapt',
+      defaultValue: function() {/*
+        // If it's already an int, use it.
+        if let intVal = newValue as? Int { return intVal }
+        // If it's a string, convert it.
+        if let strVal = newValue as? String, intVal = Int(strVal) as Int! {
+          return intVal
+        }
+        return 0
+      */},
+    },
+    {
+      name: 'swiftDefaultValue',
+      defaultValue: '0',
+    },
+    {
+      name: 'view',
+      labels: ['javascript'],
+      defaultValue: 'foam.ui.IntFieldView',
+    },
+    {
+      name: 'adapt',
+      labels: ['javascript'],
+      defaultValue: function (_, v) {
         return typeof v === 'number' ? Math.round(v) : v ? parseInt(v) : 0 ;
-      }
-    ],
+      },
+    },
     [ 'defaultValue', 0 ],
     {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
-    },
-    {
-      name: 'minValue',
-      label: 'Minimum Value',
-      type: 'Int',
-      required: false,
-      help: 'The minimum value this property accepts.'
-    },
-    {
-      name: 'maxValue',
-      label: 'Maximum Value',
-      type: 'Int',
-      required: false,
-      help: 'The maximum value this property accepts.'
-    },
-    [ 'compareProperty', function(o1, o2) { return o1 === o2 ? 0 : o1 > o2 ? 1 : -1; } ]
-  ]
-});
-
-
-CLASS({
-  name:  'LongProperty',
-  extendsModel: 'IntProperty',
-
-  help:  'Describes a properties of type Long.',
-  label: 'Round long numbers such as 1, 0, or -245',
-
-  properties: [
-    {
-      name: 'type',
-      defaultValue: 'Long'
-    },
-    {
-      name: 'displayWidth',
-      defaultValue: 12
-    },
-    {
-      name: 'javaType',
-      defaultValue: 'long',
     }
   ]
 });
 
 
 CLASS({
-  name:  'FloatProperty',
-  extendsModel: 'Property',
+  name:  'LongProperty',
+  extends: 'IntProperty',
 
-  help:  'Describes a properties of type Float.',
-  label: 'Decimal numbers such as 1.34 or -0.00345',
+  help:  'Describes a properties of type Long.',
+  label: 'Round long numbers',
 
   properties: [
+    /*
+    {
+      name: 'type',
+      defaultValue: 'Long'
+    },
+    */
+    {
+      name: 'displayWidth',
+      labels: ['javascript'],
+      defaultValue: 12
+    },
+    {
+      name: 'javaType',
+      labels: ['javascript'],
+      defaultValue: 'long',
+    },
+    {
+      name: 'swiftType',
+      labels: ['compiletime', 'swift'],
+      defaultValue: 'NSNumber',
+    },
+    {
+      name: 'swiftAdapt',
+      defaultValue: function() {/*
+        // If it's already an int, use it.
+        if let numVal = newValue as? NSNumber { return numVal }
+        if let intVal = newValue as? Int64 { return NSNumber(longLong: intVal) }
+        // If it's a string, convert it.
+        if let strVal = newValue as? String, intVal = Int64(strVal) as Int64! {
+          return NSNumber(longLong: intVal)
+        }
+        return 0
+      */},
+    },
+  ]
+});
+
+
+CLASS({
+  name:  'FloatProperty',
+  extends: 'NumericProperty_',
+
+  help:  'Describes a properties of type Float.',
+  label: 'Decimal numbers',
+
+  properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -292,16 +597,20 @@ CLASS({
       defaultValue: 'Float',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'defaultValue',
       defaultValue: 0.0
     },
     {
       name: 'javaType',
-      type: 'String',
       displayWidth: 10,
       defaultValue: 'double',
       help: 'The Java type of this property.'
+    },
+    {
+      name: 'swiftType',
+      defaultValue: 'Float',
     },
     {
       name: 'displayWidth',
@@ -318,38 +627,24 @@ CLASS({
       }
     },
     {
-      name: 'minValue',
-      label: 'Minimum Value',
-      type: 'Float',
-      required: false,
-      help: 'The minimum value this property accepts.'
-    },
-    {
-      name: 'maxValue',
-      label: 'Maximum Value',
-      type: 'Float',
-      required: false,
-      help: 'The maximum value this property accepts.'
-    },
-    {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
-    }
+    },
   ]
 });
 
 
 CLASS({
   name:  'FunctionProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help:  'Describes a properties of type Function.',
   label: 'Code that can be run',
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -357,12 +652,20 @@ CLASS({
       defaultValue: 'Function',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'javaType',
-      type: 'String',
       displayWidth: 10,
       defaultValue: 'Function',
       help: 'The Java type of this property.'
+    },
+    {
+      name: 'swiftType',
+      defaultValue: 'FoamFunction',
+    },
+    {
+      name: 'swiftDefaultValue',
+      defaultValue: 'FoamFunction(fn: { (_) -> AnyObject? in return nil })',
     },
     {
       name: 'displayWidth',
@@ -373,6 +676,12 @@ CLASS({
       defaultValue: 'foam.ui.FunctionView'
     },
     {
+      name: 'toPropertyE',
+      defaultValue: function(X) {
+        return X.lookup('foam.u2.FunctionView').create(undefined, X);
+      }
+    },
+    {
       name: 'defaultValue',
       defaultValue: function() {}
     },
@@ -381,18 +690,19 @@ CLASS({
       defaultValue: function(e, p) {
         var txt = e.innerHTML.trim();
 
-        this[p.name] = txt.startsWith('function') ?
-          eval('(' + txt + ')') :
-          new Function(txt) ;
+        this[p.name] = txt;
       }
     },
     {
       name: 'adapt',
       defaultValue: function(_, value) {
         if ( typeof value === 'string' ) {
-          return value.startsWith('function') ?
-            eval('(' + value + ')') :
-            new Function(value);
+          var parse = JSONParser.parseString(value, JSONParser['function prototype']);
+          if ( parse ) {
+            var body = value.substring(value.indexOf('{') + 1, value.lastIndexOf('}'));
+            return new Function(parse[3], body);
+          }
+          return new Function(value);
         }
         return value;
       }
@@ -402,7 +712,7 @@ CLASS({
 
 CLASS({
   name: 'TemplateProperty',
-  extendsModel: 'FunctionProperty',
+  extends: 'FunctionProperty',
 
   properties: [
     {
@@ -415,6 +725,12 @@ CLASS({
       name: 'defaultValue',
       adapt: function(_, value) {
         return TemplateProperty.ADAPT.defaultValue.call(this, _, value);
+      }
+    },
+    {
+      name: 'toPropertyE',
+      defaultValue: function(X) {
+        return X.lookup('foam.u2.MultiLineTextField').create(undefined, X);
       }
     },
     {
@@ -434,12 +750,13 @@ CLASS({
 
 CLASS({
   name: 'ArrayProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help:  'Describes a property of type Array.',
   label: 'List of items',
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -447,17 +764,17 @@ CLASS({
       defaultValue: 'Array',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'swiftType',
       defaultValue: '[AnyObject]'
     },
     {
-      name: 'swiftDefaultValue',
-      defaultValue: '[]'
+      name: 'swiftFactory',
+      defaultValue: 'return []'
     },
     {
       name: 'singular',
-      type: 'String',
       displayWidth: 70,
       defaultValueFn: function() { return this.name.replace(/s$/, ''); },
       help: 'The plural form of this model\'s name.',
@@ -465,7 +782,6 @@ CLASS({
     },
     {
       name: 'subType',
-      type: 'String',
       displayWidth: 20,
       defaultValue: '',
       help: 'The FOAM sub-type of this property.'
@@ -503,10 +819,17 @@ CLASS({
     },
     {
       name: 'javaType',
-      type: 'String',
       displayWidth: 10,
-      defaultValueFn: function(p) { return this.subType + '[]'; },
+      defaultValueFn: function(p) {
+        return 'java.util.List<' + this.subType + '>';
+      },
       help: 'The Java type of this property.'
+    },
+    {
+      name: 'javaLazyFactory',
+      defaultValueFn: function(p) {
+        return 'return new java.util.ArrayList<' + this.subType + '>();';
+      },
     },
     {
       name: 'view',
@@ -529,7 +852,7 @@ CLASS({
         defineLazyProperty(this, prop.name + '$Proxy', function() {
           var proxy = this.X.lookup('foam.dao.ProxyDAO').create({delegate: this[prop.name].dao});
 
-          this.addPropertyListener(prop.name, function(_, _, _, a) {
+          this.addPropertyListener(prop.name, function(_, __, ___, a) {
             proxy.delegate = a.dao;
           });
 
@@ -563,7 +886,6 @@ CLASS({
     {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
     }
@@ -572,13 +894,37 @@ CLASS({
 
 
 CLASS({
+  name: 'BlobProperty',
+  extends: 'Property',
+  help: 'A chunk of binary data.',
+  label: 'Binary data',
+
+  properties: [
+    {
+      name: 'type',
+      type: 'String',
+      defaultValue: 'Blob',
+      help: 'The FOAM type of this property.',
+    },
+    {
+      name: 'javaType',
+      type: 'String',
+      defaultValue: 'byte[]',
+      help: 'The Java type for this property.',
+    },
+  ]
+});
+
+
+CLASS({
   name:  'ReferenceProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help:  'A foreign key reference to another Entity.',
   label: 'Reference to another object',
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
@@ -586,23 +932,21 @@ CLASS({
       defaultValue: 'Reference',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'subType',
-      type: 'String',
       displayWidth: 20,
       defaultValue: '',
       help: 'The FOAM sub-type of this property.'
     },
     {
       name: 'subKey',
-      type: 'EXPR',
       displayWidth: 20,
       defaultValue: 'ID',
       help: 'The foreign key that this property references.'
     },
     {
       name: 'javaType',
-      type: 'String',
       displayWidth: 10,
       defaultValueFn: function() {
         return this.X.lookup(this.subType)[this.subKey].javaType;
@@ -616,9 +960,12 @@ CLASS({
 //      defaultValue: 'KeyView'
     },
     {
+      name: 'toPropertyE',
+      defaultValue: function(X) { return X.lookup('foam.u2.ReferenceView').create(null, X); }
+    },
+    {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
     }
@@ -628,30 +975,30 @@ CLASS({
 
 CLASS({
   name: 'StringArrayProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'An array of String values.',
   label: 'List of text strings',
 
   properties: [
+    /*
     {
       name: 'type',
-      type: 'String',
       displayWidth: 20,
       defaultValue: 'Array',
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'swiftType',
       defaultValue: '[String]'
     },
     {
-      name: 'swiftDefaultValue',
-      defaultValue: '[]'
+      name: 'swiftFactory',
+      defaultValue: 'return []'
     },
     {
       name: 'singular',
-      type: 'String',
       displayWidth: 70,
       defaultValueFn: function() { return this.name.replace(/s$/, ''); },
       help: 'The plural form of this model\'s name.',
@@ -659,7 +1006,6 @@ CLASS({
     },
     {
       name: 'subType',
-      type: 'String',
       displayWidth: 20,
       defaultValue: 'String',
       help: 'The FOAM sub-type of this property.'
@@ -680,7 +1026,6 @@ CLASS({
     },
     {
       name: 'javaType',
-      type: 'String',
       displayWidth: 10,
       defaultValue: 'String[]',
       help: 'The Java type of this property.'
@@ -692,7 +1037,6 @@ CLASS({
     {
       name: 'prototag',
       label: 'Protobuf tag',
-      type: 'Int',
       required: false,
       help: 'The protobuf tag number for this field.'
     },
@@ -702,8 +1046,8 @@ CLASS({
     },
     {
       name: 'fromString',
-      defaultValue: function(s, p) {
-        this[p.name] = s.split(',');
+      defaultValue: function(s) {
+        return s.split(',');
       }
     },
     {
@@ -719,13 +1063,13 @@ CLASS({
     {
       name: 'toMemento',
       defaultValue: function(o, p) {
-        return o.join(',');
+        return o.map(function(x) { return x.replace(/,/g, '&#44;'); }).join(',');
       }
     },
     {
       name: 'fromMemento',
       defaultValue: function(s, p) {
-        return s ? s.split(',') : undefined;
+        return s ? s.split(',').map(function(x) { return x.replace(/&#44;/g, ','); }) : undefined;
       }
     },
   ]
@@ -734,15 +1078,16 @@ CLASS({
 
 CLASS({
   name: 'ModelProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'Describes a Model property.',
   label: 'Data Model definition',
 
   properties: [
-    [ 'type', 'Model' ],
+//    [ 'type', 'Model' ],
     {
       name: 'getter',
+      labels: ['javascript'],
       defaultValue: function(name) {
         var value = this.instance_[name];
         if ( typeof value === 'undefined' ) {
@@ -775,6 +1120,7 @@ CLASS({
     },
     {
       name: 'propertyToJSON',
+      labels: ['javascript'],
       defaultValue: function(visitor, output, o) {
         if ( ! this.transient ) output[this.name] = o[this.name].id;
       }
@@ -785,7 +1131,7 @@ CLASS({
 
 CLASS({
   name: 'ViewProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'Describes a View-Factory property.',
 
@@ -821,7 +1167,7 @@ CLASS({
 
 CLASS({
   name: 'FactoryProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
 
   help: 'Describes a Factory property.',
 
@@ -862,7 +1208,7 @@ CLASS({
 
 CLASS({
   name: 'ViewFactoryProperty',
-  extendsModel: 'FactoryProperty',
+  extends: 'FactoryProperty',
 
   help: 'Describes a View Factory property.',
 
@@ -881,10 +1227,12 @@ CLASS({
       name: 'defaultValueFn',
       preSet: function(_, f) {
         // return a function that will adapt the given f's return
-        return function(prop) {
+        var fp = function(prop) {
           // call the defaultValue function, adapt the result, return it
           return ViewFactoryProperty.ADAPT.defaultValue.call(this, null, f.call(this, prop));
         };
+        fp.toString = function() { return f.toString(); };
+        return fp;
       }
     },
     {
@@ -917,7 +1265,7 @@ CLASS({
             if ( ! viewModel ) {
                 viewModel = VIEW_CACHE[f] = Model.create({
                   name: 'InnerDetailView' + this.$UID,
-                  extendsModel: 'foam.ui.DetailView',
+                  extends: 'foam.ui.DetailView',
                   templates:[{name: 'toHTML', template: f}]
                 });
 
@@ -967,15 +1315,17 @@ CLASS({
 
 CLASS({
   name: 'ReferenceArrayProperty',
-  extendsModel: 'ReferenceProperty',
+  extends: 'ReferenceProperty',
 
   properties: [
+    /*
     {
       name: 'type',
       defaultValue: 'Array',
       displayWidth: 20,
       help: 'The FOAM type of this property.'
     },
+    */
     {
       name: 'factory',
       defaultValue: function() { return []; },
@@ -997,25 +1347,36 @@ CLASS({
 
 CLASS({
   name: 'EMailProperty',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   label: 'Email address',
+
+  properties: [
+    [ 'pattern', '^.+\@.+$' ]
+  ]
 });
 
 CLASS({
   name: 'ImageProperty',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   label: 'Image data or link',
+  properties: [
+    {
+      name: 'view',
+      labels: ['javascript'],
+      defaultValue: 'foam.ui.md.ImagePickerView',
+    }
+  ]
 });
 
 CLASS({
   name: 'URLProperty',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   label: 'Web link (URL or internet address)',
 });
 
 CLASS({
   name: 'ColorProperty',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   label: 'Color',
   properties: [
     [ 'view', 'foam.ui.md.ColorFieldView' ]
@@ -1024,32 +1385,44 @@ CLASS({
 
 CLASS({
   name: 'PasswordProperty',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   label: 'Password that displays protected or hidden text',
+  properties: [
+    {
+      name: 'swiftView',
+      defaultValue: 'PasswordFieldView',
+    },
+  ],
 });
 
 CLASS({
   name: 'PhoneNumberProperty',
-  extendsModel: 'StringProperty',
+  extends: 'StringProperty',
   label: 'Phone number',
+
+  properties: [
+    [ 'pattern', '^[0-9\-\+\(\)\*\ ]*$' ]
+  ]
+
 });
 
 
 if ( DEBUG ) CLASS({
   name: 'DocumentationProperty',
-  extendsModel: 'Property',
+  extends: 'Property',
   help: 'Describes the documentation properties found on Models, Properties, Actions, Methods, etc.',
   documentation: "The developer documentation for this $$DOC{ref:'.'}. Use a $$DOC{ref:'DocModelView'} to view documentation.",
 
   properties: [
+    /*
     {
       name: 'type',
       type: 'String',
       defaultvalue: 'Documentation'
     },
+    */
     { // Note: defaultValue: for the getter function didn't work. factory: does.
       name: 'getter',
-      type: 'Function',
       labels: ['debug'],
       defaultValue: function(name) {
         var doc = this.instance_[name]
@@ -1085,5 +1458,70 @@ if ( DEBUG ) CLASS({
       factory: function() { return "The developer documentation for this $$DOC{ref:'.'}. Use a $$DOC{ref:'DocModelView'} to view documentation."; },
       labels: ['debug']
    }
+  ]
+});
+
+CLASS({
+  name: 'ImportedProperty',
+  extends: 'Property',
+  label: 'A pseudo-property that does not clone its value.',
+
+  properties: [
+    [ 'transient', true ],
+    [ 'hidden',    true ],
+  ],
+
+  methods: [
+    function deepCloneProperty(value, cloneArgs) {
+      this.cloneProperty(value, cloneArgs);
+    },
+    function cloneProperty(value, cloneArgs) {
+      cloneArgs[this.name] = value;
+    },
+  ]
+});
+
+CLASS({
+  name: 'EnumProperty',
+  extends: 'Property',
+  properties: [
+    {
+      name: 'enum',
+      swiftType: 'FoamEnum.Type',
+    },
+    {
+      name: 'javaType',
+      defaultValueFn: function() { return this.enum; },
+    },
+    {
+      name: 'toPropertyE',
+      defaultValue: function(X) { return X.lookup('foam.u2.EnumView').create(null, X); }
+    }
+  ]
+});
+
+CLASS({
+  name:  'FObjectProperty',
+  extends: 'Property',
+
+  help:  'Describes a properties of type FObject.',
+  label: 'FObject',
+
+  properties: [
+    {
+      name: 'javaType',
+      defaultValueFn: function() {
+        return this.subType || 'FObject';
+      },
+    },
+    {
+      name: 'swiftType',
+      defaultValueFn: function() {
+        if (this.subType) {
+          return this.subType.split('.').pop();
+        }
+        return 'FObject';
+      },
+    },
   ]
 });

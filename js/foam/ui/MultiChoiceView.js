@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'MultiChoiceView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   documentation: 'A View for selecting a set of keys from an array of choices or from a DAO.',
 
@@ -68,7 +68,7 @@ CLASS({
       }
     },
     {
-      model_: 'FunctionProperty',
+      type: 'Function',
       name: 'objToChoice',
       help: 'A Function which adapts an object from the DAO to a [key, value, ...] choice.'
     },

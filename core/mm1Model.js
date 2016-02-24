@@ -121,7 +121,6 @@ var Model = {
     },
     {
       name:  'abstract',
-      type: 'boolean',
       defaultValue: false,
       help: 'If the java class is abstract.',
       documentation: function() { /* When running FOAM in a Java environment, specifies whether the
@@ -193,7 +192,7 @@ var Model = {
       help: 'The Swift classname of this model.'
     },
     {
-      name: 'extendsModel',
+      name: 'extends',
       label: 'Extends',
       type: 'String',
       displayWidth: 70,
@@ -209,6 +208,15 @@ var Model = {
         <p>Like most inheritance schemes, instances of your $$DOC{ref:'Model'} may be used in place of
         instances of the $$DOC{ref:'Model'} you extend.</p>
          */}
+    },
+    {
+      name: 'extendsModel',
+      hidden: true,
+      compareProperty: constantFn(0),
+      getter: function() {
+        return null; },
+      setter: function(e) {
+        console.warn("Deprecated use of 'extendsModel'. Use 'extends' instead."); if ( e ) this.extends = e; },
     },
     {
       name: 'traits',
@@ -232,7 +240,6 @@ var Model = {
     },
     {
       name: 'version',
-      type: 'int',
       defaultValue: 1,
       help: 'Version number of model.',
       documentation: function() { /* For backwards compatibility, major changes should be marked by
@@ -361,6 +368,32 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       documentation: function() { /* $$DOC{ref:'Interface',usePlural:true} implemented by this $$DOC{ref:'Model'} .*/}
     },
     {
+      name: 'swiftImplements',
+      type: 'Array[String]',
+      view: 'foam.ui.StringArrayView',
+      defaultValueFn: function() { return this.implements; },
+      help: 'Swift interfaces implemented by this Model.',
+    },
+    {
+      name: 'swiftCode',
+      type: 'String',
+      defaultValue: '',
+      help: 'Swift code to drop in when generating the swift class for this model.',
+    },
+    {
+      name: 'onLoad',
+      type: 'Function',
+      labels: ['javascript'],
+      required: false,
+      displayWidth: 70,
+      displayHeight: 3,
+      view: 'foam.ui.FunctionView',
+      defaultValue: '',
+      help: "A function which is called when a Model's prototype is built.",
+      documentation: function() { /*
+      */}
+    },
+    {
       name: 'tableProperties',
       type: 'Array[String]',
       view: 'foam.ui.StringArrayView',
@@ -389,7 +422,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
         of this $$DOC{ref:'Model'} in a search view. */}
     },
     {
-//      model_: 'ArrayProperty',
+//      type: 'Array',
       name: 'properties',
       type: 'Array[Property]',
       subType: 'Property',
@@ -414,7 +447,15 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
           }
 
           if ( ! p.model_ ) {
-            p = newValue[i] = Property.create(p);
+            // The mapping from type to model_ is also done in JSONUtil,
+            // but that doesn't handle Bootstrap models.
+            if ( p.type && this.X.lookup(p.type + 'Property') ) {
+              p.model_ = p.type + 'Property';
+              p.type = undefined;
+              p = newValue[i] = JSONUtil.mapToObj(this.X, p);
+            } else {
+              p = newValue[i] = Property.create(p);
+            }
           } else if ( typeof p.model_ === 'string' ) {
             p = newValue[i] = JSONUtil.mapToObj(this.X, p);
           }
@@ -447,29 +488,31 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       help: 'Actions associated with the entity.',
-      preSet: function(_, newValue) {
-        if ( ! Action ) return newValue;
+      adapt: function(_, a) {
+        if ( ! Action ) return a;
 
-        // Convert Maps to Properties if required
-        for ( var i = 0 ; i < newValue.length ; i++ ) {
-          var p = newValue[i];
+        // Convert Maps to Actions if required
+        for ( var i = 0 ; i < a.length ; i++ ) {
+          var p = a[i];
 
-          if ( ! p.model_ ) {
-            newValue[i] = Action.create(p);
+          if ( typeof p === 'function' ) {
+            a[i] = Action.create({name: p.name, code: p});
+          } else if ( ! p.model_ ) {
+            a[i] = Action.create(p);
           } else if ( typeof p.model_ === 'string' ) {
-            newValue[i] = FOAM(p);
+            a[i] = FOAM(p);
           }
 
           // create property constant
           if ( p.name && ! this[constantize(p.name)] ) {
-            this[constantize(p.name)] = newValue[i];
+            this[constantize(p.name)] = a[i];
           }
         }
 
-        return newValue;
+        return a;
       },
       documentation: function() { /*
         <p>$$DOC{ref:'Action',usePlural:true} implement a behavior and attach a label, icon, and typically a
@@ -484,7 +527,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       help: 'Constants associated with the entity.',
       preSet: function(_, newValue) {
@@ -516,19 +559,19 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       help: 'Messages associated with the entity.',
-      preSet: function(_, newValue) {
-        if ( ! GLOBAL.Message ) return newValue;
+      preSet: function(_, ms) {
+        if ( ! GLOBAL.Message ) return ms;
 
-        if ( Array.isArray(newValue) ) return JSONUtil.arrayToObjArray(this.X, newValue, Message);
+        if ( Array.isArray(ms) ) return JSONUtil.arrayToObjArray(this.X, ms, Message);
 
         // convert a map of values to an array of Message objects
         var messages = [];
 
-        for ( var key in newValue ) {
-          var oldValue = newValue[key];
+        for ( var key in ms ) {
+          var oldValue = ms[key];
 
           var message = Message.create({
             name:  key,
@@ -542,7 +585,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       }
     },
     {
-//      model_: 'ArrayProperty',
+//      type: 'Array',
       name: 'methods',
       subType: 'Method',
       factory: function() { return []; },
@@ -550,27 +593,10 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       adapt: function(_, a) {
         if ( ! Method ) return a;
 
-        function createMethod(X, name, fn) {
-          var method = Method.create({
-            name: name,
-            code: fn
-          });
-
-          if ( FEATURE_ENABLED(['debug']) && Arg ) {
-            var str = fn.toString();
-            var match = str.match(/^function[ _$\w]*\(([ ,\w]+)/);
-            if ( match )
-            method.args = match[1].split(',').
-              map(function(name) { return Arg.create({name: name.trim()}); });
-          }
-
-          return method;
-        }
-
         if ( Array.isArray(a) ) {
           for ( var i = 0 ; i < a.length ; i++ ) {
             a[i] = ( typeof a[i] === 'function' ) ?
-              createMethod(this.X, a[i].name, a[i]) :
+              this.createMethod_(this.X, a[i].name, a[i]) :
               JSONUtil.mapToObj(this.X, a[i], Method, seq) ;
           }
           return a;
@@ -578,7 +604,8 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
 
         // convert a map of functions to an array of Method instances, DEPRECATED
         var methods = [];
-        for ( var key in a ) methods.push(createMethod(this.X, key, a[key]));
+        for ( var key in a )
+          methods.push(this.createMethod_(this.X, key, a[key]));
         return methods;
       },
       documentation: function() { /*
@@ -593,7 +620,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
           <li><code>this.methodName</code> calls another $$DOC{ref:'Method'} of this
                   $$DOC{ref:'Model'}</li>
           <li><code>this.SUPER()</code> calls the $$DOC{ref:'Method'} implementation from the
-                    base $$DOC{ref:'Model'} (specified in $$DOC{ref:'Model.extendsModel'}). Calling
+                    base $$DOC{ref:'Model'} (specified in $$DOC{ref:'Model.extends'}). Calling
                     <code>this.SUPER()</code> is extremely important in your <code>init()</code>
                      $$DOC{ref:'Method'}, if you provide one.</li>
         </ul>
@@ -608,11 +635,21 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
-      preSet: function(_, newValue) {
-        if ( Array.isArray(newValue) ) return JSONUtil.arrayToObjArray(this.X, newValue, Method);
-        return newValue;
+      adapt: function(_, a) {
+        if ( ! Method ) return a;
+
+        if ( Array.isArray(a) ) {
+          for ( var i = 0 ; i < a.length ; i++ ) {
+            a[i] = ( typeof a[i] === 'function' ) ?
+              this.createMethod_(this.X, a[i].name, a[i]) :
+              JSONUtil.mapToObj(this.X, a[i], Method, seq) ;
+          }
+          return a;
+        }
+
+        console.error('Expecting array of listeners.');
       },
       help: 'Event listeners associated with the entity.',
       documentation: function() { /*
@@ -643,7 +680,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       preSet: function(_, templates) {
         for ( var i = 0 ; i < templates.length ; i++ ) {
@@ -671,11 +708,16 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       adapt: function(_, newValue) {
         if ( ! Model ) return newValue;
-        return Array.isArray(newValue) ? JSONUtil.arrayToObjArray(this.X, newValue, Model) : newValue;
+        if ( ! Array.isArray(newValue) ) return newValue;
+        var id = this.id;
+        return JSONUtil.arrayToObjArray(this.X, newValue, Model).map(function(m) {
+          m.package = id;
+          return m;
+        });
       },
       postSet: function(_, models) {
         for ( var i = 0 ; i < models.length ; i++ ) this[models[i].name] = models[i];
@@ -695,7 +737,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       adapt: function(_, a) {
         if ( ! a ) return a;
@@ -721,7 +763,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       help: 'Relationships of this model to other models.',
       preSet: function(_, newValue) {
@@ -759,7 +801,7 @@ v                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // we can import the prop
       view: 'foam.ui.ArrayView',
       factory: function() { return []; },
       propertyToJSON: function(visitor, output, o) {
-        if ( o[this.name].length ) output[this.name] = o[this.name];
+        if ( o[this.name].length ) visitor.visitArray(o[this.name]);
       },
       help: 'Issues associated with this model.',
       documentation: function() { /*

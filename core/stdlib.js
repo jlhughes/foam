@@ -30,25 +30,20 @@ function FEATURE_ENABLED(labels) {
 
 var GLOBAL = GLOBAL || this;
 
-Object.defineProperty_ = Object.defineProperty;
-Object.defineProperty = function() {
-  this.defineProperty_.apply(this, arguments);
-};
-
 function MODEL(model) {
   var proto;
 
   function defineProperty(proto, key, map) {
     if ( ! map.value || proto === Object.prototype || proto === Array.prototype )
-      Object.defineProperty_.apply(this, arguments);
+      Object.defineProperty.apply(this, arguments);
     else
       proto[key] = map.value;
   }
 
   if ( model.name ) {
     if ( ! GLOBAL[model.name] ) {
-      if ( model.extendsModel ) {
-        GLOBAL[model.name] = { __proto__: GLOBAL[model.extendsModel] };
+      if ( model.extends ) {
+        GLOBAL[model.name] = { __proto__: GLOBAL[model.extends] };
       } else {
         GLOBAL[model.name] = {};
       }
@@ -59,12 +54,14 @@ function MODEL(model) {
                                  GLOBAL[model.extendsObject] ;
   }
 
-  if ( model.properties ) for ( var i = 0 ; i < model.properties.length ; i++ ) {
-    var p = model.properties[i];
-    defineProperty(
-      proto,
-      p.name,
-      { get: p.getter, enumerable: false });
+  if ( model.properties ) {
+    for ( var i = 0 ; i < model.properties.length ; i++ ) {
+      var p = model.properties[i];
+      defineProperty(
+        proto,
+        p.name,
+        { get: p.getter, enumerable: false });
+    }
   }
 
   for ( key in model.constants )
@@ -234,7 +231,7 @@ MODEL({
           if ( sink.remove && ( ! obj || predicate.f(obj) ) ) sink.remove(obj, s, fc);
         },
         reset: function() {
-          sink.reset();
+          sink.reset && sink.reset();
         },
         toString: function() {
           return 'PredicatedSink(' +
@@ -305,6 +302,7 @@ MODEL({
     // Function for returning multi-line strings from commented functions.
     // Ex. var str = multiline(function() { /* multi-line string here */ });
     function multiline(f) {
+      if ( typeof f === 'string' ) return f;
       var s = f.toString();
       var start = s.indexOf('/*');
       var end   = s.lastIndexOf('*/');
@@ -379,6 +377,7 @@ var constantize = memoize1(function(str) {
   // TODO: add property to specify constantization. For now catch special case to avoid conflict with context this.X and this.Y.
   if ( str === 'x' ) return 'X_';
   if ( str === 'y' ) return 'Y_';
+  if ( str === '$' ) return '$_';
   return str.replace(/[a-z][^0-9a-z_]/g, function(a) {
     return a.substring(0,1) + '_' + a.substring(1,2);
   }).toUpperCase();
@@ -397,6 +396,15 @@ var camelize = memoize1(function (str) {
   return ret[0].toLowerCase() + ret.substring(1);
 });
 
+var daoize = memoize1(function(str) {
+  // Changes ModelName to modelNameDAO for relationships, reference properties, etc.
+  return str[0].toLowerCase() + str.substring(1) + 'DAO';
+});
+
+// Replaces . with -, for eg. foam.u2.md.Input -> foam-u2-md-Input
+var cssClassize = memoize1(function (str) {
+  return str.replace(/\./g, '-');
+});
 
 
 MODEL({
@@ -451,7 +459,13 @@ MODEL({
       var a = this.clone();
       for ( var i = 0 ; i < a.length ; i++ ) {
         var o = a[i];
-        if ( o && o.deepClone ) a[i] = o.deepClone();
+        if ( o ) {
+          if ( o.deepClone ) {
+            a[i] = o.deepClone();
+          } else if ( o.clone ) {
+            a[i] = o.clone();
+          }
+        }
       }
       return a;
     },
@@ -528,7 +542,10 @@ MODEL({
     function deleteF(v) {
       var a = this.clone();
       for ( var i = 0 ; i < a.length ; i++ ) {
-        if ( a[i] === v ) { a.splice(i, 1); break; }
+        if ( a[i] === v ) {
+          a.splice(i, 1);
+          break;
+        }
       }
       return a;
     },
@@ -537,26 +554,36 @@ MODEL({
     // return true iff the value was removed
     function deleteI(v) {
       for ( var i = 0 ; i < this.length ; i++ ) {
-        if ( this[i] === v ) { this.splice(i, 1); return true; }
+        if ( this[i] === v ) {
+          this.splice(i, 1);
+          return true;
+        }
       }
       return false;
     },
+
     // Clone this Array and remove first object where predicate 'p' returns true
-    // TODO: make faster by copying in one pass, without splicing
     function removeF(p) {
-      var a = this.clone();
+      var a = [];
       for ( var i = 0 ; i < a.length ; i++ ) {
-        if ( p.f(a[i]) ) { a.splice(i, 1); break; }
+        if ( p.f(a[i]) ) {
+          // Copy the rest of the array since we only want to remove one match
+          for ( i++ ; i < a.length ; i++ ) a.push(a[i]);
+        }
       }
       return a;
     },
 
     // Remove first object in this array where predicate 'p' returns true
+    // return true iff the value was removed
     function removeI(p) {
       for ( var i = 0 ; i < this.length ; i++ ) {
-        if ( p.f(this[i]) ) { this.splice(i, 1); breeak; }
+        if ( p.f(this[i]) ) {
+          this.splice(i, 1);
+          return true;
+        }
       }
-      return this;
+      return false;
     },
 
     function pushF(obj) {
@@ -572,7 +599,7 @@ MODEL({
       for ( i = 0   ; i < start             ; i++ ) r.push(this[i]);
       for ( i = 2   ; i < arguments.length  ; i++ ) r.push(arguments[i]);
       for ( i = start+end ; i < this.length ; i++ ) r.push(this[i]);
-      
+
       return r;
     },
 
@@ -741,9 +768,10 @@ MODEL({
       };
 
       return function bind(arg) {
-        return arguments.length == 1 ?
-          simpleBind(this, arg) :
-          oldBind.apply(this, argsToArray(arguments));
+        if ( arguments.length == 1 ) return simpleBind(this, arg);
+        var args = new Array(arguments.length);
+        for ( var i = 0 ; i < arguments.length ; i++ ) args[i] = arguments[i];
+        return oldBind.apply(this, args);
       };
     })(),
 

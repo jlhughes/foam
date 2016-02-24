@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.ui',
   name: 'RadioBoxView',
 
-  extendsModel: 'foam.ui.ChoiceView',
+  extends: 'foam.ui.ChoiceView',
 
   methods: {
     toHTML: function() {
@@ -55,7 +55,7 @@ CLASS({
     initHTML: function() {
       this.SUPER();
 
-      Events.dynamic(function() { this.choices; }.bind(this), this.updateHTML.bind(this));
+      Events.dynamicFn(function() { this.choices; }.bind(this), this.updateHTML.bind(this));
     }
   }
 });

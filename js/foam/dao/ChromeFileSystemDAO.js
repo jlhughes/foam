@@ -18,7 +18,7 @@
 MODEL({
   package: 'foam.dao',
   name: 'ChromeFileSystemDAO',
-  extendsModel: 'AbstractDAO',
+  extends: 'AbstractDAO',
 
   requires: [
     'foam.dao.ChromeFileSystem'
@@ -44,7 +44,7 @@ MODEL({
       }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'backlog_',
       factory: function() { return []; }
     },

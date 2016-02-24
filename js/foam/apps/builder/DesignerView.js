@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'DesignerView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   traits: [
     'foam.metrics.ScreenViewTrait',
   ],
@@ -29,7 +29,7 @@ CLASS({
   ],
   imports: [
     'mdToolbar as toolbar',
-    'persistentContext$ as ctx$',
+    'hasSeenDesignerView$',
   ],
 
   properties: [
@@ -44,13 +44,13 @@ CLASS({
       },
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'autoUpdatePreviewHTML',
       help: 'If true, call updateHTML() on preview view on every data-related change.',
       defaultValue: true,
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'panel',
       defaultValue: {
         factory_: 'foam.apps.builder.Panel',
@@ -58,19 +58,19 @@ CLASS({
       },
     },
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'app',
       defaultValue: 'foam.apps.builder.kiosk.KioskView',
     },
     'panelView',
     'appView',
     {
-      type: 'foam.apps.builder.AppBuilderContext',
-      name: 'ctx',
-      transient: true,
+      type: 'Boolean',
+      name: 'hasSeenDesignerView',
+      defaultValue: true,
       postSet: function(old, nu) {
         if ( old === nu ) return;
-        if ( this.$ && nu && ! nu.hasSeenDesignerView ) {
+        if ( this.$ && ! nu ) {
           this.constructHelpSnippets();
         }
       },
@@ -80,7 +80,7 @@ CLASS({
   methods: [
     function initHTML() {
       this.SUPER();
-      if ( this.ctx && ! this.ctx.hasSeenDesignerView )
+      if ( ! this.hasSeenDesignerView )
         this.constructHelpSnippets();
     },
   ],
@@ -154,7 +154,7 @@ CLASS({
             }, this.Y),
           ],
           onComplete: function() {
-            this.ctx.hasSeenDesignerView = true;
+            this.hasSeenDesignerView = true;
           }.bind(this)
         }, this.Y).construct();
       },

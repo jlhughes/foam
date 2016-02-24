@@ -17,7 +17,7 @@
 CLASS({
   package: 'foam.browser.ui',
   name: 'StackView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
   imports: [
     'setTimeout',
     'window'
@@ -27,7 +27,7 @@ CLASS({
   ],
   properties: [
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'maxVisibleViews',
       defaultValue: 2,
       documentation: 'Limits the number of views on screen at a time.',
@@ -52,7 +52,7 @@ CLASS({
       defaultValue: 'stackview-container'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'noDecoration',
       documentation: 'If true, panel edges are not added',
       defaultValue: false,
@@ -83,6 +83,14 @@ CLASS({
           'popView_ for details.',
       code: function() {
         this.popView_(0);
+      }
+    },
+    {
+      name: 'popChildViews',
+      documentation: 'Default popChildViews that works on the top level. See ' +
+          'popView_ for details.',
+      code: function() {
+        this.popView_(1);
       }
     },
     function elementAnimationAdd_(style) {
@@ -134,7 +142,7 @@ CLASS({
     },
     function childHTML(index) {
       var obj = this.views_[index];
-      var html = '<div id="' + obj.id + '" class="stackview-panel stackview-hidden">';
+      var html = '<div id="' + obj.id + '" class="stackview-panel stackview-hidden stackview-no-input">';
       html += obj.view.toHTML();
       html += '  <div id="' + obj.id + '-edge" class="stackview-edge"></div>';
       html += '</div>';
@@ -145,7 +153,7 @@ CLASS({
       // rendered.
       var self = this;
       obj.view.addInitializer(function() {
-        obj.hideBinding = self.X.dynamic(
+        obj.hideBinding = self.X.dynamicFn(
             function() { self.visibleStart_; self.visibleEnd_; },
             function() {
               var e = self.X.$(obj.id);
@@ -154,6 +162,8 @@ CLASS({
               // or being overlapped to the left
               DOM.setClass(e, 'stackview-hidden',
                   index < self.visibleStart_-1 || index > self.visibleEnd_+1);
+              DOM.setClass(e, 'stackview-no-input',
+                  index < self.visibleStart_ || index > self.visibleEnd_);
             }
         ).destroy;
       });
@@ -228,7 +238,6 @@ CLASS({
         }
         if (size > 0) {
           s.width = size + 'px'; // only set size for non-zero, buried panels will be overlapped
-          bottomMostVisibleStyle = s;
         }
         s.zIndex = i; // z ordering ensures overlap
         s.left = pos + 'px';
@@ -268,6 +277,10 @@ CLASS({
 
       .stackview-hidden {
         display: none;
+      }
+
+      .stackview-no-input {
+        pointer-events: none;
       }
     */},
     function toHTML() {/*
@@ -338,6 +351,7 @@ CLASS({
           __proto__: this,
           pushView: this.pushView_.bind(this, this.views_.length),
           popView: this.popView_.bind(this, this.views_.length),
+          popChildViews: this.popView_.bind(this, this.views_.length+1),
           replaceView: this.replaceView_.bind(this, this.views_.length)
         };
 
@@ -365,6 +379,8 @@ CLASS({
         // popView_(i) pops everything greater than and including i. Therefore,
         // a view that calls this.stack.popView() (on the substack object created
         // above) will be removed from the stack.
+        if ( index >= this.views_.length ) return;
+
         this.visibleStart_ -= this.visibleEnd_ - index + 1;
         this.visibleEnd_ = index - 1;
         this.destroyChildViews_(index);

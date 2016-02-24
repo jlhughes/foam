@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'ViewSwitcher',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   help: 'A view which cycles between an array of views.',
 
@@ -47,7 +47,7 @@ CLASS({
       }
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'viewIndex',
       preSet: function(_, value) {
         if ( value >= this.views.length ) return 0;

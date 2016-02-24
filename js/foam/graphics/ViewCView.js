@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.graphics',
   name: 'ViewCView',
 
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   help: "View to CView adapter. Let's you display Views in a CView.",
 
@@ -36,7 +36,7 @@ CLASS({
       }
       return this.e_;
     },
-    function paintSelf() {
+    function paintSelf(canvas) {
       var e = this.element();
       e.style.opacity = this.alpha;
       // e.style.background = this.background;

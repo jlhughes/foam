@@ -18,7 +18,7 @@
 CLASS({
   name: 'SearchController',
   package: 'foam.navigator',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   requires: [
     'foam.dao.CachingDAO',
     'foam.dao.IDBDAO',
@@ -118,7 +118,7 @@ CLASS({
       view: 'foam.ui.ImageView'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'query',
       postSet: function(old, nu) { if (nu) this.expanded = true; }
     },
@@ -131,7 +131,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'expanded',
       defaultValue: false,
       postSet: function(old, nu) {
@@ -159,7 +159,7 @@ CLASS({
   methods: {
     init: function() {
       this.SUPER();
-      Events.dynamic(
+      Events.dynamicFn(
         function() { this.dao; this.query; this.modelFilter }.bind(this),
         function() {
           var modelQuery = this.modelFilter === 'All' ? TRUE :

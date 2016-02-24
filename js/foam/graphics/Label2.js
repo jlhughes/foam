@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.graphics',
   name:  'Label2',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   properties: [
     {
@@ -35,17 +35,17 @@ CLASS({
       defaultValue: ''
     },
     {
-      model_: 'ColorProperty',
+      type: 'Color',
       name:  'color',
       defaultValue: 'black'
     },
     {
-      model_: 'ColorProperty',
+      type: 'Color',
       name: 'border',
       label: 'Border Color'
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name:  'maxWidth',
       label: 'Maximum Width',
       defaultValue: -1
@@ -53,12 +53,11 @@ CLASS({
   ],
 
   methods: {
-    paintSelf: function() {
-      var c = this.canvas;
+    paintSelf: function(c) {
       if ( ! c ) return;
 
       c.globalAlpha = this.alpha;
-      this.erase();
+      this.erase(c);
 
       if ( this.font ) c.font = this.font;
       c.textAlign = this.align;

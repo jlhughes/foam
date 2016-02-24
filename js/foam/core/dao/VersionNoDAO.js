@@ -19,7 +19,7 @@ CLASS({
   package: 'foam.core.dao',
   name: 'VersionNoDAO',
 
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   properties: [
     {
@@ -30,7 +30,7 @@ CLASS({
       transient: true
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'version',
       defaultValue: 1
     }

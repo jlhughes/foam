@@ -5,20 +5,20 @@ var Service = FOAM({
 
   properties: [
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'name',
       mode: 'read-only'
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'selected'
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'description'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'cost',
       mode: 'read-only'
     }
@@ -38,15 +38,15 @@ var CompositeService = FOAM({
   model_: 'Model',
 
   name: 'CompositeService',
-  extendsModel: 'Service',
+  extends: 'Service',
 
   properties: [
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'children',
       postSet: function(_, value) {
         var self = this;
-        Events.dynamic(function() {
+        Events.dynamicFn(function() {
           var selected = false;
           var cost = 0;
           for ( var i = 0; i < value.length; i++ ) {
@@ -63,7 +63,7 @@ var CompositeService = FOAM({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'exclusive'
     }
   ],
@@ -83,7 +83,7 @@ var OptionalServiceView = FOAM({
 
   name: 'OptionalServiceView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
@@ -126,7 +126,7 @@ var CompositeServiceView = FOAM({
 
   name: 'CompositeDetailView',
 
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   properties: [
     {
@@ -199,7 +199,7 @@ var ServiceSummaryView = FOAM({
 
   name: 'ServiceSummaryView',
 
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   templates: [
     {
@@ -215,7 +215,7 @@ var CompositeServiceSummaryView = FOAM({
 
   name: 'CompositeServiceSummaryView',
 
-  extendsModel: 'foam.ui.DetailView',
+  extends: 'foam.ui.DetailView',
 
   properties: [
 /*    {
@@ -247,7 +247,7 @@ var CompositeServiceSummaryView = FOAM({
     {
       name: 'valueChange',
       code: function() {
-        Events.dynamic(this.render);
+        Events.dynamicFn(this.render);
       }
     },
     {
@@ -315,7 +315,7 @@ var order = CompositeService.create({
 var OrderSummaryView = FOAM({
   model_: 'Model',
   name: 'OrderSummaryView',
-  extendsModel: 'CompositeServiceSummaryView',
+  extends: 'CompositeServiceSummaryView',
 
   methods: {
     toHTML: function() {

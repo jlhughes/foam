@@ -13,7 +13,7 @@ CLASS({
   name: 'GoogleDriveDAOFactory',
   package: 'foam.apps.builder.dao',
 
-  extendsModel: 'foam.apps.builder.dao.DAOFactory',
+  extends: 'foam.apps.builder.dao.DAOFactory',
 
   label: 'Cloud storage on Google Drive',
 
@@ -44,7 +44,7 @@ CLASS({
       hidden: true,
     },
     {
-      model_: 'FactoryProperty',
+      type: 'Factory',
       hidden: true,
       name: 'factory', //TODO(jacksonic): Should be named .create, but can't until Model.create is moved
       defaultValue: function(name, model, X) {

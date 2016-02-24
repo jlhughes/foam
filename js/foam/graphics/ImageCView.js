@@ -18,15 +18,15 @@
 CLASS({
   package: 'foam.graphics',
   name: 'ImageCView',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
 
   properties: [
     {
       name: 'src',
       label: 'Source'
     },
-    'width',
-    'height'
+    ['width',  -1],
+    ['height', -1]
   ],
 
   methods: {
@@ -34,22 +34,25 @@ CLASS({
       this.SUPER();
       this.image_ = new Image();
       this.image_.onload = function() {
+        if ( this.width  == -1 ) this.width  = this.image_.width;
+        if ( this.height == -1 ) this.height = this.image_.height;
         this.view.paint();
       }.bind(this);
       this.image_.src = this.src;
       this.view.paint();
     },
 
-    transform: function() {
+    transform: function(c) {
       if ( this.width && this.image_.width )
         this.scaleX = this.width / this.image_.width;
       if ( this.height && this.image_.height )
         this.scaleY = this.height / this.image_.height;
 
-      this.SUPER();
+      this.SUPER(c);
     },
-    paintSelf: function() {
-      this.canvas.drawImage(this.image_, 0, 0);
+
+    paintSelf: function(c) {
+      c.drawImage(this.image_, 0, 0);
     }
   }
 });

@@ -19,13 +19,13 @@ CLASS({
   name: 'LimitedLiveCachingDAO',
   package: 'foam.core.dao',
 
-  extendsModel: 'foam.dao.ProxyDAO',
+  extends: 'foam.dao.ProxyDAO',
 
   properties: [
     {
       name: 'src'
     },
-    { model_: 'IntProperty', name: 'cacheLimit', defaultValue: 100 },
+    { type: 'Int', name: 'cacheLimit', defaultValue: 100 },
     {
       name: 'cache',
       help: 'Alias for delegate.',

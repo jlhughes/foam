@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.ui.md',
   name: 'TableView',
-  extendsModel: 'foam.ui.SimpleView',
+  extends: 'foam.ui.SimpleView',
 
   requires: [
     'foam.ui.TableView',
@@ -25,12 +25,12 @@ CLASS({
 
   properties: [
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'editColumnsEnabled',
       defaultValue: false
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'title',
       defaultValue: 'Table',
       postSet: function(old, nu) {
@@ -51,7 +51,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name:  'properties',
       lazyFactory: function() { return this.getDefaultProperties(); }
     },
@@ -81,7 +81,7 @@ CLASS({
       }
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'Action',
       name: 'actions',
       lazyFactory: function() {
@@ -90,7 +90,7 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'scrollEnabled',
       defaultValue: false
     },
@@ -100,8 +100,8 @@ CLASS({
         return this.TableView.create({
           scrollEnabled: this.scrollEnabled,
           className: 'mdTable',
-          ascIcon: '<i class="material-icons">keyboard_arrow_up</i>',
-          descIcon: '<i class="material-icons">keyboard_arrow_down</i>',
+          ascIcon: '<i class="material-icons-extended">keyboard_arrow_up</i>',
+          descIcon: '<i class="material-icons-extended">keyboard_arrow_down</i>',
           model$: this.model$,
           data$: this.data$,
           properties$: this.properties$,
@@ -197,6 +197,7 @@ CLASS({
       name: 'editColumns',
       iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAM0lEQVR4AWMYtiCI4TXDKwZ/otUDlf8HwpfEa3gF1vCCeA3+DC+Byn2p5sXRUBoNpWEKAEP5JZC/ixCxAAAAAElFTkSuQmCC',
       ligature: 'more_vert',
+      isAvailable: function() { return this.editColumnsEnabled; },
       code: function(X, action) {
         if ( this.columnSelectionView.state === 'OPEN' ) return;
         this.columnSelectionView.open();
@@ -212,7 +213,9 @@ CLASS({
             <% this.tableCaptionHTML(out) %>
           </table-caption>
           <table-actions><% this.tableActionsHTML(out) %></table-actions>
-          %%columnSelectionView
+          <% if (this.editColumnsEnabled) { %>
+            %%columnSelectionView
+          <% } %>
         </table-header>
         %%table
       </md-table>

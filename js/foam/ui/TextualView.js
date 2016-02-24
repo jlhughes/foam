@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'TextualView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   documentation: 'Extracts one property value as a string.',
 
@@ -28,7 +28,7 @@ CLASS({
       defaultValue: 'span',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'propertyName',
       defaultValue: 'name',
       help: 'The name of the property to use, as in this.data[propertyName].',

@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'AutocompleteView',
-  extendsModel: 'foam.ui.PopupView',
+  extends: 'foam.ui.PopupView',
   help: 'Default autocomplete popup.',
 
   requires: [
@@ -31,7 +31,7 @@ CLASS({
     'completer',
     'current',
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'closeTime',
       units: 'ms',
       help: 'Time to delay the actual close on a .close call.',
@@ -175,7 +175,7 @@ CLASS({
   listeners: [
     {
       name: 'onKeyDown',
-      code: function(_,_,e) {
+      code: function(_, __, e) {
         if ( ! this.view ) return;
 
         if ( e.keyCode === 38 /* arrow up */ ) {

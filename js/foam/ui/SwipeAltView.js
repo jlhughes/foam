@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.ui',
   name: 'SwipeAltView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.input.touch.GestureTarget',
@@ -27,7 +27,7 @@ CLASS({
 
   properties: [
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       name: 'views',
       subType: 'foam.ui.ViewChoice',
       view: 'foam.ui.ArrayView',

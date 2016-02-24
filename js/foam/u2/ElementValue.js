@@ -19,6 +19,8 @@ CLASS({
   package: 'foam.u2',
   name: 'ElementValue',
 
+  documentation: 'A Value bound to an Element attribute. Used to bind values to DOM.',
+
   constants: {
     __isValue__: true
   },
@@ -33,7 +35,9 @@ CLASS({
     },
     {
       name: 'value',
-      postSet: function(_, value) { this.element.setAttribute(this.property, value); }
+      postSet: function(_, value) {
+        this.element.setAttribute(this.property, value);
+      }
     }
   ],
 
@@ -41,11 +45,9 @@ CLASS({
     {
       name: 'onAttrValueChange',
       code: function() {
-        console.log('pre value change ', this.value);
-        this.value = this.element.id$el ?
-          this.element.id$el[this.property] :
+        this.value = this.element.el() ?
+          this.element.el()[this.property] :
           this.element.getAttribute(this.property) ;
-        console.log('post value change ', this.value);
       }
     }
   ],

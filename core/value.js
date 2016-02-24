@@ -28,42 +28,106 @@ CLASS({
     function init(value) { this.value = value || ''; },
     function get() { return this.value; },
     function set(val) { this.value = val; },
-    function toString() { return 'SimpleValue(' + this.value + ')'; }
+    function toString() { return 'SimpleValue(' + this.value + ')'; },
+    function follow(srcValue) { Events.follow(srcValue, this); }
   ]
 });
 
-// TODO(kgr): Experimental. Remove in future if not used.
+
+CLASS({
+  name: 'FunctionValue',
+  extends: 'SimpleValue',
+
+  properties: [
+    { name: 'values', factory: function() { return []; } },
+    { name: 'valueFactory' }
+  ],
+
+  methods: [
+    function init() {
+      this.SUPER();
+
+      // Call once before capture to pre-latch lazy values
+      this.valueFactory();
+
+      var f = this.valueFactory;
+      this.startRecordingDependencies();
+        this.value = f();
+      this.endRecordingDependencies();
+
+      for ( var i = 0 ; i < this.values.length ; i++ )
+        this.values[i].addListener(this.onSubValueChange);
+    },
+    function destroy() {
+      for ( var i = 0 ; i < this.values.length ; i++ )
+        this.values[i].removeListener(this.onSubValueChange);
+    },
+    function startRecordingDependencies() {
+      var values = this.values;
+      var onSubValueChange = this.onSubValueChange;
+      Events.onGet.push(function(obj, name, value) {
+        var l = obj.propertyValue(name);
+        if ( values.indexOf(l) == -1 ) {
+          values.push(l);
+          l.addListener(onSubValueChange);
+        }
+      });
+    },
+    function endRecordingDependencies() {
+      Events.onGet.pop();
+    },
+    function get() { return this.value; },
+    function set(val) { },
+    function toString() { return 'FunctionValue(' + this.value + ')'; }
+  ],
+
+  listeners: [
+    function onSubValueChange_() { this.value = this.valueFactory(); },
+    {
+      name: 'onSubValueChange',
+      isFramed: true,
+      code: function() { this.onSubValueChange_(); }
+    }
+  ]
+});
+
+
 CLASS({
   name: 'OrValue',
-  extendsModel: 'SimpleValue',
+  extends: 'SimpleValue',
 
   properties: [
     { name: 'values' },
     { name: 'valueFactory', defaultValue: function() { return arguments; } }
   ],
 
-  methods: {
-    init: function() {
+  methods: [
+    function init() {
       this.SUPER();
       for ( var i = 0 ; i < this.values.length ; i++ )
         this.values[i].addListener(this.onSubValueChange);
-      this.value = this.valueFactory();
+      this.onSubValueChange_();
     },
-    get: function() { return this.value; },
-    set: function(val) { },
-    toString: function() { return 'OrValue(' + this.value + ')'; }
-  },
+    function destroy() {
+      for ( var i = 0 ; i < this.values.length ; i++ )
+        this.values[i].removeListener(this.onSubValueChange);
+    },
+    function get() { return this.value; },
+    function set(val) { },
+    function toString() { return 'OrValue(' + this.value + ')'; }
+  ],
 
   listeners: [
+    function onSubValueChange_() {
+      var args = new Array(this.values.length);
+      for ( var i = 0 ; i < this.values.length ; i++ )
+        args[i] = this.values[i].get();
+      this.value = this.valueFactory.apply(this, args);
+    },
     {
       name: 'onSubValueChange',
       isFramed: true,
-      code: function() {
-        var args = new Array(this.values.length);
-        for ( var i = 0 ; i < this.values.length ; i++ )
-          args[i] = this.values[i].get();
-        this.value = this.valueFactory.apply(this, args);
-      }
+      code: function() { this.onSubValueChange_(); }
     }
   ]
 });
@@ -71,26 +135,26 @@ CLASS({
 function or$(values, factory, opt_X) {
   return OrValue.create({
     values: values,
-    valueFactory: factory, 
+    valueFactory: factory,
   }, opt_X);
 }
 
 
 CLASS({
   name: 'SimpleReadOnlyValue',
-  extendsModel: 'SimpleValue',
+  extends: 'SimpleValue',
 
   documentation: 'A simple value that can only be set during initialization.',
-  
+
   properties: [
-    { 
+    {
       name: 'value',
       preSet: function(old, nu) {
         return ( typeof this.instance_.value == 'undefined' ) ? nu : old ;
       }
-    } 
+    }
   ],
-  
+
   methods: {
     set: function(val) {
       /* Only allow set once. The first initialized value is the only one. */

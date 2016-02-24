@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder.wizard',
   name: 'WizardPage',
-  extendsModel: 'foam.ui.md.DetailView',
+  extends: 'foam.ui.md.DetailView',
 
   requires: [
     'foam.ui.md.UpdateDetailView',
@@ -22,7 +22,8 @@ CLASS({
     'stack',
     'dao',
     'popup',
-    'wizardStack'
+    'wizardStack',
+    'appSelection$',
   ],
 
 
@@ -58,12 +59,12 @@ CLASS({
       }
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'nextTitle',
       defaultValue: 'Finish',
     },
     {
-      model_: 'StringProperty',
+      type: 'String',
       name: 'title',
       getter: function(name) {
         if ( ! this.hidden ) {
@@ -88,30 +89,30 @@ CLASS({
       }
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'hidden',
       defaultValue: false,
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'scrollContent',
       documentation: 'If true, contentHTML will not be padded and occupy the full page width',
       defaultValue: false,
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showWizardHeading',
       documentation: 'If true, heading is shown.',
       defaultValue: true,
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showWizardInstructions',
       documentation: 'If true, instructions are shown.',
       defaultValue: true,
     },
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'showWizardActions',
       documentation: 'If true, exit/back/next actions are shown.',
       defaultValue: true,
@@ -174,13 +175,19 @@ CLASS({
     },
     function initHTML() {
       this.SUPER();
-      if ( this.popup ) this.popup.subscribe(this.popup.CANCEL, this.onCancel.bind(this));
+      if ( this.popup ) {
+        this.popup.subscribe(this.popup.CANCEL, this.onCancel.bind(this));
+      }
     },
     function onNext() {
       /* if you need to do anything when the user picks the 'next' action,
         implement this method. Remember to call this.SUPER() at the end of your
         implementation, or handle saving this.data yourself. */
-      this.dao && this.dao.put(this.data);
+      this.dao && this.dao.put(this.data, { put: function(cfg) {
+        if ( ( ! this.appSelection ) || ( this.appSelection.appId !== cfg.appId ) ) {
+          this.appSelection = cfg;
+        }
+      }.bind(this) });
     },
     function onCancel() {
       /* if you need to do anything when the user picks the 'cancel' action, implement this method */

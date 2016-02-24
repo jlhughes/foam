@@ -144,17 +144,25 @@ var arequire = function(modelName) {
         // Contextualize the model for THIS context
         m.X = THIS;
 
-        m.arequire()(function(m) {
+        var next_ = function(m) {
           THIS.arequire$ModelLoadsInProgress[modelName] = false;
           THIS.GLOBAL.X.registerModel(m);
+
           if ( ! THIS.lookupCache_[m.id] )
             THIS.lookupCache_[m.id] = m;
           future.set(m);
-        });
+        };
+
+        if ( m.arequire ) {
+          m.arequire()(next_);
+        } else {
+          next_(m);
+        }
       },
       error: function() {
         var args = argsToArray(arguments);
-        console.warn.apply(console, ['Could not load model: ', modelName].concat(args));
+        if ( modelName !== 'DocumentationProperty' )
+          console.warn.apply(console, ['Could not load model: ', modelName].concat(args));
         THIS.arequire$ModelLoadsInProgress[modelName] = false;
         future.set(undefined);
       }
@@ -163,7 +171,7 @@ var arequire = function(modelName) {
     return future.get;
   }
 
-  return model.arequire();
+  return model.arequire ? model.arequire() : aconstant(model);
 }
 
 var FOAM_POWERED = '<a style="text-decoration:none;" href="https://github.com/foam-framework/foam/" target="_blank">\
@@ -186,24 +194,31 @@ function packagePath(X, path) {
 }
 
 function registerModel(model, opt_name, fastMode) {
-  var root    = model.package ? this : GLOBAL;
-  var name    = model.name;
-  var package = model.package;
+  var root = model.package ? this : GLOBAL;
+  var name = model.name;
+  var pack = model.package;
 
   if ( opt_name ) {
     var a = opt_name.split('.');
     name = a.pop();
-    package = a.join('.');
+    pack = a.join('.');
   }
 
-  var modelRegName = (package ? package + '.' : '') + name;
+  var modelRegName = (pack ? pack + '.' : '') + name;
 
   if ( root === GLOBAL || root === X ) {
-    var path = packagePath(root, package);
+    var path = packagePath(root, pack);
     if ( fastMode )
       path[name] = model;
     else
       Object.defineProperty(path, name, { value: model, configurable: true });
+    if ( path === GLOBAL ) {
+      path = X;
+      if ( fastMode )
+        path[name] = model;
+      else
+        Object.defineProperty(path, name, { value: model, configurable: true });
+    }
   }
 
   if ( ! Object.hasOwnProperty.call(this, 'lookupCache_') ) {
@@ -304,8 +319,44 @@ function INTERFACE(imodel) {
   NONMODEL_INSTANCES[id] = true;
 }
 
+// For non-CLASS modeled things, like Enums.
+function __DATA(obj) {
+  var package = obj.package ?
+      obj.package :
+      obj.id.substring(0, obj.id.lastIndexOf('.'));
+
+  var name = obj.name ?
+      obj.name :
+      obj.id.substring(obj.id.lastIndexOf('.') + 1);
+
+  var path = packagePath(X, package);
+
+  var triggered  = false;
+
+  Object.defineProperty(path, name, {
+    get: function triggerDataLatch() {
+      if ( triggered ) return null;
+      triggered = true;
+
+      var object = JSONUtil.mapToObj(X, obj);
+
+      X.registerModel(object);
+
+      return object;
+    },
+    configurable: true
+  });
+}
 
 /** Called when a Model is registered. **/
 function onRegisterModel(m) {
-  // NOP
+  if ( ! m.package ) {
+    GLOBAL[m.name] = m;
+  }
 }
+
+X.$ = $;
+X.$$ =$$;
+X.registerModel = registerModel;
+X.arequire = arequire;
+X.onRegisterModel = onRegisterModel;

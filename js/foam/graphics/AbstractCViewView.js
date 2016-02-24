@@ -18,8 +18,7 @@
 CLASS({
   package: 'foam.graphics',
   name: 'AbstractCViewView',
-
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   documentation: function() {  /*
     Forming the DOM component for a $$DOC{ref:'foam.graphics.CView',text:'canvas view'},
@@ -33,7 +32,7 @@ CLASS({
   properties: [
     {
       name: 'cview',
-      type: 'foam.graphics.CView',
+      // type: 'foam.graphics.CView',
       postSet: function(_, cview) {
         cview.view  = this;
         this.width  = cview.x + cview.width;
@@ -50,7 +49,7 @@ CLASS({
       documentation: 'CSS class name(s), space separated.'
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'scalingRatio',
       preSet: function(_, v) { return v <= 0 ? 1 : v ; },
       defaultValue: 1,
@@ -65,7 +64,7 @@ CLASS({
     'role',
     'tabIndex',
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'width',
       defaultValue: 100,
       documentation: function() {/*
@@ -74,7 +73,7 @@ CLASS({
         */}
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name:  'height',
       defaultValue: 100,
       documentation: function() {/*
@@ -128,7 +127,7 @@ CLASS({
         this.canvas.fillRect(0, 0, this.canvasWidth(), this.canvasHeight());
 
         this.canvas.scale(this.scalingRatio, this.scalingRatio);
-        this.cview.paint();
+        this.cview.paint(this.canvas);
 
         this.canvas.restore();
       },
@@ -142,7 +141,7 @@ CLASS({
   methods: {
     init: function() { /* Connects resize listeners. */
       this.SUPER();
-      this.X.dynamic(
+      this.X.dynamicFn(
         function() { this.scalingRatio; this.width; this.height; }.bind(this),
         this.resize);
     },

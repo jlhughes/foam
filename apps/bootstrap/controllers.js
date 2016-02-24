@@ -2,7 +2,7 @@
 
 CLASS({
   name: 'AppController',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
   traits: ['DynamicViewListenerTrait'],
   requires: [
     'AppConfig',
@@ -22,7 +22,7 @@ CLASS({
       }
     },
     {
-      model_: 'StringArrayProperty',
+      type: 'StringArray',
       name: 'appConfigSources',
       getter: function() {
         var ac = this.appConfig;

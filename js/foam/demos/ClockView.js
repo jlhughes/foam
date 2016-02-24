@@ -18,8 +18,7 @@
 CLASS({
   package: 'foam.demos',
   name: 'ClockView',
-
-  extendsModel: 'foam.graphics.Circle',
+  extends: 'foam.graphics.Circle',
 
   traits: [ 'com.google.misc.Colors' ],
 
@@ -30,11 +29,11 @@ CLASS({
 
   properties: [
     {
-      model_: 'BooleanProperty',
+      type: 'Boolean',
       name: 'drawTicks',
     },
     {
-      model_: 'FloatProperty',
+      type: 'Float',
       name: 'r',
       label: 'Radius',
       defaultValue: 100
@@ -46,21 +45,18 @@ CLASS({
     },
     {
       name: 'minuteHand',
-      type: 'Hand',
       factory: function() {
         return this.Hand.create({r:this.r-6, width:5, color: this.GREEN});
       }
     },
     {
       name: 'hourHand',
-      type: 'Hand',
       factory: function() {
         return this.Hand.create({r:this.r-15, width:7, color: this.YELLOW});
       }
     },
     {
       name: 'secondHand',
-      type: 'Hand',
       factory: function() {
         return this.Hand.create({r:this.r-6, width:3, color: this.RED});
       }
@@ -71,17 +67,17 @@ CLASS({
     init: function() {
       this.SUPER();
 
-      this.border = this.BLUE;
+      this.border = this.color;
       this.borderWidth = 5;
       this.color = 'white';
-      
+
       this.addChild(this.hourHand);
       this.addChild(this.minuteHand);
       this.addChild(this.secondHand);
     },
 
-    paintSelf: function() {
-      this.SUPER();
+    paintSelf: function(c) {
+      this.SUPER(c);
 
       var date = new Date();
 
@@ -89,8 +85,6 @@ CLASS({
       this.minuteHand.a = Math.PI/2 - Math.PI*2 * date.getMinutes() / 60 ;
       this.hourHand.a   = Math.PI/2 - Math.PI*2 * (date.getHours() % 12) / 12 + this.minuteHand.a / 12;
 
-      var c = this.canvas;
-      
       if ( ! this.drawTicks ) return;
 
       for ( var i = 0 ; i < 12 ; i++ ) {
@@ -101,7 +95,7 @@ CLASS({
         c.moveTo((this.r-l)*Math.cos(a),-(this.r-l)*Math.sin(a));
         c.lineTo((this.r)*Math.cos(a),-(this.r)*Math.sin(a));
         c.closePath();
-        
+
         c.lineWidth = w;
         c.strokeStyle = this.BLUE;
         c.stroke();
@@ -110,11 +104,11 @@ CLASS({
   },
 
   models: [
-    FOAM({
-      model_: 'Model',
+    {
       name: 'Hand',
       label: 'Clock Hand',
-      extendsModel: 'foam.graphics.CView',
+      extends: 'foam.graphics.CView',
+
       properties:
       [
         {
@@ -124,48 +118,36 @@ CLASS({
           defaultValue: 'blue'
         },
         {
-          model_: 'Property',
+          type: 'Int',
           name: 'width',
-          type: 'int',
-          view: 'foam.ui.IntFieldView',
           defaultValue: 5
         },
         {
-          model_: 'Property',
+          type: 'Int',
           name: 'r',
           label: 'Radius',
-          type: 'int',
-          view: 'foam.ui.IntFieldView',
           defaultValue: 100
         },
         {
-          model_: 'Property',
+          type: 'Int',
           name: 'a',
           label: 'Rotation',
-          type: 'int',
-          view: 'foam.ui.IntFieldView',
           defaultValue: 100
         }
       ],
       methods:
       [
-        {
-          model_: 'Method',
-          name: 'paint',
-          code: function () {
-            var canvas = this.parent.canvas;
+        function paint(canvas) {
+          canvas.beginPath();
+          canvas.moveTo(0,0);
+          canvas.lineTo(this.r*Math.cos(this.a),-this.r*Math.sin(this.a));
+          canvas.closePath();
 
-            canvas.beginPath();
-            canvas.moveTo(0,0);
-            canvas.lineTo(this.r*Math.cos(this.a),-this.r*Math.sin(this.a));
-            canvas.closePath();
-
-            canvas.lineWidth = this.width;
-            canvas.strokeStyle = this.color;
-            canvas.stroke();
-          }
+          canvas.lineWidth = this.width;
+          canvas.strokeStyle = this.color;
+          canvas.stroke();
         }
       ]
-    })
+    }
   ]
 });

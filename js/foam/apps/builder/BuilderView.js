@@ -12,7 +12,7 @@
 CLASS({
   package: 'foam.apps.builder',
   name: 'BuilderView',
-  extendsModel: 'foam.ui.View',
+  extends: 'foam.ui.View',
 
   requires: [
     'foam.browser.ui.BrowserView',
@@ -21,10 +21,15 @@ CLASS({
   imports: [
     'setTimeout'
   ],
+  exports: [
+    'appSelection as selection',
+    'appSelection',
+  ],
 
   properties: [
+    'appSelection',
     {
-      model_: 'ViewFactoryProperty',
+      type: 'ViewFactory',
       name: 'menuSelectionFuture',
       documentation: function() {/*
         Create a FutureView for a BrowserView. Resolve future and unhook

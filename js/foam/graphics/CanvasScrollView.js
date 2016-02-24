@@ -18,7 +18,7 @@
 CLASS({
   package: 'foam.graphics',
   name: 'CanvasScrollView',
-  extendsModel: 'foam.graphics.CView',
+  extends: 'foam.graphics.CView',
   requires: [ 'foam.input.touch.GestureTarget' ],
   properties: [
     {
@@ -27,7 +27,7 @@ CLASS({
       onDAOUpdate: 'onDAOUpdate'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'scrollTop',
       preSet: function(_, v) { if ( v < 0 ) return 0; return v; }
     },
@@ -35,7 +35,7 @@ CLASS({
       name: 'renderer'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'selectNumber'
     },
     {
@@ -50,7 +50,7 @@ CLASS({
   methods: {
     init: function() {
       this.SUPER();
-      this.X.dynamic(
+      this.X.dynamicFn(
         function() { this.width; this.renderer; this.offset; this.objs; }.bind(this),
         function() {
           this.renderer.width = this.width;
@@ -58,7 +58,7 @@ CLASS({
         }.bind(this));
     },
     initCView: function() {
-      this.X.dynamic(
+      this.X.dynamicFn(
         function() {
           this.scrollTop; this.height; this.renderer;
         }.bind(this), this.onDAOUpdate);
@@ -76,14 +76,14 @@ CLASS({
     verticalScrollMove: function(dy) {
       this.scrollTop -= dy;
     },
-    paintSelf: function() {
+    paintSelf: function(canvas) {
       var self = this;
       var offset = this.offset;
       for ( var i = 0; i < this.objs.length; i++ ) {
-        self.canvas.save();
-        self.canvas.translate(0, offset + (i * self.renderer.height));
-        self.renderer.render(self.canvas, self.objs[i]);
-        self.canvas.restore();
+        canvas.save();
+        canvas.translate(0, offset + (i * self.renderer.height));
+        self.renderer.render(canvas, self.objs[i]);
+        canvas.restore();
       }
     }
   },
@@ -91,8 +91,6 @@ CLASS({
     {
       name: 'onDAOUpdate',
       code: function() {
-        if ( ! this.canvas ) return;
-
         var selectNumber = this.selectNumber + 1;
         this.selectNumber = selectNumber;
 

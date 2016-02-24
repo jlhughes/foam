@@ -18,7 +18,7 @@
 CLASS({
   name: 'RestDAO',
   package: 'foam.core.dao',
-  extendsModel: 'AbstractDAO',
+  extends: 'AbstractDAO',
 
   imports: [
     'ajsonp'
@@ -34,18 +34,18 @@ CLASS({
       label: 'REST API URL.'
     },
     {
-      model_: 'ArrayProperty',
+      type: 'Array',
       subType: 'Property',
       name: 'paramProperties',
       help: 'Properties that are handled as separate parameters rather than in the query.'
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'batchSize',
       defaultValue: 200
     },
     {
-      model_: 'IntProperty',
+      type: 'Int',
       name: 'skipThreshold',
       defaultValue: 1000
     }
